@@ -37,9 +37,9 @@ const CFG={
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
   // 地图区域：tint 颜色、雾、灯光、各种敌人的出现权重
   biomes:{
-    hive:   {name:'巢都工厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x0b0504,fogD:.05, bg:0x070303,hemi:[0x5a3a40,0x100404],lamp:0xff7a30,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1}},
-    sanctum:{name:'地下圣堂',wall:0xfff0d8,floor:0xe8d8b8,ceil:0xc8b8a0,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3}},
-    frost:  {name:'冰封区',  wall:0x9ab8d8,floor:0xb8d0e8,ceil:0x8aa0b8,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2}}},
+    hive:   {name:'巢都炼油厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1}},
+    sanctum:{name:'地下圣堂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3}},
+    frost:  {name:'蓝冰洞窟',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2}}},
   // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
   threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
   // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物

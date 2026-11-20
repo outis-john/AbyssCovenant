@@ -29,17 +29,8 @@ const ENEMY_AI={
 // ---------- 区域：配色 / 灯光 / 刷怪
 let curBiome='hive',pendingBiome=null;
 function pickBiome(){const ks=Object.keys(CFG.biomes);if(pendingBiome&&CFG.biomes[pendingBiome])return pendingBiome;const want=loadout.biome||'random';return want!=='random'&&CFG.biomes[want]?want:ks[seed%ks.length];}
-function applyBiome(){const B=CFG.biomes[curBiome];matBrick.color.setHex(B.wall);scene.fog.color.setHex(B.fog);scene.fog.density=B.fogD;scene.background.setHex(B.bg);
+function applyBiome(){const B=CFG.biomes[curBiome];matBrick.color.setHex(B.wall);matDark.color.setHex(B.dark||0x1a1210);scene.fog.color.setHex(B.fog);scene.fog.density=B.fogD;scene.background.setHex(B.bg);
   scene.traverse(o=>{if(o.isHemisphereLight){o.color.setHex(B.hemi[0]);o.groundColor.setHex(B.hemi[1]);}});for(const l of candleLights)l.color.setHex(B.lamp);}
 function pickEnemy(noBrute){const sp=CFG.biomes[curBiome].spawn,w=Object.entries(sp);if(!noBrute)w.push(['brute',CFG.wave.bruteChance*10]);let t=w.reduce((a,[,v])=>a+v,0)*Math.random();
   for(const [k,v] of w){t-=v;if(t<=0)return k;}return 'imp';}
-// 区域装饰（在 buildLevel 末尾调用；用 rng，房主和队友一样）
-function biomeProps(){const B=curBiome;
-  for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j===0)continue;const cx=i*C,cz=j*C;
-    if(B==='sanctum'){for(let r=0;r<3;r++)if(rng()<.6){const z=cz-4+r*3.5;addBox(cx-2.6,z,3.2,.7,0,.9,matDark);addBox(cx+2.6,z,3.2,.7,0,.9,matDark);}
-      if(rng()<.5){addBox(cx,cz-HALF+1.2,1.2,1.2,0,1,matDark);const st=new THREE.Mesh(new THREE.BoxGeometry(.8,2.6,.6),matBone);st.position.set(cx,2.3,cz-HALF+1.2);levelGroup.add(st);}}
-    if(B==='frost'){for(let k=0;k<3;k++)if(rng()<.55){const x=cx+(rng()-.5)*13,z=cz+(rng()-.5)*13,h=1+rng()*2.5;const m=new THREE.Mesh(new THREE.ConeGeometry(.5+rng()*.5,h,5),iceMat);m.position.set(x,h/2,z);levelGroup.add(m);
-        colliders.push({minX:x-.45,maxX:x+.45,minZ:z-.45,maxZ:z+.45});}}
-    if(B==='hive'&&rng()<.5){const m=new THREE.Mesh(new THREE.BoxGeometry(C*.8,.35,.35),matMetal);m.position.set(cx,H-1,cz+(rng()-.5)*12);levelGroup.add(m);}}
-  levelGroup.traverse(o=>{if(o.isMesh&&o.material&&o.material.map===texFloor){o.material.color.setHex(CFG.biomes[B].floor);}if(o.isMesh&&o.material&&o.material.map===texCeil)o.material.color.setHex(CFG.biomes[B].ceil);});}
 const iceMat=new THREE.MeshLambertMaterial({color:0xa8d8ff,emissive:0x203858,transparent:true,opacity:.85});
