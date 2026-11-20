@@ -112,6 +112,7 @@
 <div class="layer" id="splat"></div>
 <div id="announce"></div>
 <div id="prompt"></div>
+<div id="bossbar" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:420px;display:none;text-align:center;color:#e8c0a0;font-size:13px;text-shadow:0 0 4px #000">深渊领主<div style="height:8px;border:1px solid #6b2a1a;background:#1a0806;margin-top:3px"><div id="bossfill" style="height:100%;width:100%;background:#c0302a"></div></div></div>
 <div id="progress" class="bar"><div style="background:#d8a657"></div></div>
 <div id="litany"></div>
 <div id="weapons"></div>
@@ -178,8 +179,11 @@ const CFG={
   enemies:{
     imp:   {hp:60, speed:5.2,dmg:12,reach:1.7,scale:1.0,color:0x9a2a22},                 // 小恶魔
     brute: {hp:420,speed:3.0,dmg:30,reach:2.6,scale:1.7,color:0x5a1a3a},                 // 巨魔
+    lord:  {hp:2600,speed:3.4,dmg:38,reach:3.4,scale:2.6,color:0x3a0c0c,boss:true},     // Boss：深渊领主
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
+  // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
+  boss:{slamR:5,slamWind:0.9,slamCd:2.6,volley:5,volleyCd:3.8,summonEvery:14,summonN:3},
   spit:{speed:12,castTime:0.7,cooldown:[2.4,4.0],range:24,reflectMul:4},                 // 瘟火球
   guns:{
     bolter: {dmg:24, rate:7,  magSize:24,res0:120,reserveMax:192,reload:1.1,spread:.012},  // 爆弹枪
@@ -53488,7 +53492,7 @@ function collide(p,r){
 
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
-const ETYPES=['imp','brute','caster'];
+const ETYPES=['imp','brute','caster','lord'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
@@ -53511,7 +53515,7 @@ function spawnEnemy(type,x,z,elite=false){
   scene.add(g);
   const TH=curThreat(),hp=T.hp*(elite?1.6:1)*TH.hp;
   const e={id:++enemySeq,remote:false,type,g,mat:flesh,parts:{body,head,armL,armR,legL,legR},hp,maxHp:hp,armHp:{armL:hp*.3,armR:hp*.3},arms:2,kv:new THREE.Vector3(),lean:0,headSnap:0,
-    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1)*TH.dmg,reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
+    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1)*TH.dmg,reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,boss:!!T.boss,phase:1,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
   for(const p of Object.values(e.parts))p.userData.enemy=e;
   head.children.forEach(c=>c.userData.enemy=e);
   enemies.push(e);return e;
@@ -53525,8 +53529,8 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   const head=part==='head';if(head)dmg*=2;
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
   if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
-  e.hp-=dmg;e.flash=0.08;e.stagger=Math.max(e.stagger,opts.stagger??0.12);
-  if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9);}
+  e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
+  if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9*res);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
   spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,head?10:5);
   // 部位破坏：打断手臂
@@ -53542,6 +53546,7 @@ function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m
 }
 function killEnemy(e,dir,explode,how={}){
   if(isHost())bcast({t:'kill',id:e.id,dir,how});
+  if(e.boss&&!isClient())bossDown(e);
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);
   try{
@@ -53963,7 +53968,7 @@ function updateSparks(dt){while(sparks.length>CFG.perf.sparks){const o=sparks.sh
 
 // ============================================================ 处决：需要充能，动作由手持武器决定，期间无敌，回复等量生命
 const ex={active:false,t:0,dur:1.1,type:'',target:null,fired:{}};
-const canExecute=e=>player.exCharge>=100&&e.alive&&(!e.elite||e.hp<=e.maxHp*0.5);
+const canExecute=e=>player.exCharge>=100&&e.alive&&!e.boss&&(!e.elite||e.hp<=e.maxHp*0.5);
 function executeTarget(){if(player.exCharge<100)return null;const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));let best=null,bd=3.6;
   for(const e of enemies){if(!canExecute(e))continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<bd&&to.normalize().dot(fwd)>0.2){bd=d;best=e;}}return best;}
 function execute(){
@@ -54040,7 +54045,7 @@ function castLift(free=false){
   if(!free&&PSY.lift.cd>0){announce('锁喉冷却中',0.8);return;}
   if(isClient()){payPsy(30);PSY.lift.cd=PSY.lift.max;player.channelT=1.7;play('lift');sendNet({t:'cast',k:'lift'});if(player.ovl>=player.maxOvl)backlash();return;}
   const f=fwdFlat(),list=[];
-  for(const e of enemies){if(!e.alive||e.lifted)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<16&&to.normalize().dot(f)>Math.cos(0.66))list.push([d,e]);}
+  for(const e of enemies){if(!e.alive||e.lifted||e.boss)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<16&&to.normalize().dot(f)>Math.cos(0.66))list.push([d,e]);}
   list.sort((a,b)=>a[0]-b[0]);const targets=list.slice(0,cls==='tide'?10:6).map(x=>x[1]);
   // 扇形范围提示
   const fan=new THREE.Mesh(new THREE.CircleGeometry(16,20,Math.PI/2-0.66,1.32),new THREE.MeshBasicMaterial({color:0xa040ff,transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));
@@ -54085,7 +54090,7 @@ function updateHoles(dt){
   for(const H of holes){H.t+=dt;H.ring.rotation.z+=dt*6;H.halo.scale.setScalar(1+Math.sin(H.t*8)*.08);H.tick-=dt;const tick=H.tick<=0;if(tick)H.tick=0.25;
     if(Math.random()<0.7){const a=Math.random()*6.28,r=6;const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x8040c0}));m.position.set(H.P.x+Math.cos(a)*r,H.P.y+(Math.random()-.5)*2,H.P.z+Math.sin(a)*r);scene.add(m);
       sparks.push({m,v:H.P.clone().sub(m.position).multiplyScalar(2.2),life:.45});}
-    if(!H.visual)for(const e of enemies){if(!e.alive||e.lifted)continue;const to=H.P.clone().setY(0).sub(e.g.position.clone().setY(0));const d=to.length();
+    if(!H.visual)for(const e of enemies){if(!e.alive||e.lifted||e.boss)continue;const to=H.P.clone().setY(0).sub(e.g.position.clone().setY(0));const d=to.length();
       if(d>9){if(H.caught.has(e)){H.caught.delete(e);e.inHole=false;e.g.scale.setScalar(e.s0);e.g.position.y=0;}continue;}
       H.caught.add(e);e.inHole=true;const k=1-d/9;
       if(d>0.6)e.g.position.addScaledVector(to.normalize(),Math.min(d-0.5,(3+k*9)*dt));
@@ -54221,6 +54226,7 @@ function setupMatch(){
   if(types.includes('cores'))for(let k=0;k<3;k++)spawnPickup('core',...cellPos(randomCell([[0,0]])));
   // 初始恶魔（只有房主 / 单人生成，队友从快照里拿）
   if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2)+curThreat().extra*(Math.random()<0.6?1:0);for(let q=0;q<k;q++)spawnEnemy('imp',...cellPos([i,j],5));if(i+j>=3&&Math.random()<0.4)spawnEnemy('caster',...cellPos([i,j],6));}
+  if(!isClient())spawnEnemy('lord',...cellPos([G-1,G-1],3));   // Boss 守在离空降点最远的房间
   if(!isClient())for(let q=0;q<2;q++)spawnEnemy('brute',...cellPos(randomCell([[0,0],[1,0],[0,1]]),4),true);
 }
 function nearestInteractable(){let best=null,bd=2.6;for(const it of interactables){if(it.used||it.type==='ritual'||it.type==='ammo')continue;const d=Math.hypot(it.x-player.pos.x,it.z-player.pos.z)-((it.type==='pod'||it.type==='terminal')?1.2:0);if(d<bd){bd=d;best=it;}}return best;}
@@ -54384,6 +54390,7 @@ function updateEnemies(dt){
       if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);}e.cd=1.1;}continue;}
     e.cd-=dt;
     if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
+    if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
     else{const sp=e.speed*(e.legsLost?0.5:1);e.g.position.addScaledVector(dir,sp*dt);e.walk+=dt*sp*2;
       e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;
@@ -54452,6 +54459,32 @@ function updateSpits(dt){
   spits=spits.filter(s=>!s.dead);
 }
 
+
+// ---------- Boss：深渊领主（房主判定；砸地特效用 fx 事件同步给队友）
+function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>e.maxHp*0.33?2:3;
+  if(ph>e.phase){e.phase=ph;annTeam(ph===2?'深渊领主怒吼——瘟火从它掌中涌出！':'深渊领主陷入狂暴！裂隙在它身边撕开……',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
+  const aL=e.parts.armL,aR=e.parts.armR;
+  if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy('imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
+  if(e.act){e.act.t-=dt;const A=e.act;
+    if(A.k==='slam'){const k=1-A.t/B.slamWind;aL.rotation.x=aR.rotation.x=-2.6*Math.min(1,k*1.3);e.parts.body.rotation.x=-0.3*k;
+      if(A.t<=0){aL.rotation.x=aR.rotation.x=0.4;e.parts.body.rotation.x=0.25;const P=e.g.position.clone().addScaledVector(to.clone().normalize(),1.5);slamFx(P.x,P.z);if(isHost())bcast({t:'fx',k:'slam',x:+P.x.toFixed(2),z:+P.z.toFixed(2)});
+        for(const t of targetsList())if(Math.hypot(t.pos.x-P.x,t.pos.z-P.z)<B.slamR){const n=e.dmg*(e.arms===0?0.5:1);if(t.remote)sendTo(t.remote.id,{t:'hurt',n,att:e.id});else hurtPlayer(n,false,e);}
+        e.act=null;e.cd=B.slamCd;e.stun=Math.min(e.stun,0.6);}}
+    else if(A.k==='volley'){aR.rotation.x=-1.6;if(A.t<=0){if(T){const o=e.g.position.clone().setY(3.2);const base=new THREE.Vector3(T.pos.x,(T.pos.y||0)+1.2,T.pos.z).sub(o).normalize();
+        for(let i=0;i<B.volley;i++){const ang=(i-(B.volley-1)/2)*0.16,c=Math.cos(ang),sn=Math.sin(ang);const v=new THREE.Vector3(base.x*c-base.z*sn,base.y,base.x*sn+base.z*c).multiplyScalar(CFG.spit.speed);
+          addSpit(o,v,CFG.enemies.caster.dmg*curThreat().dmg,e,false);if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});}play('spit');}
+      aR.rotation.x=0;e.act=null;e.vcd=B.volleyCd;}}
+    return true;}
+  e.vcd=(e.vcd??2)-dt;
+  if(dist<B.slamR-0.5&&e.cd<=0&&e.arms>0){e.act={k:'slam',t:B.slamWind};play('growl');play('charge');return true;}
+  if(ph>=2&&dist>6&&dist<26&&e.vcd<=0&&hasLOS(e,pp)){e.act={k:'volley',t:0.6};play('hiss');return true;}
+  if(dist<B.slamR-0.5)return true;   // 贴身时等冷却，不用普通挥击
+  return false;
+}
+function slamFx(x,z){const P=new THREE.Vector3(x,0.3,z);play('boom');for(let i=0;i<18;i++){const a=i/18*6.28;puff(new THREE.Vector3(x+Math.cos(a)*CFG.boss.slamR*.8,.3,z+Math.sin(a)*CFG.boss.slamR*.8),1,0x4a3a2a,1.2);}
+  embers(P,10);if(player.pos.distanceTo(P)<14)player.shake=Math.max(player.shake,0.5);}
+function bossDown(e){const p=e.g.position;annTeam('深渊领主倒下了！它的心脏化作一件灵能圣物。',3);
+  netDrop('rare',p.x,p.z);for(let k=0;k<4;k++)netDrop('relic',p.x+(Math.random()-.5)*4,p.z+(Math.random()-.5)*4);}
 // ============================================================ 对局流程
 function updateMatch(dt){
   {const [ci,cj]=cellOf(player.pos);match.explored.add(ci+','+cj);}
@@ -54502,7 +54535,7 @@ function drawMinimap(){
   const [px,py]=toMap(player.pos.x,player.pos.z);g.save();g.translate(px,py);g.rotate(Math.atan2(-Math.cos(player.yaw),-Math.sin(player.yaw)));
   g.fillStyle='#f0e0c0';g.beginPath();g.moveTo(7,0);g.lineTo(-4,-4.5);g.lineTo(-4,4.5);g.closePath();g.fill();g.restore();
 }
-function updateHUD(dt){
+function updateHUD(dt){updateBossBar();
   const bar=(id,v)=>$(id).firstElementChild.style.width=(clamp(v,0,1)*100)+'%';
   bar('hp',player.hp/player.maxHp);bar('st',player.stamina/100);bar('mana',player.mana/player.maxMana);bar('ovl',player.ovl/player.maxOvl);
   $('hpTxt').textContent=Math.ceil(Math.max(0,player.hp))+' / '+player.maxHp;$('manaTxt').textContent=Math.floor(player.mana);$('ovlTxt').textContent=Math.floor(player.ovl/player.maxOvl*100)+'%';
@@ -54547,6 +54580,8 @@ function openRunes(){
 $('runeDone').onclick=()=>{$('runes').classList.remove('show');resumeGame();};
 
 // ============================================================ 开始 / 结束
+function updateBossBar(){let b=null;for(const e of enemies)if(e.alive&&e.boss&&e.g.position.distanceTo(player.pos)<32){b=e;break;}
+  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}
 // ============================================================ 局外：战舰整备甲板
 const hubScene=new THREE.Scene(), hubCam=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,0.1,300);
 window.__hubCam=hubCam;
@@ -54956,6 +54991,7 @@ function clientRecv(m){
   else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
   else if(m.t==='ann'){announce(m.text,m.dur);}
+  else if(m.t==='fx'&&m.k==='slam'){slamFx(m.x,m.z);}
   else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
   else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}
   else if(m.t==='fx'){if(m.k==='hole')spawnHoleVisual(m.p);else if(m.k==='beacon')beaconVisual(m.p);}

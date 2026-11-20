@@ -48,7 +48,7 @@ function drawMinimap(){
   const [px,py]=toMap(player.pos.x,player.pos.z);g.save();g.translate(px,py);g.rotate(Math.atan2(-Math.cos(player.yaw),-Math.sin(player.yaw)));
   g.fillStyle='#f0e0c0';g.beginPath();g.moveTo(7,0);g.lineTo(-4,-4.5);g.lineTo(-4,4.5);g.closePath();g.fill();g.restore();
 }
-function updateHUD(dt){
+function updateHUD(dt){updateBossBar();
   const bar=(id,v)=>$(id).firstElementChild.style.width=(clamp(v,0,1)*100)+'%';
   bar('hp',player.hp/player.maxHp);bar('st',player.stamina/100);bar('mana',player.mana/player.maxMana);bar('ovl',player.ovl/player.maxOvl);
   $('hpTxt').textContent=Math.ceil(Math.max(0,player.hp))+' / '+player.maxHp;$('manaTxt').textContent=Math.floor(player.mana);$('ovlTxt').textContent=Math.floor(player.ovl/player.maxOvl*100)+'%';
@@ -93,3 +93,5 @@ function openRunes(){
 $('runeDone').onclick=()=>{$('runes').classList.remove('show');resumeGame();};
 
 // ============================================================ 开始 / 结束
+function updateBossBar(){let b=null;for(const e of enemies)if(e.alive&&e.boss&&e.g.position.distanceTo(player.pos)<32){b=e;break;}
+  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}

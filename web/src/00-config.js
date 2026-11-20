@@ -5,8 +5,11 @@ const CFG={
   enemies:{
     imp:   {hp:60, speed:5.2,dmg:12,reach:1.7,scale:1.0,color:0x9a2a22},                 // 小恶魔
     brute: {hp:420,speed:3.0,dmg:30,reach:2.6,scale:1.7,color:0x5a1a3a},                 // 巨魔
+    lord:  {hp:2600,speed:3.4,dmg:38,reach:3.4,scale:2.6,color:0x3a0c0c,boss:true},     // Boss：深渊领主
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
+  // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
+  boss:{slamR:5,slamWind:0.9,slamCd:2.6,volley:5,volleyCd:3.8,summonEvery:14,summonN:3},
   spit:{speed:12,castTime:0.7,cooldown:[2.4,4.0],range:24,reflectMul:4},                 // 瘟火球
   guns:{
     bolter: {dmg:24, rate:7,  magSize:24,res0:120,reserveMax:192,reload:1.1,spread:.012},  // 爆弹枪

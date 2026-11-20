@@ -44,6 +44,10 @@ A.ev('enemies.forEach(e=>{if(e.alive){e.alive=false;scene.remove(e.g);}})');tick
 A.ev("player.pos.set(0,0,0);{const e=spawnEnemy('caster',40,34);e.cast=0;e.los=true;e.losT=999;}");B.ev('player.hp=100;player.blocking=false');
 let sawSpit=0,ctype=null;const hp1=100;for(let i=0;i<120;i++){tick(1);sawSpit=Math.max(sawSpit,B.ev('spits.length'));ctype=ctype||B.ev("enemies.some(e=>e.alive&&e.type==='caster')");}
 log('client sees caster type',ctype,'| client sees spit',sawSpit>0,'| client hp',hp1,'->',Math.round(B.ev('player.hp')));
+// 4c Boss 砸地打到队友
+A.ev('enemies.forEach(e=>{if(e.alive){e.alive=false;scene.remove(e.g);}})');tick(4);
+A.ev("{const e=spawnEnemy('lord',40,37);e.cd=0;}");B.ev('player.hp=100;player.pos.set(40,0,40)');tick(90);
+log('client sees boss',B.ev("enemies.some(e=>e.alive&&e.boss)"),'| client hp after slam',Math.round(B.ev('player.hp')));
 // 5 队友拾取线索、遗物 -> 房主结算 -> 同步回队友
 const ci=B.ev("interactables.find(i=>i.type==='clue'&&!i.used).idx");B.ev(`interact(interactables[${ci}])`);flush();
 B.ev("interact(interactables.find(i=>i.type==='relic'&&!i.used))");flush();tick(8);

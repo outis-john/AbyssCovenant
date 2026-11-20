@@ -7,7 +7,7 @@ function castLift(free=false){
   if(!free&&PSY.lift.cd>0){announce('锁喉冷却中',0.8);return;}
   if(isClient()){payPsy(30);PSY.lift.cd=PSY.lift.max;player.channelT=1.7;play('lift');sendNet({t:'cast',k:'lift'});if(player.ovl>=player.maxOvl)backlash();return;}
   const f=fwdFlat(),list=[];
-  for(const e of enemies){if(!e.alive||e.lifted)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<16&&to.normalize().dot(f)>Math.cos(0.66))list.push([d,e]);}
+  for(const e of enemies){if(!e.alive||e.lifted||e.boss)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<16&&to.normalize().dot(f)>Math.cos(0.66))list.push([d,e]);}
   list.sort((a,b)=>a[0]-b[0]);const targets=list.slice(0,cls==='tide'?10:6).map(x=>x[1]);
   // 扇形范围提示
   const fan=new THREE.Mesh(new THREE.CircleGeometry(16,20,Math.PI/2-0.66,1.32),new THREE.MeshBasicMaterial({color:0xa040ff,transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));
@@ -52,7 +52,7 @@ function updateHoles(dt){
   for(const H of holes){H.t+=dt;H.ring.rotation.z+=dt*6;H.halo.scale.setScalar(1+Math.sin(H.t*8)*.08);H.tick-=dt;const tick=H.tick<=0;if(tick)H.tick=0.25;
     if(Math.random()<0.7){const a=Math.random()*6.28,r=6;const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x8040c0}));m.position.set(H.P.x+Math.cos(a)*r,H.P.y+(Math.random()-.5)*2,H.P.z+Math.sin(a)*r);scene.add(m);
       sparks.push({m,v:H.P.clone().sub(m.position).multiplyScalar(2.2),life:.45});}
-    if(!H.visual)for(const e of enemies){if(!e.alive||e.lifted)continue;const to=H.P.clone().setY(0).sub(e.g.position.clone().setY(0));const d=to.length();
+    if(!H.visual)for(const e of enemies){if(!e.alive||e.lifted||e.boss)continue;const to=H.P.clone().setY(0).sub(e.g.position.clone().setY(0));const d=to.length();
       if(d>9){if(H.caught.has(e)){H.caught.delete(e);e.inHole=false;e.g.scale.setScalar(e.s0);e.g.position.y=0;}continue;}
       H.caught.add(e);e.inHole=true;const k=1-d/9;
       if(d>0.6)e.g.position.addScaledVector(to.normalize(),Math.min(d-0.5,(3+k*9)*dt));

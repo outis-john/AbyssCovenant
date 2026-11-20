@@ -30,6 +30,7 @@ function updateEnemies(dt){
       if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);}e.cd=1.1;}continue;}
     e.cd-=dt;
     if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
+    if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
     else{const sp=e.speed*(e.legsLost?0.5:1);e.g.position.addScaledVector(dir,sp*dt);e.walk+=dt*sp*2;
       e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;
@@ -98,3 +99,29 @@ function updateSpits(dt){
   spits=spits.filter(s=>!s.dead);
 }
 
+
+// ---------- Boss：深渊领主（房主判定；砸地特效用 fx 事件同步给队友）
+function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>e.maxHp*0.33?2:3;
+  if(ph>e.phase){e.phase=ph;annTeam(ph===2?'深渊领主怒吼——瘟火从它掌中涌出！':'深渊领主陷入狂暴！裂隙在它身边撕开……',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
+  const aL=e.parts.armL,aR=e.parts.armR;
+  if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy('imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
+  if(e.act){e.act.t-=dt;const A=e.act;
+    if(A.k==='slam'){const k=1-A.t/B.slamWind;aL.rotation.x=aR.rotation.x=-2.6*Math.min(1,k*1.3);e.parts.body.rotation.x=-0.3*k;
+      if(A.t<=0){aL.rotation.x=aR.rotation.x=0.4;e.parts.body.rotation.x=0.25;const P=e.g.position.clone().addScaledVector(to.clone().normalize(),1.5);slamFx(P.x,P.z);if(isHost())bcast({t:'fx',k:'slam',x:+P.x.toFixed(2),z:+P.z.toFixed(2)});
+        for(const t of targetsList())if(Math.hypot(t.pos.x-P.x,t.pos.z-P.z)<B.slamR){const n=e.dmg*(e.arms===0?0.5:1);if(t.remote)sendTo(t.remote.id,{t:'hurt',n,att:e.id});else hurtPlayer(n,false,e);}
+        e.act=null;e.cd=B.slamCd;e.stun=Math.min(e.stun,0.6);}}
+    else if(A.k==='volley'){aR.rotation.x=-1.6;if(A.t<=0){if(T){const o=e.g.position.clone().setY(3.2);const base=new THREE.Vector3(T.pos.x,(T.pos.y||0)+1.2,T.pos.z).sub(o).normalize();
+        for(let i=0;i<B.volley;i++){const ang=(i-(B.volley-1)/2)*0.16,c=Math.cos(ang),sn=Math.sin(ang);const v=new THREE.Vector3(base.x*c-base.z*sn,base.y,base.x*sn+base.z*c).multiplyScalar(CFG.spit.speed);
+          addSpit(o,v,CFG.enemies.caster.dmg*curThreat().dmg,e,false);if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});}play('spit');}
+      aR.rotation.x=0;e.act=null;e.vcd=B.volleyCd;}}
+    return true;}
+  e.vcd=(e.vcd??2)-dt;
+  if(dist<B.slamR-0.5&&e.cd<=0&&e.arms>0){e.act={k:'slam',t:B.slamWind};play('growl');play('charge');return true;}
+  if(ph>=2&&dist>6&&dist<26&&e.vcd<=0&&hasLOS(e,pp)){e.act={k:'volley',t:0.6};play('hiss');return true;}
+  if(dist<B.slamR-0.5)return true;   // 贴身时等冷却，不用普通挥击
+  return false;
+}
+function slamFx(x,z){const P=new THREE.Vector3(x,0.3,z);play('boom');for(let i=0;i<18;i++){const a=i/18*6.28;puff(new THREE.Vector3(x+Math.cos(a)*CFG.boss.slamR*.8,.3,z+Math.sin(a)*CFG.boss.slamR*.8),1,0x4a3a2a,1.2);}
+  embers(P,10);if(player.pos.distanceTo(P)<14)player.shake=Math.max(player.shake,0.5);}
+function bossDown(e){const p=e.g.position;annTeam('深渊领主倒下了！它的心脏化作一件灵能圣物。',3);
+  netDrop('rare',p.x,p.z);for(let k=0;k<4;k++)netDrop('relic',p.x+(Math.random()-.5)*4,p.z+(Math.random()-.5)*4);}

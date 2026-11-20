@@ -41,6 +41,7 @@ function setupMatch(){
   if(types.includes('cores'))for(let k=0;k<3;k++)spawnPickup('core',...cellPos(randomCell([[0,0]])));
   // 初始恶魔（只有房主 / 单人生成，队友从快照里拿）
   if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2)+curThreat().extra*(Math.random()<0.6?1:0);for(let q=0;q<k;q++)spawnEnemy('imp',...cellPos([i,j],5));if(i+j>=3&&Math.random()<0.4)spawnEnemy('caster',...cellPos([i,j],6));}
+  if(!isClient())spawnEnemy('lord',...cellPos([G-1,G-1],3));   // Boss 守在离空降点最远的房间
   if(!isClient())for(let q=0;q<2;q++)spawnEnemy('brute',...cellPos(randomCell([[0,0],[1,0],[0,1]]),4),true);
 }
 function nearestInteractable(){let best=null,bd=2.6;for(const it of interactables){if(it.used||it.type==='ritual'||it.type==='ammo')continue;const d=Math.hypot(it.x-player.pos.x,it.z-player.pos.z)-((it.type==='pod'||it.type==='terminal')?1.2:0);if(d<bd){bd=d;best=it;}}return best;}
