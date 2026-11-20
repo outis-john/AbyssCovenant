@@ -3,6 +3,7 @@ startTraining();step(3);const st=[training.step];const dm=enemies.filter(e=>e.al
 log('training started',state,'| dummies',dm.length,'| dummies stand still & harmless',dm[0].speed===0&&dm[0].dmg===0);
 damageEnemy(dm[0],999,'body',new THREE.Vector3(0,0,-1));step(3);st.push(training.step);
 switchWeapon(2);step(20);MS.combo=4;step(2);st.push(training.step);
+player.didHeavy=true;step(2);st.push(training.step);
 player.mana=999;castLift();step(2);st.push(training.step);
 castHole();step(2);st.push(training.step);
 const d=enemies.find(e=>e.alive&&e.dummy);d.g.position.set(0,0,-2);player.yaw=0;step(1);execute();step(2);st.push(training.step);

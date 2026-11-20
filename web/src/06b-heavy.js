@@ -36,7 +36,7 @@ function meleeRelease(){if(!hold.on)return;hold.on=false;if(hold.charged)heavyAt
 function updateHold(dt){if(!hold.on)return;if(cur!==2||activeGun()){hold.on=false;return;}hold.t+=dt;
   if(!hold.charged&&hold.t>=CFG.heavyHold&&MS.phase==='none'&&player.meleeCd<=0){hold.charged=true;play('charge');MS.step=HEAVY[WEAPONS[2].id];MS.phase='charge';swordOut=1.4;swing=1;}
   if(hold.charged){MS.t=0;const k=Math.min(1,hold.t/0.6);blendPose(POSE.rest,POSE.restPos,poseAt(0),posAt(0),0.6+0.4*k,1.25);sword.position.x+=(Math.random()-.5)*0.01*k;}}
-function heavyAttack(){const M=WEAPONS[2];const st=HEAVY[M.id];if(!st)return melee();
+function heavyAttack(){const M=WEAPONS[2];const st=HEAVY[M.id];if(!st)return melee();player.didHeavy=true;
   MS.step=st;MS.dir=stepDir();MS.counter=false;MS.phase='windup';MS.t=M.windup*0.6;MS.s=0;MS.hitDone=false;MS.combo=0;
   player.meleeCd=(M.windup+M.slash)*1.6+0.25;swordOut=1.4;swing=1;}
 // ---------- 重击效果（在挥到一半时调用）
