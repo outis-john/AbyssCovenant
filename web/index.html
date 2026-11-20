@@ -1088,13 +1088,25 @@ const HEAVY={
   saw:   {p:'h',dm:2.2,k:'spin',  name:'回旋锯斩'},
   power: {p:'a',dm:2.6,k:'line',  name:'裂地斩'},
   ssword:{p:'t',dm:0.8,k:'bash',  thrust:true,name:'盾击'},
-  hammer:{p:'a',dm:1.9,k:'quake', name:'雷霆砸地'},
-  fist:  {p:'t',dm:3.0,k:'crush', thrust:true,name:'捏碎'},
-  axe:   {p:'h',dm:2.4,k:'behead',name:'斩首'}};
+  hammer:{p:'hm3',dm:1.9,k:'quake', name:'雷霆砸地'},
+  fist:  {p:'f4',dm:3.0,k:'crush', thrust:true,name:'捏碎'},
+  axe:   {p:'x3',dm:2.4,k:'behead',name:'斩首'}};
+// 新武器自己的动作：幅度更大，彼此不同（锤：抡圆横扫 + 过顶砸；拳：直拳 / 勾拳 / 上勾；斧：过顶劈 / 反手上撩 / 整圈横斩）
+Object.assign(POSE,{
+  hm1:{start:[0.25,2.5,1.5],end:[0.05,-2.5,-1.3],ps:[.72,-.08,-.35],pe:[-.8,-.5,-.6]},
+  hm2:{start:[0.1,-2.4,-1.4],end:[0.3,2.4,1.3],ps:[-.7,-.45,-.4],pe:[.85,-.2,-.6]},
+  hm3:{start:[2.1,0.15,0.1],end:[-1.5,-0.1,0],ps:[.22,.38,-.3],pe:[0,-.85,-.8]},
+  f1:{start:[0.15,0.05,0.1],end:[-0.05,0,-0.35],ps:[.4,-.38,-.05],pe:[.08,-.18,-1.05]},
+  f2:{start:[0.1,1.1,0.2],end:[0,-1.0,-0.5],ps:[.7,-.3,-.4],pe:[-.5,-.22,-.8]},
+  f3:{start:[1.1,0.1,0],end:[-1.3,0,0],ps:[.25,-.95,-.25],pe:[.05,.3,-.85]},
+  f4:{start:[0.3,0.3,0.6],end:[-0.2,0,-0.2],ps:[.45,-.15,-.3],pe:[0,-.15,-1.2]},
+  x1:{start:[1.7,0.9,0.7],end:[-1.4,-0.7,-0.6],ps:[.55,.3,-.35],pe:[-.25,-.8,-.65]},
+  x2:{start:[-1.3,-1.5,-0.9],end:[1.2,1.4,1.1],ps:[-.42,-.65,-.45],pe:[.7,.12,-.6]},
+  x3:{start:[0.1,2.7,0.35],end:[0.1,-2.7,-0.35],ps:[.75,-.25,-.35],pe:[-.85,-.3,-.5]}});
 Object.assign(COMBOS,{
-  hammer:[{p:'a',dm:1,name:'横扫'},{p:'r',dm:1.1,name:'回扫'},{p:'u',dm:1.5,fin:true,name:'上撩'}],
-  fist:[{p:'t',dm:.8,thrust:true,name:'刺拳'},{p:'t',dm:1,thrust:true,name:'直拳'},{p:'u',dm:1.6,fin:true,name:'上勾拳'}],
-  axe:[{p:'a',dm:1,name:'斜劈'},{p:'r',dm:1.1,name:'回劈'},{p:'h',dm:1.3,bite:true,biteDur:.4,name:'锯入'}]});
+  hammer:[{p:'hm1',dm:1,name:'抡圆横扫'},{p:'hm2',dm:1.1,name:'回身横扫'},{p:'hm3',dm:1.6,fin:true,name:'过顶重砸'}],
+  fist:[{p:'f1',dm:.8,thrust:true,name:'直拳'},{p:'f2',dm:1.1,name:'勾拳'},{p:'f3',dm:1.6,fin:true,name:'上勾拳'}],
+  axe:[{p:'x1',dm:1,name:'过顶劈'},{p:'x2',dm:1.1,name:'反手上撩'},{p:'x3',dm:1.4,bite:true,biteDur:.35,name:'回旋锯斩'}]});
 // ---------- 模型
 const hammerG=new THREE.Group();view.add(hammerG);hammerG.visible=false;
 {const hd=new THREE.Mesh(new THREE.BoxGeometry(.36,.26,.26),new THREE.MeshLambertMaterial({map:texMetal,color:0x8a8a9a}));hd.position.z=-.95;hammerG.add(hd);
@@ -1107,10 +1119,14 @@ const fistG=new THREE.Group();view.add(fistG);fistG.visible=false;
  const glow=new THREE.Mesh(new THREE.BoxGeometry(.32,.04,.44),powMat);glow.position.set(0,-.16,-.3);fistG.add(glow);
  const cuff=new THREE.Mesh(new THREE.BoxGeometry(.24,.24,.2),new THREE.MeshLambertMaterial({color:0xb8952e}));cuff.position.z=-.02;fistG.add(cuff);}
 const axeG=new THREE.Group();view.add(axeG);axeG.visible=false;
-{const h=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,1.05),new THREE.MeshLambertMaterial({color:0x2a1a12}));h.position.z=-.45;axeG.add(h);
- const b=new THREE.Mesh(new THREE.BoxGeometry(.05,.4,.34),new THREE.MeshLambertMaterial({map:texMetal,color:0xa09080}));b.position.set(0,.16,-.88);axeG.add(b);
- const e=new THREE.Mesh(new THREE.BoxGeometry(.06,.05,.36),chainMat);e.position.set(0,.37,-.88);axeG.add(e);
- const eng=new THREE.Mesh(new THREE.BoxGeometry(.14,.16,.18),gunDark);eng.position.set(0,0,-.7);axeG.add(eng);}
+{const steel=new THREE.MeshLambertMaterial({map:texMetal,color:0xb8b0a0}),dark=new THREE.MeshLambertMaterial({color:0x2a1a12}),gold=new THREE.MeshLambertMaterial({color:0xb8952e,emissive:0x1a1000});
+ const add=(w,h,d,x,y,z,m,rx=0)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);b.rotation.x=rx;axeG.add(b);return b;};
+ add(.06,.06,1.15,0,0,-.42,dark);for(const z of [-.05,-.2,.1])add(.075,.075,.04,0,0,z,gold);           // 握柄 + 缠金箍
+ add(.16,.18,.2,0,0,-.86,gunDark);add(.04,.04,.12,.09,.06,-.82,gunMat);                              // 中央锯链引擎
+ for(const sy of [1,-1]){                                                                             // 两面月牙斧刃
+   add(.05,.16,.3,0,sy*.17,-.86,steel);add(.045,.14,.42,0,sy*.31,-.86,steel);add(.04,.1,.52,0,sy*.42,-.86,steel);
+   add(.05,.04,.56,0,sy*.49,-.86,chainMat);add(.05,.12,.04,0,sy*.44,-.6,chainMat,sy*.5);add(.05,.12,.04,0,sy*.44,-1.12,chainMat,-sy*.5);}
+ add(.05,.05,.28,0,0,-1.1,steel);add(.03,.03,.1,0,0,-1.27,gold);}                                     // 顶部尖刺
 Object.assign(MELEE_GROUP,{hammer:hammerG,fist:fistG,axe:axeG});
 applyLoadout();
 // ---------- 输入：按下开始计时；短按 = 轻攻击，按住超过 heavyHold 秒 = 蓄力重击
