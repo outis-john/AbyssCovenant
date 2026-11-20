@@ -33,9 +33,9 @@
   #progress{position:fixed;top:64%;left:50%;width:240px;margin-left:-120px;display:none}
   .panel{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,2,2,.86);pointer-events:auto}
   .panel.show{display:flex}
-  #shop .up{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0}#shop .up button{min-width:96px;padding:4px 8px;font-size:12px}#shop button:disabled{opacity:.4;cursor:default}
-  #shop .lv{color:#ffd23a;font-size:10px;letter-spacing:1px}.ths{display:flex;gap:6px}.ths .th{flex:1;padding:6px 4px;font-size:12px}.ths .th small{display:block;color:#a8977c}.ths .th.sel{outline:2px solid #ffd23a}
-  .am{display:block;margin-top:8px;font-size:12px;color:#d8c8a8}
+  #shop h3{margin:0 0 8px;color:var(--gold);font-size:15px;font-weight:normal;letter-spacing:3px}#shop .up{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #2a1e16;font-size:13px}#shop .up:last-child{border:0}#shop .up .small{font-size:11px}#shop .up button{min-width:84px;padding:5px 8px;font-size:12px;margin:0}#shop button:disabled{opacity:.4;cursor:default}
+  #shop .lv{color:#ffd23a;font-size:10px;letter-spacing:1px}.ths{display:flex;gap:6px;justify-content:center}.ths .th{flex:1;max-width:150px;padding:6px 4px;font-size:12px;margin:0;pointer-events:auto}#deployOpts .lbl{font-size:12px;color:var(--mute);letter-spacing:3px;margin-bottom:6px}.ths .th small{display:block;color:#a8977c}.ths .th.sel{outline:2px solid #ffd23a}
+  .am{display:block;margin-top:8px;font-size:12px;color:#d8c8a8;pointer-events:auto}
   #settings{z-index:60}.setrow{display:grid;grid-template-columns:1fr 180px 56px;gap:12px;align-items:center;margin:10px 0;color:#d8c8a8}.setrow b{color:#ffd23a;text-align:right}
   #help{position:fixed;right:16px;top:16px;display:none;z-index:55;background:rgba(10,5,4,.88);border:1px solid #6b4a2a;padding:12px 16px;pointer-events:none;color:#d8c8a8;font-size:13px;max-width:420px}
   #help.show{display:block}.hk{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:3px 0}.hk b{color:#ffd23a}
@@ -61,30 +61,41 @@
   #mapWrap.big #minimap{width:400px;height:400px}
   #splat{background:radial-gradient(circle at 30% 40%,rgba(120,0,0,.8) 0 3%,transparent 4%),radial-gradient(circle at 70% 30%,rgba(120,0,0,.7) 0 2%,transparent 3%),radial-gradient(circle at 60% 70%,rgba(110,0,0,.8) 0 4%,transparent 5%),radial-gradient(circle at 20% 75%,rgba(120,0,0,.6) 0 2%,transparent 3%),radial-gradient(ellipse at center,transparent 50%,rgba(100,0,0,.5) 100%);opacity:0}
   body.inhub #mapWrap,body.inhub #hud-bl,body.inhub #hud-br,body.inhub #obj,body.inhub #cross,body.inhub #prompt,body.inhub #vignette{display:none}
-  #hub{position:fixed;inset:0;pointer-events:none;display:none}
+  #hub{position:fixed;inset:0;pointer-events:none;display:none;--gold:#d8a657;--ink:#f0dcb8;--mute:#a8977c;--pnl:rgba(12,7,6,.84);--line:#3a2a1e}
   #hub.show{display:block}
-  #hub .left{position:absolute;left:32px;top:28px;width:300px;pointer-events:auto}
-  #hub .right{position:absolute;right:32px;top:28px;width:320px;pointer-events:auto}
-  #hub .bottom{position:absolute;left:0;right:0;bottom:36px;text-align:center;pointer-events:none}
-  #hub .title{font-size:30px;letter-spacing:8px;color:#d8a657;text-shadow:0 0 12px #000}
-  #hub .sub{font-size:13px;color:#a8977c;margin:4px 0 22px;letter-spacing:2px}
-  .card{border:1px solid #4a3324;background:rgba(10,6,5,.78);padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
-  .lo{display:flex;gap:6px}.opt{flex:1;border:1px solid #4a3324;background:rgba(10,6,5,.78);padding:7px 4px;font-size:13px;text-align:center;cursor:pointer;color:#cbb89a}
-  .opt:hover{border-color:#8a5a32}.opt.sel{border-color:#d8a657;color:#f0dcb8;box-shadow:0 0 10px rgba(216,166,87,.3)}
-  .card:hover{border-color:#8a5a32}.card.sel{border-color:#d8a657;box-shadow:0 0 14px rgba(216,166,87,.35)}
-  .card b{font-size:17px;color:#f0dcb8}.card div{font-size:12px;color:#a8977c;margin-top:3px}
+  #hub .pnl{background:var(--pnl);border:1px solid var(--line);border-top:2px solid var(--gold);padding:14px 16px;pointer-events:auto;backdrop-filter:blur(2px)}
+  #hub h4{margin:14px 0 6px;font-size:12px;font-weight:normal;color:var(--mute);letter-spacing:3px}#hub h4:first-child{margin-top:0}
+  #hub .hbar{position:absolute;left:28px;right:28px;top:20px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+  #hub .hbar-r{display:flex;align-items:center;gap:8px;pointer-events:auto}
+  #hub .title{font-size:30px;letter-spacing:8px;color:var(--gold);text-shadow:0 0 12px #000;line-height:1.1}
+  #hub .sub{font-size:12px;color:var(--mute);margin-top:4px;letter-spacing:2px;text-shadow:0 0 6px #000}
+  #vaultInfo{display:flex;gap:6px;font-size:13px;color:var(--mute)}#vaultInfo span{background:var(--pnl);border:1px solid var(--line);padding:7px 12px}#vaultInfo b{color:var(--ink);margin-left:4px}
+  #hub button.ghost{margin:0;padding:7px 14px;font-size:13px;background:var(--pnl);border-color:var(--line);color:var(--mute)}#hub button.ghost:hover{color:var(--ink);border-color:var(--gold)}
+  #hub .left{position:absolute;left:28px;top:96px;width:300px;max-height:calc(100vh - 290px);overflow:auto}
+  #hub .right{position:absolute;right:28px;top:96px;width:300px;max-height:calc(100vh - 290px);overflow:auto}
+  #hub .bottom{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;pointer-events:none}
+  .clsrow{display:flex;gap:6px}.card{flex:1;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:9px 10px;cursor:pointer;transition:border-color .15s}
+  .card:hover{border-color:#8a5a32}.card.sel{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+  .card b{font-size:15px;color:var(--ink)}.card div{font-size:11px;color:var(--mute);margin-top:2px}
+  #clsInfo{font-size:12px;line-height:1.55;color:#cbb89a;margin-top:10px}#clsInfo h3{display:none}#clsInfo .small{margin-top:6px}
+  .lo{display:flex;gap:4px}.opt{flex:1;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:7px 2px;font-size:13px;text-align:center;cursor:pointer;color:#cbb89a}
+  .opt:hover{border-color:#8a5a32}.opt.sel{border-color:var(--gold);color:var(--ink);background:rgba(216,166,87,.12)}
+  #loDesc{margin-top:10px;line-height:1.55;color:#a8977c}#hub .dim{margin-top:8px;color:#6e6458}
   .info{border:1px solid #4a3324;background:rgba(10,6,5,.78);padding:14px 16px;margin-bottom:10px;font-size:13px;line-height:1.6}
-  .info h3{margin:0 0 6px;color:#d8a657;font-size:16px}
-  .stat{display:flex;align-items:center;gap:8px;margin:3px 0}.stat span{width:72px;color:#a8977c}.stat i{flex:1;height:7px;background:#2a1b14;position:relative}
-  .stat i b{position:absolute;left:0;top:0;bottom:0;background:#d8a657}
-  #goBtn{pointer-events:auto;font-size:20px;padding:14px 56px;letter-spacing:6px;background:#5a1d12;border-color:#d8a657}
-  #goBtn:hover{background:#7a2a18}
+  .info h3{margin:0 0 6px;color:var(--gold);font-size:16px}
+  .stat{display:flex;align-items:center;gap:8px;margin:3px 0}.stat span{width:64px;color:var(--mute)}.stat i{flex:1;height:5px;background:#2a1b14;position:relative}
+  .stat i b{position:absolute;left:0;top:0;bottom:0;background:var(--gold)}
+  .deploy{width:clamp(440px,calc(100vw - 800px),680px);text-align:center;padding:12px 18px 10px}
+  .drow{display:flex;gap:12px;align-items:stretch;justify-content:center;margin-top:10px;flex-wrap:wrap}
+  #goBtn{pointer-events:auto;font-size:19px;padding:12px 44px;letter-spacing:6px;background:#6a2214;border-color:var(--gold);color:#fff0d8;margin:0}
+  #goBtn:hover{background:#86301c}
+  .mp{display:flex;gap:0;align-items:stretch}.mp button,.mp input{margin:0}
   .hint{font-size:12px;color:#7a6f62;margin-top:8px}
   #letterbox{position:fixed;inset:0;display:none;pointer-events:auto;cursor:pointer}#letterbox.show{display:block}
   .lb{position:absolute;left:0;right:0;height:11vh;background:#000}.lb.top{top:0}.lb.bot{bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0 40px;box-sizing:border-box}
   #cutCap{font-size:20px;letter-spacing:6px;color:#d8a657}.skip{font-size:12px;color:#5a4f42}
-  #hub .bottom .nb,#joinCode{pointer-events:auto;font-size:16px;padding:12px 18px}
-  #joinCode{width:90px;background:#1d110d;color:#f0dcb8;border:1px solid #6b4a2a;text-transform:uppercase;letter-spacing:3px;margin:0 4px 0 12px;font:inherit;font-size:16px}
+  #hub .bottom .nb,#joinCode{pointer-events:auto;font-size:14px;padding:10px 14px}
+  #joinCode{width:92px;background:#1d110d;color:#f0dcb8;border:1px solid #6b4a2a;border-left:0;border-right:0;text-transform:uppercase;letter-spacing:3px;margin:0;font:inherit;font-size:14px}
   #lobby{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);width:560px;padding:16px 20px;background:rgba(10,6,5,.92);border:1px solid #6b4a2a;text-align:center;display:none;pointer-events:auto}
   #lobby.show{display:block}#lobby .lt{color:#d8a657;font-size:18px;letter-spacing:4px;margin-bottom:6px}#lobbyCode{font-size:26px;letter-spacing:6px;color:#f0c674}
   #matching{position:fixed;left:0;right:0;bottom:120px;text-align:center;display:none;pointer-events:auto}
@@ -131,23 +142,29 @@
 <div id="letterbox"><div class="lb top"></div><div class="lb bot"><span id="cutCap"></span><span class="skip">点击 / 空格 跳过</span></div></div>
 <div class="layer" id="fade" style="background:#000;opacity:0"></div>
 <div id="hub" class="show">
-  <div class="left">
-    <div class="title">深渊圣约</div>
-    <div class="sub">战舰「永夜誓约号」· 整备甲板</div>
-    <div class="card" data-cls="tide"><b>唤潮者</b><div>灵能者 · 以深渊之力为武器</div></div>
-    <div class="card" data-cls="ward"><b>铸甲卫士</b><div>基因改造战士 · 重甲与爆弹步枪</div></div>
-    <div class="sub" style="margin:16px 0 6px">主武器</div><div class="lo" id="loPrimary"></div>
-    <div class="sub" style="margin:12px 0 6px">近战武器</div><div class="lo" id="loMelee"></div>
-    <div class="info small" id="loDesc" style="margin-top:8px"></div>
-    <div class="small">副武器：爆弹手枪（无限备弹）· 拖动角色可旋转查看</div>
+  <header class="hbar">
+    <div><div class="title">深渊圣约</div><div class="sub">战舰「永夜誓约号」· 整备甲板</div></div>
+    <div class="hbar-r"><div id="vaultInfo"></div><button id="trainBtn" class="ghost">训练场</button><button id="setBtn" class="ghost">设置</button></div>
+  </header>
+  <section class="left pnl">
+    <h4>职业</h4>
+    <div class="clsrow"><div class="card" data-cls="tide"><b>唤潮者</b><div>灵能者</div></div><div class="card" data-cls="ward"><b>铸甲卫士</b><div>重甲战士</div></div></div>
+    <div id="clsInfo"></div>
+    <h4>主武器</h4><div class="lo" id="loPrimary"></div>
+    <h4>近战武器</h4><div class="lo" id="loMelee"></div>
+    <div class="small" id="loDesc"></div>
+    <div class="small dim">副武器：爆弹手枪（无限备弹）· 拖动角色旋转查看</div>
+  </section>
+  <section class="right pnl"><div id="shop"></div></section>
+  <div class="bottom">
+    <div class="deploy pnl">
+      <div id="deployOpts"></div>
+      <div class="drow"><button id="goBtn">单人行动</button>
+        <div class="mp"><button id="hostBtn" class="nb">创建房间</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入</button></div></div>
+      <div class="hint">撤离方式未知 · 阵亡会丢失身上的一切 · 按 H 查看按键</div>
+    </div>
   </div>
-  <div class="right">
-    <div class="info" id="clsInfo"></div>
-    <div class="info" id="vaultInfo"></div>
-    <div class="info" id="shop"></div>
-    <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击（近战可连招）· R 换弹<br>右键：链锯蓄力狂热 / 力场剑分解力场 / 热熔蓄力 / 剑盾切换剑与手枪<br>E 举盾格挡（剑盾，时机准可防反）<br>X 处决（需充满）· F 拾取 / 互动<br>V 锁喉提摔 · G 黑洞 · Q 子弹时间<br>C 符文技能 · Tab 符文拼装 · B 回收装置 · M 地图 · Esc 暂停</div>
-  </div>
-  <div class="bottom"><button id="goBtn">单人行动</button><button id="hostBtn" class="nb">创建房间</button><button id="trainBtn" class="nb">训练场</button><button id="setBtn" class="nb">设置</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入房间</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>
+</div>
 </div>
 <div id="lobby"><div class="lt">联机房间</div><div>房间码 <b id="lobbyCode">—</b></div><div class="slots" id="lobbyList"></div>
   <div id="netMsg" class="hint"></div><button id="lobbyStart">开始行动</button><button id="lobbyLeave">离开房间</button></div>
@@ -1654,7 +1671,7 @@ document.querySelectorAll('.card').forEach(el=>el.onclick=()=>{initAudio();selec
 // 战舰仓库（保存在这个浏览器里）
 function loadVault(){try{return JSON.parse(localStorage.getItem('abyss_vault'))||{loot:0,rare:0,runs:0,extracted:0};}catch(e){return{loot:0,rare:0,runs:0,extracted:0};}}
 function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));}catch(e){}}
-function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<h3>战舰仓库</h3>物资：<b>${v.loot}</b> 件 · 灵能圣物：<b style="color:#d040ff">${v.rare}</b><br><span class="small">出击 ${v.runs} 次 · 成功撤离 ${v.extracted} 次</span>`;}
+function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>物资<b>${v.loot}</b></span><span>圣物<b style="color:#d070ff">${v.rare}</b></span><span title="出击 / 成功撤离">战绩<b>${v.extracted}/${v.runs}</b></span>`;}
 function renderLoadout(){
   const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
   mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
@@ -1720,9 +1737,9 @@ function renderShop(){const v=loadVault();v.up=v.up||{};
     return `<div class="up"><div><b>${u.name}</b> <span class="lv">${'■'.repeat(lv)}${'□'.repeat(u.max-lv)}</span><div class="small">${u.desc}</div></div><button data-up="${u.id}" ${can?'':'disabled'}>${price}</button></div>`;}).join('');
   const th=CFG.threat.slice(1).map((t,i)=>`<button class="th ${loadout.threat===i+1?'sel':''}" data-th="${i+1}">${t.name}<small>物资 ×${t.loot}</small></button>`).join('');
   const am=v.rare>0?`<label class="am"><input type="checkbox" id="amulet" ${loadout.amulet?'checked':''}> 佩戴圣物护符出击（生命 +${CFG.amulet.hp}，伤害 +${Math.round((CFG.amulet.dmg-1)*100)}%；<b style="color:#e05a4a">阵亡会失去 1 件圣物</b>）</label>`:'<div class="small">拥有灵能圣物后可以佩戴圣物护符出击。</div>';
-  $('shop').innerHTML=`<h3>战舰工坊</h3>${rows}<div class="sub" style="margin:10px 0 4px">威胁等级</div><div class="ths">${th}</div>${am}`;
+  $('shop').innerHTML=`<h3>战舰工坊</h3>${rows}`;$('deployOpts').innerHTML=`<div class="lbl">威胁等级</div><div class="ths">${th}</div>${am}`;
   $('shop').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>buyUpgrade(b.dataset.up));
-  $('shop').querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{loadout.threat=+b.dataset.th;saveLoadout();renderShop();play('equip');});
+  $('deployOpts').querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{loadout.threat=+b.dataset.th;saveLoadout();renderShop();play('equip');});
   const a=$('amulet');if(a)a.onchange=()=>{loadout.amulet=a.checked;saveLoadout();play('equip');};}
 function buyUpgrade(id){const v=loadVault();v.up=v.up||{};const u=CFG.upgrades.find(x=>x.id===id),lv=v.up[id]||0;if(lv>=u.max)return;
   const c=u.cost[lv],r=u.rare?u.rare[lv]:0;if(v.loot<c||v.rare<r)return;v.loot-=c;v.rare-=r;v.up[id]=lv+1;saveVault(v);play('pickup');showVault();renderShop();applyLoadout();}

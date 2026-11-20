@@ -113,7 +113,7 @@ document.querySelectorAll('.card').forEach(el=>el.onclick=()=>{initAudio();selec
 // 战舰仓库（保存在这个浏览器里）
 function loadVault(){try{return JSON.parse(localStorage.getItem('abyss_vault'))||{loot:0,rare:0,runs:0,extracted:0};}catch(e){return{loot:0,rare:0,runs:0,extracted:0};}}
 function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));}catch(e){}}
-function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<h3>战舰仓库</h3>物资：<b>${v.loot}</b> 件 · 灵能圣物：<b style="color:#d040ff">${v.rare}</b><br><span class="small">出击 ${v.runs} 次 · 成功撤离 ${v.extracted} 次</span>`;}
+function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>物资<b>${v.loot}</b></span><span>圣物<b style="color:#d070ff">${v.rare}</b></span><span title="出击 / 成功撤离">战绩<b>${v.extracted}/${v.runs}</b></span>`;}
 function renderLoadout(){
   const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
   mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
