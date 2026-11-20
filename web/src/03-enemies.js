@@ -1,6 +1,6 @@
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
-const ETYPES=['imp','brute','caster','lord'];
+const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
@@ -24,6 +24,7 @@ function spawnEnemy(type,x,z,elite=false){
   const TH=curThreat(),hp=T.hp*(elite?1.6:1)*TH.hp;
   const e={id:++enemySeq,remote:false,type,g,mat:flesh,parts:{body,head,armL,armR,legL,legR},hp,maxHp:hp,armHp:{armL:hp*.3,armR:hp*.3},arms:2,kv:new THREE.Vector3(),lean:0,headSnap:0,
     s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1)*TH.dmg,reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,boss:!!T.boss,phase:1,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
+  if(typeof ENEMY_BUILD!=='undefined'&&ENEMY_BUILD[type])ENEMY_BUILD[type](e);
   for(const p of Object.values(e.parts))p.userData.enemy=e;
   head.children.forEach(c=>c.userData.enemy=e);
   enemies.push(e);return e;
@@ -37,6 +38,7 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   const head=part==='head';if(head)dmg*=2;
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
   if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
+  if(e.shieldHp>0&&dir&&!opts._noShield)dmg=shieldBlock(e,dmg,dir,opts);
   e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9*res);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
@@ -55,6 +57,7 @@ function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m
 function killEnemy(e,dir,explode,how={}){
   if(isHost())bcast({t:'kill',id:e.id,dir,how});
   if(e.boss&&!isClient())bossDown(e);
+  if(e.type==='bloater')bloaterBurst(e);
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);
   try{

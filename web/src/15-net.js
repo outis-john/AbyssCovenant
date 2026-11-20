@@ -114,7 +114,7 @@ function hostRecv(id,m){
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
-    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
+    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat,bi:curBiome});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
     return;}
   if(!r)return;
   if(m.t==='state'){r.tp.set(m.x,m.y,m.z);r.yaw=m.yaw;r.pitch=m.pitch;r.hp=m.hp;r.maxHp=m.maxHp;r.dead=m.dead;r.inMatch=true;if(!r.pos.lengthSq())r.pos.copy(r.tp);}
@@ -136,7 +136,7 @@ function checkWipe(){if(!isHost()||!net.inMatch)return;const meAlive=player.hp>0
 // ---------- 队友收到消息
 function clientRecv(m){
   if(m.t==='lobby'){net.lobby=m.list;renderLobby();}
-  else if(m.t==='start'){pendingThreat=m.th||1;beginNetMatch(m.seed,m.mid);}
+  else if(m.t==='start'){pendingThreat=m.th||1;pendingBiome=m.bi||null;beginNetMatch(m.seed,m.mid);}
   else if(m.t==='snap'){applySnapshot(m);}
   else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
@@ -149,14 +149,14 @@ function clientRecv(m){
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}
 }
 // ---------- 开局
-$('lobbyStart').onclick=()=>{if(!isHost())return;initAudio();actx.resume?.();net.inMatch=true;const s=Math.floor(Math.random()*1e9);pendingThreat=loadout.threat||1;bcast({t:'start',seed:s,th:pendingThreat});beginNetMatch(s,false);};
+$('lobbyStart').onclick=()=>{if(!isHost())return;initAudio();actx.resume?.();net.inMatch=true;const s=Math.floor(Math.random()*1e9);pendingThreat=loadout.threat||1;pendingBiome=null;seed=s;pendingBiome=pickBiome();bcast({t:'start',seed:s,th:pendingThreat,bi:pendingBiome});beginNetMatch(s,false);};
 function beginNetMatch(s,mid){initAudio();net.inMatch=true;$('lobby').classList.remove('show');$('hub').classList.remove('show');$('matching').classList.remove('show');
   for(const r of net.remotes.values()){if(r.model)scene.remove(r.model);r.model=null;r.dead=false;}
   prepareMatch(s);startCutscene();}
 // ---------- 快照
 function buildSnapshot(){
   const en=[];for(const e of enemies){if(!e.alive)continue;const p=e.g.position;
-    en.push([e.id,ETYPES.indexOf(e.type),e.elite?1:0,+p.x.toFixed(2),+p.z.toFixed(2),+e.g.rotation.y.toFixed(2),+p.y.toFixed(2),Math.round(e.hp),Math.round(e.maxHp),(e.parts.armL.parent!==e.g?1:0)|(e.parts.armR.parent!==e.g?2:0),+(e.g.scale.x/e.s0).toFixed(2),+(e.g.scale.y/e.s0).toFixed(2),e.stagger>0||e.stun>0?1:0]);}
+    en.push([e.id,ETYPES.indexOf(e.type),e.elite?1:0,+p.x.toFixed(2),+p.z.toFixed(2),+e.g.rotation.y.toFixed(2),+p.y.toFixed(2),Math.round(e.hp),Math.round(e.maxHp),(e.parts.armL.parent!==e.g?1:0)|(e.parts.armR.parent!==e.g?2:0)|(e.shieldM&&!(e.shieldHp>0)?4:0),+(e.g.scale.x/e.s0).toFixed(2),+(e.g.scale.y/e.s0).toFixed(2),e.stagger>0||e.stun>0?1:0]);}
   const pl=[[net.myId,+player.pos.x.toFixed(2),+player.pos.y.toFixed(2),+player.pos.z.toFixed(2),+player.yaw.toFixed(2),Math.round(player.hp),player.maxHp,(player.hp<=0||state==='spectate'||state==='dying')?1:0,cls]];
   for(const r of net.remotes.values())if(r.inMatch)pl.push([r.id,+r.pos.x.toFixed(2),+r.pos.y.toFixed(2),+r.pos.z.toFixed(2),+r.yaw.toFixed(2),r.hp,r.maxHp,r.dead?1:0,r.cls]);
   const used=[];interactables.forEach((it,i)=>{if(it.used)used.push(i);});
@@ -169,6 +169,7 @@ function applySnapshot(s){
     if(!e){e=spawnEnemy(ETYPES[ty]||'imp',x,z,!!el);e.id=id;e.remote=true;}
     if(!e.alive)continue;e.tx=x;e.tz=z;e.ty=y;e.try=ry;e.hp=hp;e.maxHp=mhp;e.netStag=stg;
     if((arms&1)&&e.parts.armL.parent===e.g){detach(e,'armL',null);e.arms--;e.armHp.armL=Infinity;}
+    if((arms&4)&&e.shieldHp>0)breakShield(e);
     if((arms&2)&&e.parts.armR.parent===e.g){detach(e,'armR',null);e.arms--;e.armHp.armR=Infinity;}
     e.g.scale.set(e.s0*sx,e.s0*sy,e.s0*sx);}
   for(const e of enemies){if(!e.alive||seen.has(e.id))continue;const n=(net.missing.get(e.id)||0)+1;net.missing.set(e.id,n);if(n>=3){e.alive=false;scene.remove(e.g);}}

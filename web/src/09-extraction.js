@@ -40,7 +40,7 @@ function setupMatch(){
   if(types.includes('ritual')){const c=randomCell(used);used.push(c);spawnPickup('ritual',c[0]*C,c[1]*C);}
   if(types.includes('cores'))for(let k=0;k<3;k++)spawnPickup('core',...cellPos(randomCell([[0,0]])));
   // 初始恶魔（只有房主 / 单人生成，队友从快照里拿）
-  if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2)+curThreat().extra*(Math.random()<0.6?1:0);for(let q=0;q<k;q++)spawnEnemy('imp',...cellPos([i,j],5));if(i+j>=3&&Math.random()<0.4)spawnEnemy('caster',...cellPos([i,j],6));}
+  if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2)+curThreat().extra*(Math.random()<0.6?1:0);for(let q=0;q<k;q++)spawnEnemy(i+j>=2?pickEnemy(true):'imp',...cellPos([i,j],5));}
   if(!isClient())spawnEnemy('lord',...cellPos([G-1,G-1],3));   // Boss 守在离空降点最远的房间
   if(!isClient())for(let q=0;q<2;q++)spawnEnemy('brute',...cellPos(randomCell([[0,0],[1,0],[0,1]]),4),true);
 }
@@ -92,7 +92,7 @@ function spawnWave(n,near){
   const [pi,pj]=cellOf(player.pos);const d=bfs(pi,pj);
   const cand=[];for(let i=0;i<G;i++)for(let j=0;j<G;j++)if(d[i][j]>=1&&d[i][j]<=(near?1:2))cand.push([i,j]);
   if(!cand.length)cand.push([pi,pj]);
-  for(let k=0;k<n;k++){const c=cand[Math.floor(Math.random()*cand.length)];{const r=Math.random();spawnEnemy(r<CFG.wave.bruteChance?'brute':r<CFG.wave.bruteChance+CFG.wave.casterChance?'caster':'imp',...cellPos(c,5),false);}}
+  for(let k=0;k<n;k++){const c=cand[Math.floor(Math.random()*cand.length)];{spawnEnemy(pickEnemy(false),...cellPos(c,5),false);}}
   play('growl');
 }
 

@@ -65,6 +65,7 @@ function buildLevel(){
   // 单元格之间的距离（找最远的房间放逃生舱）
   const d=bfs(0,0);let best=[0,0],bd=-1;for(let i=0;i<G;i++)for(let j=0;j<G;j++)if(d[i][j]>bd){bd=d[i][j];best=[i,j];}
   podCell=best;
+  biomeProps();applyBiome();
 }
 function bfs(si,sj){const d=[...Array(G)].map(()=>Array(G).fill(1e9));d[si][sj]=0;const q=[[si,sj]];
   while(q.length){const [i,j]=q.shift();for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=i+a,nj=j+b;if(ni<0||nj<0||ni>=G||nj>=G||!connected(i,j,ni,nj))continue;if(d[ni][nj]>d[i][j]+1){d[ni][nj]=d[i][j]+1;q.push([ni,nj]);}}}return d;}

@@ -6,6 +6,9 @@ const CFG={
     imp:   {hp:60, speed:5.2,dmg:12,reach:1.7,scale:1.0,color:0x9a2a22},                 // 小恶魔
     brute: {hp:420,speed:3.0,dmg:30,reach:2.6,scale:1.7,color:0x5a1a3a},                 // 巨魔
     lord:  {hp:2600,speed:3.4,dmg:38,reach:3.4,scale:2.6,color:0x3a0c0c,boss:true},     // Boss：深渊领主
+    bloater:{hp:70, speed:3.2,dmg:34,reach:2.2,scale:1.05,color:0x6a7a2a},              // 腐爆者：靠近自爆，死亡也爆炸
+    hound: {hp:38, speed:8.5,dmg:10,reach:1.5,scale:.85,color:0x3a1a4a},                // 裂隙猎犬：飞快，会扑跳
+    bulwark:{hp:200,speed:2.7,dmg:22,reach:1.9,scale:1.25,color:0x7a6a5a,shield:320},  // 骨盾恶魔：正面骨盾挡枪（重击 / 爆炸破盾）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
@@ -32,6 +35,11 @@ const CFG={
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
+  // 地图区域：tint 颜色、雾、灯光、各种敌人的出现权重
+  biomes:{
+    hive:   {name:'巢都工厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x0b0504,fogD:.05, bg:0x070303,hemi:[0x5a3a40,0x100404],lamp:0xff7a30,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1}},
+    sanctum:{name:'地下圣堂',wall:0xfff0d8,floor:0xe8d8b8,ceil:0xc8b8a0,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3}},
+    frost:  {name:'冰封区',  wall:0x9ab8d8,floor:0xb8d0e8,ceil:0x8aa0b8,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2}}},
   // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
   threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
   // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物

@@ -31,6 +31,7 @@ function updateEnemies(dt){
     e.cd-=dt;
     if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
     if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
+    if(ENEMY_AI[e.type]&&ENEMY_AI[e.type](e,T,pp,to,dist,dt))continue;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
     else{const sp=e.speed*(e.legsLost?0.5:1);e.g.position.addScaledVector(dir,sp*dt);e.walk+=dt*sp*2;
       e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;

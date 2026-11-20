@@ -8,7 +8,9 @@ function renderShop(){const v=loadVault();v.up=v.up||{};
     return `<div class="up"><div><b>${u.name}</b> <span class="lv">${'■'.repeat(lv)}${'□'.repeat(u.max-lv)}</span><div class="small">${u.desc}</div></div><button data-up="${u.id}" ${can?'':'disabled'}>${price}</button></div>`;}).join('');
   const th=CFG.threat.slice(1).map((t,i)=>`<button class="th ${loadout.threat===i+1?'sel':''}" data-th="${i+1}">${t.name}<small>物资 ×${t.loot}</small></button>`).join('');
   const am=v.rare>0?`<label class="am"><input type="checkbox" id="amulet" ${loadout.amulet?'checked':''}> 佩戴圣物护符出击（生命 +${CFG.amulet.hp}，伤害 +${Math.round((CFG.amulet.dmg-1)*100)}%；<b style="color:#e05a4a">阵亡会失去 1 件圣物</b>）</label>`:'<div class="small">拥有灵能圣物后可以佩戴圣物护符出击。</div>';
-  $('shop').innerHTML=`<h3>战舰工坊</h3>${rows}`;$('deployOpts').innerHTML=`<div class="lbl">威胁等级</div><div class="ths">${th}</div>${am}`;
+  $('shop').innerHTML=`<h3>战舰工坊</h3>${rows}`;const bi=[['random','随机区域']].concat(Object.entries(CFG.biomes).map(([k,b])=>[k,b.name])).map(([k,n])=>`<button class="th ${(loadout.biome||'random')===k?'sel':''}" data-bi="${k}">${n}</button>`).join('');
+  $('deployOpts').innerHTML=`<div class="ths" style="margin-bottom:6px">${bi}</div><div class="lbl">威胁等级</div><div class="ths">${th}</div>${am}`;
+  $('deployOpts').querySelectorAll('[data-bi]').forEach(b=>b.onclick=()=>{loadout.biome=b.dataset.bi;saveLoadout();renderShop();play('equip');});
   $('shop').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>buyUpgrade(b.dataset.up));
   $('deployOpts').querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{loadout.threat=+b.dataset.th;saveLoadout();renderShop();play('equip');});
   const a=$('amulet');if(a)a.onchange=()=>{loadout.amulet=a.checked;saveLoadout();play('equip');};}

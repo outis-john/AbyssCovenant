@@ -22,7 +22,8 @@ for(const k in CLS){const c=CLS[k];CLS_INFO[k].stats=[['生命',c.hp,520],['枪�
 // ---------- 开局套用职业
 function applyClassStats(){const c=CLS[cls]||CLS.ward;
   Object.assign(player,{maxHp:c.hp,hp:c.hp,gunMul:c.gunMul,dmgTaken:c.dmgTaken,meleeMul:c.meleeMul,speedMul:c.speed,eye:c.eye||1.6,r:c.r||.45,zcd:0,stimT:0,auraT:0,dash:0});
-  if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}}
+  if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}
+  document.body.classList.toggle('nopsy',!c.psy);}
 function fixLoadoutForClass(){const c=CLS[cls];if(!c)return;
   if(c.guns&&!c.guns.includes(loadout.primary))loadout.primary=c.guns[0];if(c.melee&&!c.melee.includes(loadout.melee))loadout.melee=c.melee[0];}
 // ---------- Z 技能

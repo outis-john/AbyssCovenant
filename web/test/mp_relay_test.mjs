@@ -27,6 +27,7 @@ A.ev("net.inMatch=true;bcast({t:'start',seed:777});beginNetMatch(777,false);");f
 A.ev("endCutscene();state='playing';");B.ev("endCutscene();state='playing';");tick(10);
 log('enemies host',A.ev('enemies.filter(e=>e.alive).length'),'client',B.ev('enemies.filter(e=>e.alive).length'),'| same seed',A.ev('seed')===B.ev('seed'),
   '| same pickups',A.ev('interactables.length')===B.ev('interactables.length'));
+log('same biome',A.ev('curBiome'),B.ev('curBiome'),A.ev('curBiome')===B.ev('curBiome'));
 const id=A.ev('enemies.find(e=>e.alive&&e.type==="imp").id');
 log('enemy',id,'host pos',A.ev(`enemyById(${id}).g.position.x.toFixed(1)`),'client pos',B.ev(`enemyById(${id}).g.position.x.toFixed(1)`));
 // 3 队友打死敌人（链锯切开）
