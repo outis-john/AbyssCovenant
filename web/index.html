@@ -196,10 +196,31 @@ const matDark=new THREE.MeshLambertMaterial({color:0x1a1210});
 const matBlood=new THREE.MeshBasicMaterial({color:0x5a0000});
 
 // ============================================================ 音效（全部合成）
-let actx=null, noiseBuf=null, master=null, whisperGain=null, whisperFilter=null, sawOsc=null, sawFilter=null, sawGain=null, sawRevT=0;
-function sawRev(t){sawRevT=Math.max(sawRevT,t);}
-function sawEngine(out,swinging){if(!actx)return;const now=actx.currentTime;sawRevT=Math.max(0,sawRevT-1/60);const rev=sawRevT>0||swinging;
-  sawGain.gain.setTargetAtTime(out?(rev?0.2:0.08):0,now,0.05);sawOsc.frequency.setTargetAtTime(rev?175:72,now,rev?0.04:0.15);sawFilter.frequency.setTargetAtTime(rev?2600:800,now,0.05);}
+let actx=null, noiseBuf=null, master=null, whisperGain=null, whisperFilter=null, saw=null;
+// 链锯引擎：单缸二冲程，每转点火一次（基频 = 转速/60）。怠速约 2900 转、偶尔漏火；满油约 12500 转；锯进肉里会被拖到约 8000 转
+function initSaw(){
+  const sr=actx.sampleRate, sp=actx.createScriptProcessor(1024,0,1);
+  saw={rpm:2900,target:2900,load:0,loadT:0,on:0,onT:0,phase:0,burst:0,lp:0,crack:0,hp:0,prev:0};
+  sp.onaudioprocess=ev=>{const out=ev.outputBuffer.getChannelData(0),S=saw;
+    S.rpm+=(S.target-S.rpm)*(S.target>S.rpm?0.22:0.12);S.load+=(S.loadT-S.load)*0.3;S.on+=(S.onT-S.on)*0.3;
+    const idle=S.rpm<4200;
+    for(let i=0;i<out.length;i++){
+      const f=S.rpm*(1+(Math.random()-.5)*0.01)/60;S.phase+=f/sr;
+      if(S.phase>=1){S.phase-=1;if(!(idle&&Math.random()<0.3))S.burst=0.75+Math.random()*0.35;}   // 点火（怠速时约 30% 漏火）
+      const n=Math.random()*2-1;
+      S.burst*=Math.exp(-f*6/sr);
+      const pop=S.burst*(0.6*n+0.9*Math.sin(6.2832*S.phase*1.5));                  // 排气爆破
+      S.lp+=(n-S.lp)*0.03;                                                          // 机身低频震动
+      S.hp=0.9*(S.hp+n-S.prev);S.prev=n;                                            // 链条高频啸叫
+      const whine=S.hp*0.07*Math.min(1,Math.max(0,(S.rpm-3000)/9000));
+      let grit=0;if(S.load>0.01){if(Math.random()<0.004)S.crack=1;S.crack*=0.996;grit=(n*0.45+S.crack*n)*S.load*(0.6+0.4*Math.sin(6.2832*S.phase));}
+      out[i]=(pop*0.8+S.lp*0.5+whine+grit)*S.on;
+    }};
+  const muff=actx.createBiquadFilter();muff.type='peaking';muff.frequency.value=450;muff.Q.value=1.1;muff.gain.value=9;
+  const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=6000;
+  const g=actx.createGain();g.gain.value=0.32;sp.connect(muff).connect(lp).connect(g).connect(master);
+}
+function sawEngine(out,mode){if(!saw)return;saw.onT=out?1:0;saw.target=mode==='bite'?8000:mode==='swing'?12500:2900;saw.loadT=mode==='bite'?1:0;}
 function initAudio(){
   if(actx) return;
   actx=new (window.AudioContext||window.webkitAudioContext)();
@@ -207,12 +228,7 @@ function initAudio(){
   noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   // 过载低语层：持续的带通噪声，过载越高越响
   const n=actx.createBufferSource();n.buffer=noiseBuf;n.loop=true;
-  sawOsc=actx.createOscillator();sawOsc.type='sawtooth';sawOsc.frequency.value=70;
-  const lfo=actx.createOscillator();lfo.frequency.value=26;const lfoG=actx.createGain();lfoG.gain.value=0.45;
-  const sawAmp=actx.createGain();sawAmp.gain.value=0.55;lfo.connect(lfoG).connect(sawAmp.gain);
-  sawFilter=actx.createBiquadFilter();sawFilter.type='lowpass';sawFilter.frequency.value=800;
-  sawGain=actx.createGain();sawGain.gain.value=0;
-  sawOsc.connect(sawAmp).connect(sawFilter).connect(sawGain).connect(master);sawOsc.start();lfo.start();
+  initSaw();
   whisperFilter=actx.createBiquadFilter();whisperFilter.type='bandpass';whisperFilter.Q.value=9;whisperFilter.frequency.value=900;
   whisperGain=actx.createGain();whisperGain.gain.value=0;
   n.connect(whisperFilter).connect(whisperGain).connect(master);n.start();
@@ -234,6 +250,7 @@ const sfx={
   beacon(){for(let i=0;i<4;i++)tone('square',i%2?880:440,i%2?880:440,0.08,0.12,i*0.15);},
   heart(){tone('sine',55,40,0.5,0.15);tone('sine',55,40,0.35,0.15,0.18);},
   grind(){noiseHit(2600,0.4,0.32,'bandpass');tone('square',230,150,0.14,0.28);tone('sawtooth',1900,1100,0.07,0.22);noiseHit(500,0.3,0.2);},
+  rip(){noiseHit(900,0.5,0.35);noiseHit(3200,0.25,0.25,'bandpass');tone('sawtooth',300,90,0.15,0.3);},
   whoosh(){noiseHit(1800,0.18,0.18,'bandpass');},
   whistle(){tone('sine',260,1500,0.12,2.3);noiseHit(1200,0.15,2.3,'bandpass');},
   backlash(){noiseHit(300,0.8,1.4);tone('sawtooth',40,25,0.5,1.2);},
@@ -401,7 +418,9 @@ const housing=new THREE.Mesh(new THREE.BoxGeometry(.18,.24,.3),gunDark);housing.
 const exhaust=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.14,5),gunMat);exhaust.position.set(.1,.12,0);sword.add(exhaust);
 const grip=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.28),new THREE.MeshLambertMaterial({color:0x3a1a12}));grip.position.z=.18;sword.add(grip);
 sword.visible=false;
-const SWING=0.42;let swing=0,swordOut=0,meleePending=0,gunKick=0,gunRoll=0;
+const ghost=new THREE.Mesh(new THREE.BoxGeometry(.14,.3,1.1),new THREE.MeshBasicMaterial({color:0xd8d0c0,transparent:true,opacity:.25,depthWrite:false}));
+ghost.geometry.translate(0,0,-.62);view.add(ghost);ghost.visible=false;
+let gunKick=0,gunRoll=0;
 
 const ray=new THREE.Raycaster();
 function aimRay(spread=0){const d=new THREE.Vector3(0,0,-1);d.x+=(Math.random()-.5)*spread;d.y+=(Math.random()-.5)*spread;d.applyQuaternion(camera.quaternion).normalize();
@@ -420,15 +439,59 @@ function fire(){
     else spawnSpark(h.point);}
 }
 function spawnSpark(p){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xffc060}));m.position.copy(p);scene.add(m);setTimeout(()=>scene.remove(m),80);}
+// 挥砍阶段：windup 蓄力 -> slash 劈砍 -> (bite 卡在肉里锯 -> rip 撕出) -> recover 收刀
+const MS={phase:'none',t:0,dir:1,combo:0,s:0,target:null,tick:0,hitDone:false,ghost:[]};
+const SWING=0.6;let swing=0,swordOut=0;
+const POSE={rest:[0.02,0.3,0.12],
+  a:{start:[0.42,1.05,0.7],end:[-0.42,-1.15,-0.45]},   // 右上 -> 左下
+  b:{start:[-0.38,-1.0,-0.6],end:[0.45,1.15,0.55]}};   // 左下 -> 右上（反手）
+function poseAt(k){const P=MS.dir>0?POSE.a:POSE.b;return P.start.map((v,i)=>lerp(v,P.end[i],k));}
 function melee(){
-  if(player.meleeCd>0)return;player.meleeCd=0.5;swing=SWING;swordOut=1.1;meleePending=0.09;sawRev(0.45);play('whoosh');
+  if(player.meleeCd>0||MS.phase==='bite')return;
+  MS.dir=MS.combo%2===0?1:-1;MS.combo++;MS.phase='windup';MS.t=0;MS.s=0;MS.target=null;MS.hitDone=false;
+  player.meleeCd=0.55;swordOut=1.4;swing=1;
 }
-function meleeHit(){
-  const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));let any=false,killed=false;
-  for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const dist=to.length();
-    if(dist<2.9+e.r&&to.normalize().dot(fwd)>0.5){const pt=e.g.position.clone().setY(1.3*e.g.scale.y);
-      const k=damageEnemy(e,55,'body',fwd,{stagger:0.55,knock:1.6,point:pt});spawnBlood(pt,fwd.clone().negate(),14);hitSparks(pt,fwd.clone().negate(),8);any=true;killed=killed||k;}}
-  if(any){play('grind');hitstop=Math.max(hitstop,0.09);player.shake=Math.max(player.shake,0.28);player.punch=0.07;showHit(killed);splat();sawRev(0.6);}
+function meleeCandidates(){
+  const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const out=[];
+  for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();
+    if(d<3.0+e.r&&to.normalize().dot(fwd)>0.45)out.push([d,e]);}
+  return out.sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+}
+function contactPoint(e){return e.g.position.clone().setY(1.25*e.g.scale.y).lerp(player.pos.clone().setY(1.3),0.25);}
+function bladeDirWorld(){const q=new THREE.Quaternion();sword.getWorldQuaternion(q);return new THREE.Vector3(0,0,-1).applyQuaternion(q);}
+function sprayAlongChain(p,n){
+  const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)).multiplyScalar(MS.dir);
+  const blade=bladeDirWorld(),toCam=player.pos.clone().setY(1.6).sub(p).normalize();
+  for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,matBlood);m.position.copy(p);scene.add(m);
+    const v=blade.clone().multiplyScalar(5+Math.random()*4).addScaledVector(right,2+Math.random()*3).add(new THREE.Vector3(0,2+Math.random()*3,0)).addScaledVector(toCam,Math.random()*2);
+    v.x+=(Math.random()-.5)*2;v.z+=(Math.random()-.5)*2;bloods.push({m,v,rest:false});}
+  while(bloods.length>600){const o=bloods.shift();scene.remove(o.m);}
+}
+function updateMelee(dt){
+  if(MS.phase==='none')return;MS.t+=dt;
+  const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));
+  if(MS.phase==='windup'){const k=Math.min(1,MS.t/0.12),e=1-(1-k)*(1-k);const P=poseAt(0);
+    sword.rotation.set(...POSE.rest.map((v,i)=>lerp(v,P[i]*1.08,e)));if(MS.t>=0.12){MS.phase='slash';MS.t=0;play('whoosh');}}
+  else if(MS.phase==='slash'){MS.s=Math.min(1,(MS.t/0.15)**1.6);sword.rotation.set(...poseAt(MS.s));
+    if(!MS.hitDone&&MS.s>=0.5){MS.hitDone=true;const c=meleeCandidates();
+      if(c.length){MS.target=c[0];MS.phase='bite';MS.t=0;MS.tick=0;MS.s=0.5;
+        hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.3);player.punch=0.06;splat();play('grind');
+        for(const e of c.slice(1))damageEnemy(e,30,'body',fwd,{stagger:.4,knock:1.2,point:contactPoint(e)});}}
+    if(MS.s>=1){MS.phase='recover';MS.t=0;}}
+  else if(MS.phase==='bite'){const e=MS.target;
+    const j=()=>(Math.random()-.5)*0.07;const P=poseAt(0.5+Math.min(0.08,MS.t*0.25));sword.rotation.set(P[0]+j(),P[1]+j(),P[2]+j());
+    sword.position.z=-0.38+Math.sin(MS.t*60)*0.02;player.shake=Math.max(player.shake,0.12);
+    if(e&&e.alive){e.stagger=Math.max(e.stagger,0.2);e.lean=Math.max(e.lean,0.6);e.g.rotation.z=(Math.random()-.5)*0.15;}
+    MS.tick-=dt;if(MS.tick<=0){MS.tick=0.06;const p=e?contactPoint(e):player.pos.clone().addScaledVector(fwd,1.5).setY(1.3);
+      sprayAlongChain(p,7);hitSparks(p,fwd.clone().negate(),2);
+      if(e&&e.alive){const k=damageEnemy(e,11,'body',null,{stagger:.2,point:p});if(k){showHit(true);MS.phase='rip';MS.t=0;MS.killedInBite=true;}else play('hit');}}
+    if(MS.phase==='bite'&&(MS.t>=0.34||!e||!e.alive)){MS.phase='rip';MS.t=0;}
+    if(MS.phase==='rip'){play('rip');splat();player.punch=0.08;hitstop=Math.max(hitstop,0.06);
+      if(e&&e.alive){const k=damageEnemy(e,18,'body',fwd,{stagger:.6,knock:2.2,point:contactPoint(e)});showHit(k);}
+      if(e)sprayAlongChain(contactPoint(e),24);}}
+  else if(MS.phase==='rip'){MS.s=Math.min(1,0.5+MS.t/0.08*0.5);sword.rotation.set(...poseAt(MS.s));if(MS.t>=0.08){MS.phase='recover';MS.t=0;}}
+  else if(MS.phase==='recover'){const k=Math.min(1,MS.t/0.22),e=k*k*(3-2*k);const P=poseAt(1);
+    sword.rotation.set(...P.map((v,i)=>lerp(v,POSE.rest[i],e)));if(k>=1){MS.phase='none';swing=0;}}
 }
 function splat(){const el=$('splat');el.style.transition='none';el.style.opacity=0.75;requestAnimationFrame(()=>{el.style.transition='opacity .7s';el.style.opacity=0;});}
 function hitSparks(p,dir,n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0xffe080:0xffffff}));m.position.copy(p);m.scale.setScalar(.6);scene.add(m);
@@ -439,7 +502,7 @@ function execute(){
   const t=executeTarget();if(!t)return false;
   const dir=t.g.position.clone().sub(player.pos).setY(0).normalize();
   player.pos.addScaledVector(dir,Math.max(0,t.g.position.distanceTo(player.pos)-1.4));
-  swing=SWING;swordOut=1.2;meleePending=0;sawRev(0.6);play('grind');play('kill');splat();player.punch=0.09;
+  swordOut=1.2;MS.dir=1;MS.phase='recover';MS.t=0;sword.rotation.set(...POSE.a.end);play('grind');play('rip');play('kill');splat();player.punch=0.09;sprayAlongChain(t.g.position.clone().setY(1.3),30);
   damageEnemy(t,9999,'body',dir,{explode:true});spawnBlood(t.g.position.clone().setY(1.2),dir,40);
   player.hp=Math.min(player.maxHp,player.hp+15);hitstop=0.14;player.shake=0.4;showHit(true);return true;
 }
@@ -637,22 +700,22 @@ function updatePlayer(dt){
   camera.position.set(player.pos.x+(Math.random()-.5)*sh*.4,player.pos.y+1.6+bob+(Math.random()-.5)*sh*.4,player.pos.z);
   const roll=player.warp>0?Math.sin(gameTime*3)*0.08*Math.min(1,player.warp):0;
   player.punch=Math.max(0,(player.punch||0)-dt*0.5);
-  camera.rotation.set(player.pitch-player.punch,player.yaw,roll,'YXZ');
+  camera.rotation.set(player.pitch-player.punch,player.yaw,roll+(player.swingRoll||0),'YXZ');
   // 视角模型
   gunKick=Math.max(0,gunKick-dt*11);
   gun.position.set(.32+Math.sin(gameTime*4.5)*.004,-.28+bob*.3-gunKick*.015,-.55+player.recoil*0.4+gunKick*0.08);
   gun.rotation.set(player.recoil*1.0+gunKick*0.14,0,gunRoll*gunKick);
-  if(meleePending>0){meleePending-=dt;if(meleePending<=0)meleeHit();}
-  if(swordOut>0){swordOut-=dt;sword.visible=true;gun.visible=false;texChain.offset.x-=dt*(swing>0?14:5);
-    const jit=(Math.random()-.5)*0.006;
-    if(swing>0){swing-=dt;const p=1-swing/SWING;let ry,rz,rx,px;
-      if(p<0.2){const k=p/0.2;ry=lerp(0.3,1.1,k);rz=lerp(0.1,0.7,k);rx=lerp(0,-0.25,k);px=lerp(.25,.38,k);}
-      else if(p<0.55){const k=(p-0.2)/0.35,e=1-(1-k)*(1-k);ry=lerp(1.1,-1.35,e);rz=lerp(0.7,-0.5,e);rx=lerp(-0.25,0.35,e);px=lerp(.38,-.1,e);}
-      else{const k=(p-0.55)/0.45;ry=lerp(-1.35,0.25,k);rz=lerp(-0.5,0.1,k);rx=lerp(0.35,0.05,k);px=lerp(-.1,.25,k);}
-      sword.rotation.set(rx,ry,rz);sword.position.set(px,-.32,-.42);}
-    else{sword.rotation.set(0.05+jit,0.25,0.1+jit);sword.position.set(.25+jit,-.33+jit,-.42);}
-  } else {sword.visible=false;gun.visible=true;}
-  sawEngine(swordOut>0,swing>0);
+  if(swordOut>0){if(MS.phase==='none')swordOut-=dt;sword.visible=true;gun.visible=false;
+    const fast=MS.phase==='slash'||MS.phase==='rip'||MS.phase==='bite';texChain.offset.x-=dt*(fast?22:6);
+    sword.rotation.order='YXZ';sword.position.set(.3,-.42,-.3);
+    if(MS.phase==='none'){const j=(Math.random()-.5)*0.008;sword.rotation.set(POSE.rest[0]+j,POSE.rest[1],POSE.rest[2]+j);}
+    else updateMelee(dt);
+    ghost.visible=MS.phase==='slash'||MS.phase==='rip';
+    ghost.rotation.order='YXZ';ghost.position.copy(sword.position);
+    ghost.rotation.x=lerp(ghost.rotation.x,sword.rotation.x,0.45);ghost.rotation.y=lerp(ghost.rotation.y,sword.rotation.y,0.45);ghost.rotation.z=lerp(ghost.rotation.z,sword.rotation.z,0.45);
+    sawEngine(true,MS.phase==='bite'?'bite':(fast||MS.phase==='windup')?'swing':'idle');
+  } else {sword.visible=false;ghost.visible=false;gun.visible=true;sawEngine(false,'idle');}
+  player.swingRoll=lerp(player.swingRoll||0,MS.phase==='slash'||MS.phase==='rip'?-MS.dir*0.05:MS.phase==='bite'?-MS.dir*0.03:0,0.3);
   player.fireCd-=dt;player.meleeCd-=dt;
   // 灵能恢复与过载衰减
   player.mana=Math.min(player.maxMana,player.mana+8*dt);player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
@@ -907,7 +970,7 @@ function enterHub(){
   state='hub';document.body.classList.add('inhub');document.exitPointerLock?.();
   $('hub').classList.add('show');$('matching').classList.remove('show');$('result').classList.remove('show');$('ready').classList.remove('show');$('pause').classList.remove('show');
   $('hurt').style.opacity=0;$('warp').style.opacity=0;canvas.style.filter='';setProgress(-1);$('announce').style.opacity=0;
-  if(actx){whisperGain.gain.value=0;sawGain.gain.value=0;}swordOut=0;swing=0;
+  if(actx){whisperGain.gain.value=0;}sawEngine(false,'idle');swordOut=0;swing=0;MS.phase='none';
   showVault();selectClass(cls);
 }
 
@@ -1019,7 +1082,7 @@ $('readyBtn').onclick=()=>{
 };
 let deathT=0;
 function beginDeath(){
-  if(state!=='playing')return;state='dying';deathT=2.2;mouseDown=false;swordOut=0;swing=0;if(actx)sawGain.gain.value=0;
+  if(state!=='playing')return;state='dying';deathT=2.2;mouseDown=false;swordOut=0;swing=0;MS.phase='none';sawEngine(false,'idle');
   play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('你倒下了……',2);
 }
 function updateDeath(dt){
