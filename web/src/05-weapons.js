@@ -79,7 +79,7 @@ const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
 let loadout=loadLoadout();
 let WEAPONS=[],cur=0,ammo=[],reloadT=0,switchT=0,reloadFor=-1;
-function applyLoadout(){WEAPONS=[RANGED[loadout.primary],PISTOL,MELEE[loadout.melee]];sword=MELEE_GROUP[loadout.melee];
+function applyLoadout(){const P={...RANGED[loadout.primary]},M={...MELEE[loadout.melee]};upgradeWeapons(P,M);WEAPONS=[P,PISTOL,M];sword=MELEE_GROUP[loadout.melee];
   heat.v=0;heat.over=0;heat.charge=0;
   ammo=[{mag:WEAPONS[0].magSize,res:WEAPONS[0].res0},{mag:PISTOL.magSize,res:Infinity},{}];cur=0;reloadT=0;switchT=0;reloadFor=-1;}
 applyLoadout();

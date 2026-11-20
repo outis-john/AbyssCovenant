@@ -21,5 +21,19 @@ const CFG={
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
+  // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
+  threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
+  // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物
+  upgrades:[
+    {id:'armor', name:'强化甲片',  desc:'最大生命 +15',             max:3,cost:[4,8,14]},
+    {id:'blade', name:'精锻刃',    desc:'近战伤害 +15%',            max:3,cost:[5,10,16]},
+    {id:'mag',   name:'扩容弹匣',  desc:'爆弹枪 / 霰弹枪弹匣 +30%，开局备弹 +30%', max:2,cost:[6,12]},
+    {id:'melta', name:'热熔聚焦器',desc:'热熔枪伤害 +20%',          max:2,cost:[6,12]},
+    {id:'beacon',name:'备用回收装置',desc:'每局回收装置 +1 次',      max:1,cost:[10]},
+    {id:'psy',   name:'灵能导管',  desc:'灵能上限 +25，过载上限 +20',max:2,cost:[0,0],rare:[1,2]},
+    {id:'exec',  name:'嗜血圣印',  desc:'处决充能速度 +30%',        max:1,cost:[0],rare:[1]},
+  ],
+  amulet:{hp:25,dmg:1.2},   // 圣物护符：带一件圣物出击，属性提升；阵亡就失去它
   wave:{interval:50,size:4,bruteChance:.12,casterChance:.18},   // 刷怪潮
 };
+let pendingThreat=1;   // 本局威胁等级（联机时用房主的）

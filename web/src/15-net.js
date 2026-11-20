@@ -76,6 +76,7 @@ function myName(){return CLS_INFO[cls].name;}
 async function hostRoom(){
   if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
   netReset();net.code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
+  if(!useP2P())net.code=withRelay(net.code,0);   // 先按主服务器定好房间码，免得连上后变
   let peer;try{peer=useP2P()?new Peer(PEER_PREFIX+net.code):new RelayPeer(PEER_PREFIX+net.code);}catch(e){return netFail(netErrText(e));}
   net.peer=peer;net.mode='host';showLobby('正在创建房间…');
   peer.on('open',id=>{net.myId=id;if(peer.relay)net.code=peer.code;net.lobby=[{id,name:myName()+'（房主）',cls}];renderLobby();});
@@ -112,7 +113,7 @@ function hostRecv(id,m){
   let r=net.remotes.get(id);
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
-    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
+    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
     return;}
   if(!r)return;
   if(m.t==='state'){r.tp.set(m.x,m.y,m.z);r.yaw=m.yaw;r.pitch=m.pitch;r.hp=m.hp;r.maxHp=m.maxHp;r.dead=m.dead;r.inMatch=true;if(!r.pos.lengthSq())r.pos.copy(r.tp);}
@@ -134,7 +135,7 @@ function checkWipe(){if(!isHost()||!net.inMatch)return;const meAlive=player.hp>0
 // ---------- 队友收到消息
 function clientRecv(m){
   if(m.t==='lobby'){net.lobby=m.list;renderLobby();}
-  else if(m.t==='start'){beginNetMatch(m.seed,m.mid);}
+  else if(m.t==='start'){pendingThreat=m.th||1;beginNetMatch(m.seed,m.mid);}
   else if(m.t==='snap'){applySnapshot(m);}
   else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
@@ -145,7 +146,7 @@ function clientRecv(m){
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}
 }
 // ---------- 开局
-$('lobbyStart').onclick=()=>{if(!isHost())return;initAudio();actx.resume?.();net.inMatch=true;const s=Math.floor(Math.random()*1e9);bcast({t:'start',seed:s});beginNetMatch(s,false);};
+$('lobbyStart').onclick=()=>{if(!isHost())return;initAudio();actx.resume?.();net.inMatch=true;const s=Math.floor(Math.random()*1e9);pendingThreat=loadout.threat||1;bcast({t:'start',seed:s,th:pendingThreat});beginNetMatch(s,false);};
 function beginNetMatch(s,mid){initAudio();net.inMatch=true;$('lobby').classList.remove('show');$('hub').classList.remove('show');$('matching').classList.remove('show');
   for(const r of net.remotes.values()){if(r.model)scene.remove(r.model);r.model=null;r.dead=false;}
   prepareMatch(s);startCutscene();}

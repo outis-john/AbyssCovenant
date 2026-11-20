@@ -33,6 +33,9 @@
   #progress{position:fixed;top:64%;left:50%;width:240px;margin-left:-120px;display:none}
   .panel{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,2,2,.86);pointer-events:auto}
   .panel.show{display:flex}
+  #shop .up{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0}#shop .up button{min-width:96px;padding:4px 8px;font-size:12px}#shop button:disabled{opacity:.4;cursor:default}
+  #shop .lv{color:#ffd23a;font-size:10px;letter-spacing:1px}.ths{display:flex;gap:6px}.ths .th{flex:1;padding:6px 4px;font-size:12px}.ths .th small{display:block;color:#a8977c}.ths .th.sel{outline:2px solid #ffd23a}
+  .am{display:block;margin-top:8px;font-size:12px;color:#d8c8a8}
   #settings{z-index:60}.setrow{display:grid;grid-template-columns:1fr 180px 56px;gap:12px;align-items:center;margin:10px 0;color:#d8c8a8}.setrow b{color:#ffd23a;text-align:right}
   #help{position:fixed;right:16px;top:16px;display:none;z-index:55;background:rgba(10,5,4,.88);border:1px solid #6b4a2a;padding:12px 16px;pointer-events:none;color:#d8c8a8;font-size:13px;max-width:420px}
   #help.show{display:block}.hk{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:3px 0}.hk b{color:#ffd23a}
@@ -139,6 +142,7 @@
   <div class="right">
     <div class="info" id="clsInfo"></div>
     <div class="info" id="vaultInfo"></div>
+    <div class="info" id="shop"></div>
     <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击（近战可连招）· R 换弹<br>右键：链锯蓄力狂热 / 力场剑分解力场 / 热熔蓄力 / 剑盾切换剑与手枪<br>E 举盾格挡（剑盾，时机准可防反）<br>X 处决（需充满）· F 拾取 / 互动<br>V 锁喉提摔 · G 黑洞 · Q 子弹时间<br>C 符文技能 · Tab 符文拼装 · B 回收装置 · M 地图 · Esc 暂停</div>
   </div>
   <div class="bottom"><button id="goBtn">单人行动</button><button id="hostBtn" class="nb">创建房间</button><button id="setBtn" class="nb">设置</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入房间</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>
@@ -190,8 +194,22 @@ const CFG={
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
+  // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
+  threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
+  // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物
+  upgrades:[
+    {id:'armor', name:'强化甲片',  desc:'最大生命 +15',             max:3,cost:[4,8,14]},
+    {id:'blade', name:'精锻刃',    desc:'近战伤害 +15%',            max:3,cost:[5,10,16]},
+    {id:'mag',   name:'扩容弹匣',  desc:'爆弹枪 / 霰弹枪弹匣 +30%，开局备弹 +30%', max:2,cost:[6,12]},
+    {id:'melta', name:'热熔聚焦器',desc:'热熔枪伤害 +20%',          max:2,cost:[6,12]},
+    {id:'beacon',name:'备用回收装置',desc:'每局回收装置 +1 次',      max:1,cost:[10]},
+    {id:'psy',   name:'灵能导管',  desc:'灵能上限 +25，过载上限 +20',max:2,cost:[0,0],rare:[1,2]},
+    {id:'exec',  name:'嗜血圣印',  desc:'处决充能速度 +30%',        max:1,cost:[0],rare:[1]},
+  ],
+  amulet:{hp:25,dmg:1.2},   // 圣物护符：带一件圣物出击，属性提升；阵亡就失去它
   wave:{interval:50,size:4,bruteChance:.12,casterChance:.18},   // 刷怪潮
 };
+let pendingThreat=1;   // 本局威胁等级（联机时用房主的）
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
 // ============================================================ 工具
@@ -446,9 +464,9 @@ function spawnEnemy(type,x,z,elite=false){
     makePart(new THREE.BoxGeometry(.66,.2,.62),hood,0,.3,-.02,head,'hood');makePart(new THREE.BoxGeometry(.66,.55,.12),hood,0,0,-.3,head,'hood');
     orb=makePart(new THREE.BoxGeometry(.24,.24,.24),new THREE.MeshBasicMaterial({color:0x7dff3a}),0,-.6,0,armR,'orb');}
   scene.add(g);
-  const hp=T.hp*(elite?1.6:1);
+  const TH=curThreat(),hp=T.hp*(elite?1.6:1)*TH.hp;
   const e={id:++enemySeq,remote:false,type,g,mat:flesh,parts:{body,head,armL,armR,legL,legR},hp,maxHp:hp,armHp:{armL:hp*.3,armR:hp*.3},arms:2,kv:new THREE.Vector3(),lean:0,headSnap:0,
-    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1),reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
+    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1)*TH.dmg,reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
   for(const p of Object.values(e.parts))p.userData.enemy=e;
   head.children.forEach(c=>c.userData.enemy=e);
   enemies.push(e);return e;
@@ -456,12 +474,12 @@ function spawnEnemy(type,x,z,elite=false){
 function damageEnemy(e,dmg,part,dir,opts={}){
   if(!e.alive)return false;
   if(isClient()&&e.remote){const hd=part==='head'?2:1,est=Math.min(dmg*hd,Math.max(0,e.hp));
-    if(state==='playing'&&!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+est*0.12);if(bt.t>0)player.hp=Math.min(player.maxHp,player.hp+est*0.3);
+    if(state==='playing'&&!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+est*0.12*(player.exRate||1));if(bt.t>0)player.hp=Math.min(player.maxHp,player.hp+est*0.3);
     sendNet({t:'dmg',id:e.id,dmg,part,dir,o:{stagger:opts.stagger,knock:opts.knock,limbMul:opts.limbMul,explode:opts.explode,how:opts.how}});net.lastDmg.set(e.id,gameTime);
     e.flash=0.08;e.lean=Math.min(1.2,e.lean+0.6);spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,part==='head'?10:5);return false;}
   const head=part==='head';if(head)dmg*=2;
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
-  if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12);
+  if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
   e.hp-=dmg;e.flash=0.08;e.stagger=Math.max(e.stagger,opts.stagger??0.12);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
@@ -752,7 +770,7 @@ const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
 let loadout=loadLoadout();
 let WEAPONS=[],cur=0,ammo=[],reloadT=0,switchT=0,reloadFor=-1;
-function applyLoadout(){WEAPONS=[RANGED[loadout.primary],PISTOL,MELEE[loadout.melee]];sword=MELEE_GROUP[loadout.melee];
+function applyLoadout(){const P={...RANGED[loadout.primary]},M={...MELEE[loadout.melee]};upgradeWeapons(P,M);WEAPONS=[P,PISTOL,M];sword=MELEE_GROUP[loadout.melee];
   heat.v=0;heat.over=0;heat.charge=0;
   ammo=[{mag:WEAPONS[0].magSize,res:WEAPONS[0].res0},{mag:PISTOL.magSize,res:Infinity},{}];cur=0;reloadT=0;switchT=0;reloadFor=-1;}
 applyLoadout();
@@ -1144,7 +1162,7 @@ function setupMatch(){
   for(const it of interactables)scene.remove(it.m);interactables=[];
   const pool=['kill','elite','hack','ritual','cores'];for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
   const n=rng()<0.5?1:2;
-  match={conds:pool.slice(0,n).map(type=>({type,prog:0,target:COND_INFO[type].target,revealed:false})),parts:{thruster:0,fuel:0,hull:0},carried:{thruster:0,fuel:0,hull:0},loot:0,safeLoot:0,rare:false,beacons:2,kills:0,elites:0,explored:new Set(['0,0']),launching:-1,hack:-1,ritual:-1};
+  match={threat:pendingThreat,conds:pool.slice(0,n).map(type=>({type,prog:0,target:COND_INFO[type].target,revealed:false})),parts:{thruster:0,fuel:0,hull:0},carried:{thruster:0,fuel:0,hull:0},loot:0,safeLoot:0,rare:false,beacons:2,kills:0,elites:0,explored:new Set(['0,0']),launching:-1,hack:-1,ritual:-1};
   const used=[[0,0],podCell];
   const [px,pz]=[podCell[0]*C,podCell[1]*C];match.pod=spawnPickup('pod',px,pz+2.5);
   for(let k=0;k<n+1;k++){const c=randomCell(used);used.push(c);spawnPickup('clue',...cellPos(c));}
@@ -1157,7 +1175,7 @@ function setupMatch(){
   if(types.includes('ritual')){const c=randomCell(used);used.push(c);spawnPickup('ritual',c[0]*C,c[1]*C);}
   if(types.includes('cores'))for(let k=0;k<3;k++)spawnPickup('core',...cellPos(randomCell([[0,0]])));
   // 初始恶魔（只有房主 / 单人生成，队友从快照里拿）
-  if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2);for(let q=0;q<k;q++)spawnEnemy('imp',...cellPos([i,j],5));if(i+j>=3&&Math.random()<0.4)spawnEnemy('caster',...cellPos([i,j],6));}
+  if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2)+curThreat().extra*(Math.random()<0.6?1:0);for(let q=0;q<k;q++)spawnEnemy('imp',...cellPos([i,j],5));if(i+j>=3&&Math.random()<0.4)spawnEnemy('caster',...cellPos([i,j],6));}
   if(!isClient())for(let q=0;q<2;q++)spawnEnemy('brute',...cellPos(randomCell([[0,0],[1,0],[0,1]]),4),true);
 }
 function nearestInteractable(){let best=null,bd=2.6;for(const it of interactables){if(it.used||it.type==='ritual'||it.type==='ammo')continue;const d=Math.hypot(it.x-player.pos.x,it.z-player.pos.z)-((it.type==='pod'||it.type==='terminal')?1.2:0);if(d<bd){bd=d;best=it;}}return best;}
@@ -1394,7 +1412,7 @@ function updateMatch(dt){
   {const [ci,cj]=cellOf(player.pos);match.explored.add(ci+','+cj);}
   // 刷怪潮
   if(isClient()){if(match.hack>=0&&match.hack<8)setProgress(match.hack/8);else if(match.launching>=0)setProgress(1-match.launching/7);else if(match.ritual>=0&&match.ritual<12)setProgress(match.ritual/12);else setProgress(-1);}
-  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=CFG.wave.interval;spawnWave(CFG.wave.size,false);annTeam('远处传来裂隙撕开的声音……',2);}}
+  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=curThreat().wave;spawnWave(CFG.wave.size+curThreat().extra,false);annTeam('远处传来裂隙撕开的声音……',2);}}
   // 终端破解
   const term=interactables.find(i=>i.type==='terminal');
   if(!isClient()&&term&&match.hack>=0&&match.hack<8){if(anyPlayerNear(term.x,term.z,6)){match.hack+=dt;if(Math.random()<dt*0.25)spawnWave(1,true);}
@@ -1611,7 +1629,7 @@ function enterHub(){
   $('hub').classList.add('show');$('matching').classList.remove('show');$('result').classList.remove('show');$('ready').classList.remove('show');$('pause').classList.remove('show');
   $('hurt').style.opacity=0;$('warp').style.opacity=0;canvas.style.filter='';setProgress(-1);$('announce').style.opacity=0;
   if(actx){whisperGain.gain.value=0;}sawEngine(false,'idle');humEngine(false,false);swordOut=0;swing=0;MS.phase='none';ex.active=false;player.blocking=false;
-  showVault();selectClass(cls);renderLoadout();if(isNet())showLobby();
+  showVault();selectClass(cls);renderLoadout();renderShop();if(isNet())showLobby();
 }
 
 // ============================================================ 匹配
@@ -1655,6 +1673,32 @@ $('helpBody').innerHTML=HELP.map(([k,v])=>`<div class="hk"><b>${k}</b><span>${v}
 function toggleHelp(on){const h=$('help');h.classList.toggle('show',on??!h.classList.contains('show'));}
 $('pauseHelp').onclick=()=>toggleHelp(true);
 applySet();
+// ============================================================ 战舰工坊：升级（物资 / 圣物）、威胁等级、圣物护符（带进去可能会丢）
+loadout.threat=loadout.threat||1;
+function upLv(id){return (loadVault().up||{})[id]||0;}
+function curThreat(){return CFG.threat[(match&&match.threat)||pendingThreat];}
+function renderShop(){const v=loadVault();v.up=v.up||{};
+  const rows=CFG.upgrades.map(u=>{const lv=v.up[u.id]||0,max=lv>=u.max,c=max?0:u.cost[lv],r=max?0:(u.rare?u.rare[lv]:0);
+    const can=!max&&v.loot>=c&&v.rare>=r;const price=max?'已满级':[c?c+' 物资':'',r?r+' 圣物':''].filter(Boolean).join(' + ');
+    return `<div class="up"><div><b>${u.name}</b> <span class="lv">${'■'.repeat(lv)}${'□'.repeat(u.max-lv)}</span><div class="small">${u.desc}</div></div><button data-up="${u.id}" ${can?'':'disabled'}>${price}</button></div>`;}).join('');
+  const th=CFG.threat.slice(1).map((t,i)=>`<button class="th ${loadout.threat===i+1?'sel':''}" data-th="${i+1}">${t.name}<small>物资 ×${t.loot}</small></button>`).join('');
+  const am=v.rare>0?`<label class="am"><input type="checkbox" id="amulet" ${loadout.amulet?'checked':''}> 佩戴圣物护符出击（生命 +${CFG.amulet.hp}，伤害 +${Math.round((CFG.amulet.dmg-1)*100)}%；<b style="color:#e05a4a">阵亡会失去 1 件圣物</b>）</label>`:'<div class="small">拥有灵能圣物后可以佩戴圣物护符出击。</div>';
+  $('shop').innerHTML=`<h3>战舰工坊</h3>${rows}<div class="sub" style="margin:10px 0 4px">威胁等级</div><div class="ths">${th}</div>${am}`;
+  $('shop').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>buyUpgrade(b.dataset.up));
+  $('shop').querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{loadout.threat=+b.dataset.th;saveLoadout();renderShop();play('equip');});
+  const a=$('amulet');if(a)a.onchange=()=>{loadout.amulet=a.checked;saveLoadout();play('equip');};}
+function buyUpgrade(id){const v=loadVault();v.up=v.up||{};const u=CFG.upgrades.find(x=>x.id===id),lv=v.up[id]||0;if(lv>=u.max)return;
+  const c=u.cost[lv],r=u.rare?u.rare[lv]:0;if(v.loot<c||v.rare<r)return;v.loot-=c;v.rare-=r;v.up[id]=lv+1;saveVault(v);play('pickup');showVault();renderShop();applyLoadout();}
+function saveLoadout(){try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}}
+// 开局时套用升级和护符（在职业属性之后调用）
+function applyProgress(){const v=loadVault();
+  player.maxHp+=15*upLv('armor');player.maxMana=100+25*upLv('psy');player.mana=player.maxMana;player.maxOvl+=20*upLv('psy');player.exRate=1+0.3*upLv('exec');
+  player.amulet=!!(loadout.amulet&&v.rare>0);if(player.amulet){player.maxHp+=CFG.amulet.hp;player.gunMul*=CFG.amulet.dmg;}
+  player.hp=player.maxHp;}
+// 武器：复制一份再加升级，避免改到原始数据
+function upgradeWeapons(P,M){const mg=1+0.3*upLv('mag');
+  if(!P.heat){P.magSize=Math.round(P.magSize*mg);P.res0=Math.round(P.res0*mg);P.reserveMax=Math.round(P.reserveMax*mg);}else P.dmg*=1+0.2*upLv('melta');
+  M.dmg*=(1+0.15*upLv('blade'))*(player.amulet?CFG.amulet.dmg:1);}
 // ============================================================ 空降过场
 const cut={t:0,pod:null,door:null,char:null,parts:[],done:false,impacted:false,opened:false};
 function makeDropPod(){
@@ -1803,6 +1847,7 @@ function myName(){return CLS_INFO[cls].name;}
 async function hostRoom(){
   if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
   netReset();net.code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
+  if(!useP2P())net.code=withRelay(net.code,0);   // 先按主服务器定好房间码，免得连上后变
   let peer;try{peer=useP2P()?new Peer(PEER_PREFIX+net.code):new RelayPeer(PEER_PREFIX+net.code);}catch(e){return netFail(netErrText(e));}
   net.peer=peer;net.mode='host';showLobby('正在创建房间…');
   peer.on('open',id=>{net.myId=id;if(peer.relay)net.code=peer.code;net.lobby=[{id,name:myName()+'（房主）',cls}];renderLobby();});
@@ -1839,7 +1884,7 @@ function hostRecv(id,m){
   let r=net.remotes.get(id);
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
-    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
+    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
     return;}
   if(!r)return;
   if(m.t==='state'){r.tp.set(m.x,m.y,m.z);r.yaw=m.yaw;r.pitch=m.pitch;r.hp=m.hp;r.maxHp=m.maxHp;r.dead=m.dead;r.inMatch=true;if(!r.pos.lengthSq())r.pos.copy(r.tp);}
@@ -1861,7 +1906,7 @@ function checkWipe(){if(!isHost()||!net.inMatch)return;const meAlive=player.hp>0
 // ---------- 队友收到消息
 function clientRecv(m){
   if(m.t==='lobby'){net.lobby=m.list;renderLobby();}
-  else if(m.t==='start'){beginNetMatch(m.seed,m.mid);}
+  else if(m.t==='start'){pendingThreat=m.th||1;beginNetMatch(m.seed,m.mid);}
   else if(m.t==='snap'){applySnapshot(m);}
   else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
@@ -1872,7 +1917,7 @@ function clientRecv(m){
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}
 }
 // ---------- 开局
-$('lobbyStart').onclick=()=>{if(!isHost())return;initAudio();actx.resume?.();net.inMatch=true;const s=Math.floor(Math.random()*1e9);bcast({t:'start',seed:s});beginNetMatch(s,false);};
+$('lobbyStart').onclick=()=>{if(!isHost())return;initAudio();actx.resume?.();net.inMatch=true;const s=Math.floor(Math.random()*1e9);pendingThreat=loadout.threat||1;bcast({t:'start',seed:s,th:pendingThreat});beginNetMatch(s,false);};
 function beginNetMatch(s,mid){initAudio();net.inMatch=true;$('lobby').classList.remove('show');$('hub').classList.remove('show');$('matching').classList.remove('show');
   for(const r of net.remotes.values()){if(r.model)scene.remove(r.model);r.model=null;r.dead=false;}
   prepareMatch(s);startCutscene();}
@@ -1946,6 +1991,7 @@ function beaconVisual(p){const b=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6)
 
 // ============================================================ 开始 / 死亡 / 结算
 function prepareMatch(seedArg){
+  if(!isClient())pendingThreat=loadout.threat||1;
   seed=seedArg??Math.floor(Math.random()*1e9);rng=mulberry32(seed);enemySeq=0;net.missing=new Map();distCache=new Map();
   for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
@@ -1955,8 +2001,8 @@ function prepareMatch(seedArg){
   else{player.maxHp=player.hp=150;player.gunMul=1.3;player.dmgTaken=0.8;}
   player.pos.set(0,0,0);
   spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
-  applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
-  setupMatch();updatePodLook();
+  applyProgress();applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
+  setupMatch();match.beacons+=upLv('beacon');updatePodLook();
   waveTimer=60;gameTime=0;setProgress(-1);
   camera.position.set(0,1.6,0);camera.rotation.set(0,player.yaw,0,'YXZ');
 }
@@ -1983,8 +2029,9 @@ function endMatch(win){
   if(state==='result')return;if(isHost()&&net.inMatch)bcast({t:'end',win});net.inMatch=false;for(const r of net.remotes.values()){if(r.model)scene.remove(r.model);r.model=null;r.inMatch=false;r.dead=false;}
   const diedButWon=win&&player.hp<=0;state='result';document.exitPointerLock?.();setProgress(-1);view.visible=true;
   const v=loadVault();v.runs++;
-  const kept=win?match.safeLoot+match.loot:match.safeLoot, lost=win?0:match.loot;
-  v.loot+=kept;if(win){v.extracted++;if(match.rare)v.rare++;}saveVault(v);
+  const TM=CFG.threat[match.threat||1].loot,kept=Math.round((win?match.safeLoot+match.loot:match.safeLoot)*TM), lost=win?0:match.loot;
+  const amLost=player.amulet&&player.hp<=0&&!win;   // 阵亡：护符留在了深渊
+  v.loot+=kept;if(win){v.extracted++;if(match.rare)v.rare++;}if(amLost)v.rare=Math.max(0,v.rare-1);saveVault(v);
   const t=Math.floor(gameTime),mm=String(Math.floor(t/60)).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
   const done=match.conds.filter(c=>c.prog>=c.target).length,found=match.conds.filter(c=>c.revealed).length;
   const parts=Object.keys(PART_NEED).reduce((a,k)=>a+match.parts[k],0),need=Object.values(PART_NEED).reduce((a,b)=>a+b,0);
@@ -1997,6 +2044,7 @@ function endMatch(win){
     row('撤离条件',`完成 ${done} / ${match.conds.length}　发现 ${found} / ${match.conds.length}`)+row('逃生舱零件',`${parts} / ${need}`)+
     row(win?'带回物资':'回收装置保住',kept+' 件','gain')+(win?'':row('丢失物资',lost+' 件','lost'))+
     row('灵能圣物',match.rare?(win?'带回':'丢失'):'未找到',match.rare?(win?'gain':'lost'):'')+
+    row('威胁等级',CFG.threat[match.threat||1].name+`（物资 ×${TM}）`)+(player.amulet?row('圣物护符',amLost?'失去':'带回',amLost?'lost':'gain'):'')+
     row('战舰仓库总计',`${v.loot} 件物资 · ${v.rare} 件圣物`);
   $('result').classList.add('show');
 }

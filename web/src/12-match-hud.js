@@ -3,7 +3,7 @@ function updateMatch(dt){
   {const [ci,cj]=cellOf(player.pos);match.explored.add(ci+','+cj);}
   // 刷怪潮
   if(isClient()){if(match.hack>=0&&match.hack<8)setProgress(match.hack/8);else if(match.launching>=0)setProgress(1-match.launching/7);else if(match.ritual>=0&&match.ritual<12)setProgress(match.ritual/12);else setProgress(-1);}
-  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=CFG.wave.interval;spawnWave(CFG.wave.size,false);annTeam('远处传来裂隙撕开的声音……',2);}}
+  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=curThreat().wave;spawnWave(CFG.wave.size+curThreat().extra,false);annTeam('远处传来裂隙撕开的声音……',2);}}
   // 终端破解
   const term=interactables.find(i=>i.type==='terminal');
   if(!isClient()&&term&&match.hack>=0&&match.hack<8){if(anyPlayerNear(term.x,term.z,6)){match.hack+=dt;if(Math.random()<dt*0.25)spawnWave(1,true);}

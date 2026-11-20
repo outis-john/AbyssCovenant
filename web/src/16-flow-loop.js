@@ -1,5 +1,6 @@
 // ============================================================ 开始 / 死亡 / 结算
 function prepareMatch(seedArg){
+  if(!isClient())pendingThreat=loadout.threat||1;
   seed=seedArg??Math.floor(Math.random()*1e9);rng=mulberry32(seed);enemySeq=0;net.missing=new Map();distCache=new Map();
   for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
@@ -9,8 +10,8 @@ function prepareMatch(seedArg){
   else{player.maxHp=player.hp=150;player.gunMul=1.3;player.dmgTaken=0.8;}
   player.pos.set(0,0,0);
   spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
-  applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
-  setupMatch();updatePodLook();
+  applyProgress();applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
+  setupMatch();match.beacons+=upLv('beacon');updatePodLook();
   waveTimer=60;gameTime=0;setProgress(-1);
   camera.position.set(0,1.6,0);camera.rotation.set(0,player.yaw,0,'YXZ');
 }
@@ -37,8 +38,9 @@ function endMatch(win){
   if(state==='result')return;if(isHost()&&net.inMatch)bcast({t:'end',win});net.inMatch=false;for(const r of net.remotes.values()){if(r.model)scene.remove(r.model);r.model=null;r.inMatch=false;r.dead=false;}
   const diedButWon=win&&player.hp<=0;state='result';document.exitPointerLock?.();setProgress(-1);view.visible=true;
   const v=loadVault();v.runs++;
-  const kept=win?match.safeLoot+match.loot:match.safeLoot, lost=win?0:match.loot;
-  v.loot+=kept;if(win){v.extracted++;if(match.rare)v.rare++;}saveVault(v);
+  const TM=CFG.threat[match.threat||1].loot,kept=Math.round((win?match.safeLoot+match.loot:match.safeLoot)*TM), lost=win?0:match.loot;
+  const amLost=player.amulet&&player.hp<=0&&!win;   // 阵亡：护符留在了深渊
+  v.loot+=kept;if(win){v.extracted++;if(match.rare)v.rare++;}if(amLost)v.rare=Math.max(0,v.rare-1);saveVault(v);
   const t=Math.floor(gameTime),mm=String(Math.floor(t/60)).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
   const done=match.conds.filter(c=>c.prog>=c.target).length,found=match.conds.filter(c=>c.revealed).length;
   const parts=Object.keys(PART_NEED).reduce((a,k)=>a+match.parts[k],0),need=Object.values(PART_NEED).reduce((a,b)=>a+b,0);
@@ -51,6 +53,7 @@ function endMatch(win){
     row('撤离条件',`完成 ${done} / ${match.conds.length}　发现 ${found} / ${match.conds.length}`)+row('逃生舱零件',`${parts} / ${need}`)+
     row(win?'带回物资':'回收装置保住',kept+' 件','gain')+(win?'':row('丢失物资',lost+' 件','lost'))+
     row('灵能圣物',match.rare?(win?'带回':'丢失'):'未找到',match.rare?(win?'gain':'lost'):'')+
+    row('威胁等级',CFG.threat[match.threat||1].name+`（物资 ×${TM}）`)+(player.amulet?row('圣物护符',amLost?'失去':'带回',amLost?'lost':'gain'):'')+
     row('战舰仓库总计',`${v.loot} 件物资 · ${v.rare} 件圣物`);
   $('result').classList.add('show');
 }

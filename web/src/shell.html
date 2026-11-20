@@ -33,6 +33,9 @@
   #progress{position:fixed;top:64%;left:50%;width:240px;margin-left:-120px;display:none}
   .panel{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,2,2,.86);pointer-events:auto}
   .panel.show{display:flex}
+  #shop .up{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0}#shop .up button{min-width:96px;padding:4px 8px;font-size:12px}#shop button:disabled{opacity:.4;cursor:default}
+  #shop .lv{color:#ffd23a;font-size:10px;letter-spacing:1px}.ths{display:flex;gap:6px}.ths .th{flex:1;padding:6px 4px;font-size:12px}.ths .th small{display:block;color:#a8977c}.ths .th.sel{outline:2px solid #ffd23a}
+  .am{display:block;margin-top:8px;font-size:12px;color:#d8c8a8}
   #settings{z-index:60}.setrow{display:grid;grid-template-columns:1fr 180px 56px;gap:12px;align-items:center;margin:10px 0;color:#d8c8a8}.setrow b{color:#ffd23a;text-align:right}
   #help{position:fixed;right:16px;top:16px;display:none;z-index:55;background:rgba(10,5,4,.88);border:1px solid #6b4a2a;padding:12px 16px;pointer-events:none;color:#d8c8a8;font-size:13px;max-width:420px}
   #help.show{display:block}.hk{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:3px 0}.hk b{color:#ffd23a}
@@ -139,6 +142,7 @@
   <div class="right">
     <div class="info" id="clsInfo"></div>
     <div class="info" id="vaultInfo"></div>
+    <div class="info" id="shop"></div>
     <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击（近战可连招）· R 换弹<br>右键：链锯蓄力狂热 / 力场剑分解力场 / 热熔蓄力 / 剑盾切换剑与手枪<br>E 举盾格挡（剑盾，时机准可防反）<br>X 处决（需充满）· F 拾取 / 互动<br>V 锁喉提摔 · G 黑洞 · Q 子弹时间<br>C 符文技能 · Tab 符文拼装 · B 回收装置 · M 地图 · Esc 暂停</div>
   </div>
   <div class="bottom"><button id="goBtn">单人行动</button><button id="hostBtn" class="nb">创建房间</button><button id="setBtn" class="nb">设置</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入房间</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>

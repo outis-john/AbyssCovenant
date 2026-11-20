@@ -125,7 +125,7 @@ function enterHub(){
   $('hub').classList.add('show');$('matching').classList.remove('show');$('result').classList.remove('show');$('ready').classList.remove('show');$('pause').classList.remove('show');
   $('hurt').style.opacity=0;$('warp').style.opacity=0;canvas.style.filter='';setProgress(-1);$('announce').style.opacity=0;
   if(actx){whisperGain.gain.value=0;}sawEngine(false,'idle');humEngine(false,false);swordOut=0;swing=0;MS.phase='none';ex.active=false;player.blocking=false;
-  showVault();selectClass(cls);renderLoadout();if(isNet())showLobby();
+  showVault();selectClass(cls);renderLoadout();renderShop();if(isNet())showLobby();
 }
 
 // ============================================================ 匹配

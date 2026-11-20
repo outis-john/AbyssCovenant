@@ -19,7 +19,7 @@ const A=await import('./game_a.mjs'),B=await import('./game_b.mjs');
 const log=console.log;let now=1000;
 const tick=(n=1)=>{for(let i=0;i<n;i++){now+=16;A.ev(`frame(${now})`);flush();B.ev(`frame(${now})`);flush();}};
 // 1 建房 / 加入
-await A.ev('hostRoom()');flush();await sleep(20);flush();const code=A.ev('net.code');log('host code',code,'mode',A.ev('net.mode'));
+await A.ev('hostRoom()');for(let i=0;i<5;i++){flush();await sleep(30);}flush();const code=A.ev('net.code');log('host code',code,'mode',A.ev('net.mode'));
 await B.ev(`joinRoom('${code}')`);for(let i=0;i<5;i++){flush();await sleep(120);}flush();log('relay used: host',A.ev('net.peer.relay'),'client',B.ev('net.peer.relay'),'broker',A.ev('net.peer.bi'));
 log('lobby on host',A.ev('net.lobby.length'),'| client mode',B.ev('net.mode'),'| client sees lobby',B.ev('net.lobby.length'));
 // 2 开局

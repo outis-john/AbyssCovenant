@@ -21,9 +21,9 @@ function spawnEnemy(type,x,z,elite=false){
     makePart(new THREE.BoxGeometry(.66,.2,.62),hood,0,.3,-.02,head,'hood');makePart(new THREE.BoxGeometry(.66,.55,.12),hood,0,0,-.3,head,'hood');
     orb=makePart(new THREE.BoxGeometry(.24,.24,.24),new THREE.MeshBasicMaterial({color:0x7dff3a}),0,-.6,0,armR,'orb');}
   scene.add(g);
-  const hp=T.hp*(elite?1.6:1);
+  const TH=curThreat(),hp=T.hp*(elite?1.6:1)*TH.hp;
   const e={id:++enemySeq,remote:false,type,g,mat:flesh,parts:{body,head,armL,armR,legL,legR},hp,maxHp:hp,armHp:{armL:hp*.3,armR:hp*.3},arms:2,kv:new THREE.Vector3(),lean:0,headSnap:0,
-    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1),reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
+    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1)*TH.dmg,reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
   for(const p of Object.values(e.parts))p.userData.enemy=e;
   head.children.forEach(c=>c.userData.enemy=e);
   enemies.push(e);return e;
@@ -31,12 +31,12 @@ function spawnEnemy(type,x,z,elite=false){
 function damageEnemy(e,dmg,part,dir,opts={}){
   if(!e.alive)return false;
   if(isClient()&&e.remote){const hd=part==='head'?2:1,est=Math.min(dmg*hd,Math.max(0,e.hp));
-    if(state==='playing'&&!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+est*0.12);if(bt.t>0)player.hp=Math.min(player.maxHp,player.hp+est*0.3);
+    if(state==='playing'&&!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+est*0.12*(player.exRate||1));if(bt.t>0)player.hp=Math.min(player.maxHp,player.hp+est*0.3);
     sendNet({t:'dmg',id:e.id,dmg,part,dir,o:{stagger:opts.stagger,knock:opts.knock,limbMul:opts.limbMul,explode:opts.explode,how:opts.how}});net.lastDmg.set(e.id,gameTime);
     e.flash=0.08;e.lean=Math.min(1.2,e.lean+0.6);spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,part==='head'?10:5);return false;}
   const head=part==='head';if(head)dmg*=2;
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
-  if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12);
+  if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
   e.hp-=dmg;e.flash=0.08;e.stagger=Math.max(e.stagger,opts.stagger??0.12);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
