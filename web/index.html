@@ -44,6 +44,34 @@
   select{font:inherit;background:#1d110d;color:#f0dcb8;border:1px solid #6b4a2a;padding:4px}
   .rune{border:1px solid #4a3324;padding:10px;margin:8px 0}
   .small{font-size:12px;color:#8a7f72}
+  body.inhub #hud-bl,body.inhub #hud-br,body.inhub #obj,body.inhub #cross,body.inhub #prompt,body.inhub #vignette{display:none}
+  #hub{position:fixed;inset:0;pointer-events:none;display:none}
+  #hub.show{display:block}
+  #hub .left{position:absolute;left:32px;top:28px;width:300px;pointer-events:auto}
+  #hub .right{position:absolute;right:32px;top:28px;width:320px;pointer-events:auto}
+  #hub .bottom{position:absolute;left:0;right:0;bottom:36px;text-align:center;pointer-events:none}
+  #hub .title{font-size:30px;letter-spacing:8px;color:#d8a657;text-shadow:0 0 12px #000}
+  #hub .sub{font-size:13px;color:#a8977c;margin:4px 0 22px;letter-spacing:2px}
+  .card{border:1px solid #4a3324;background:rgba(10,6,5,.78);padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+  .card:hover{border-color:#8a5a32}.card.sel{border-color:#d8a657;box-shadow:0 0 14px rgba(216,166,87,.35)}
+  .card b{font-size:17px;color:#f0dcb8}.card div{font-size:12px;color:#a8977c;margin-top:3px}
+  .info{border:1px solid #4a3324;background:rgba(10,6,5,.78);padding:14px 16px;margin-bottom:10px;font-size:13px;line-height:1.6}
+  .info h3{margin:0 0 6px;color:#d8a657;font-size:16px}
+  .stat{display:flex;align-items:center;gap:8px;margin:3px 0}.stat span{width:72px;color:#a8977c}.stat i{flex:1;height:7px;background:#2a1b14;position:relative}
+  .stat i b{position:absolute;left:0;top:0;bottom:0;background:#d8a657}
+  #goBtn{pointer-events:auto;font-size:20px;padding:14px 56px;letter-spacing:6px;background:#5a1d12;border-color:#d8a657}
+  #goBtn:hover{background:#7a2a18}
+  .hint{font-size:12px;color:#7a6f62;margin-top:8px}
+  #matching{position:fixed;left:0;right:0;bottom:120px;text-align:center;display:none;pointer-events:auto}
+  #matching.show{display:block}
+  #mmText{font-size:20px;letter-spacing:3px;color:#f0c674;text-shadow:0 0 8px #000}
+  .slots{display:flex;gap:12px;justify-content:center;margin:14px 0}
+  .slot{width:150px;padding:10px;border:1px solid #4a3324;background:rgba(10,6,5,.8);font-size:13px}
+  .slot.me{border-color:#d8a657}.slot.wait{color:#7a6f62;animation:pulse 1.2s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+  #result table{border-collapse:collapse;width:100%;margin:10px 0 6px;font-size:14px}
+  #result td{padding:6px 4px;border-bottom:1px solid #2e1f17}#result td:last-child{text-align:right;color:#f0dcb8}
+  .lost{color:#e05a4a!important}.gain{color:#8fd08f!important}
 </style>
 </head>
 <body>
@@ -67,14 +95,28 @@
   <div id="spells"></div>
 </div>
 
-<div class="panel show" id="menu"><div class="box">
-  <h1>深渊圣约</h1>
-  <p>巢都第七区已被深渊吞没。你的小队空降到这里，<b>撤离方式未知</b>——找到线索，完成隐藏的撤离条件，收集零件造出逃生舱，活着离开。死亡会丢失身上的一切。</p>
-  <div class="cls"><button id="pickTide">唤潮者</button><div class="small">灵能核心 4 槽 · 过载上限 +30% · 25% 概率免疫反噬 · 生命 100</div></div>
-  <div class="cls"><button id="pickWard">铸甲卫士</button><div class="small">灵能核心 3 槽 · 枪械伤害 +30% · 受到伤害 -20% · 生命 150</div></div>
-  <p class="keys">WASD 移动 · Shift 冲刺 · 空格 跳<br>左键 射击 · V 链锯剑<br>F 处决（敌人残血发光时）<br>1 / 2 / 3 灵能技能<br>Tab 符文拼装 · E 互动<br>R 呼叫回收装置（每局 2 次）<br>Esc 暂停</p>
-  <p class="small">提示：灵能值不够也能强行施法，但过载会暴涨。过载满了会反噬。</p>
-</div></div>
+<div id="hub" class="show">
+  <div class="left">
+    <div class="title">深渊圣约</div>
+    <div class="sub">战舰「永夜誓约号」· 整备甲板</div>
+    <div class="card" data-cls="tide"><b>唤潮者</b><div>灵能者 · 以深渊之力为武器</div></div>
+    <div class="card" data-cls="ward"><b>铸甲卫士</b><div>基因改造战士 · 重甲与爆弹步枪</div></div>
+    <div class="info small" style="font-size:12px">拖动角色可以旋转查看</div>
+  </div>
+  <div class="right">
+    <div class="info" id="clsInfo"></div>
+    <div class="info" id="vaultInfo"></div>
+    <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>左键 射击 · V 链锯剑 · F 处决<br>1 / 2 / 3 灵能 · Tab 符文拼装<br>E 互动 · R 回收装置 · Esc 暂停</div>
+  </div>
+  <div class="bottom"><button id="goBtn">开始匹配</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>
+</div>
+<div id="matching">
+  <div id="mmText">正在寻找队友……</div>
+  <div class="slots"><div class="slot me" id="slot0"></div><div class="slot wait" id="slot1">寻找中…</div><div class="slot wait" id="slot2">寻找中…</div></div>
+  <button id="mmCancel">取消匹配</button>
+  <div class="hint">联机功能开发中，目前会以单人身份空降</div>
+</div>
+<div class="panel" id="ready"><div class="box" style="text-align:center"><h2>空降舱已着陆</h2><p>巢都第七区。撤离方式未知——寻找数据板线索。</p><button id="readyBtn">点击开始行动</button></div></div>
 
 <div class="panel" id="pause"><div class="box"><h2>暂停</h2><button id="resume">继续</button><button id="quit">放弃行动</button></div></div>
 
@@ -85,7 +127,7 @@
   <button id="runeDone">完成</button>
 </div></div>
 
-<div class="panel" id="end"><div class="box"><h2 id="endTitle"></h2><p id="endText"></p><button id="again">再来一局</button></div></div>
+<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="backBtn">返回战舰</button></div></div>
 
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
@@ -109,6 +151,7 @@ scene.add(camera);
 function resize(){
   renderer.setSize(Math.max(1,Math.floor(innerWidth/PIX)), Math.max(1,Math.floor(innerHeight/PIX)), false);
   camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  if(window.__hubCam){__hubCam.aspect=camera.aspect;__hubCam.updateProjectionMatrix();}
 }
 addEventListener('resize', resize); resize();
 
@@ -176,7 +219,7 @@ function play(name,...a){if(actx&&sfx[name])sfx[name](...a);}
 
 // ============================================================ 状态
 const G=5, C=20, H=7, HALF=C/2;
-let state='menu', seed=0, rng=Math.random, cls='tide';
+let state='hub', seed=0, rng=Math.random, cls='tide';
 let colliders=[], wallMeshes=[], candles=[], levelGroup=null;
 let enemies=[], gibs=[], bloods=[], projectiles=[], beams=[], wisps=[], interactables=[];
 let conn=new Set(), podCell=[0,0], cellDist=null, distTimer=0;
@@ -297,7 +340,7 @@ function killEnemy(e,dir,explode){
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);
   for(const k of Object.keys(e.parts))if(e.parts[k].parent===e.g)detach(e,k,dir);
   scene.remove(e.g);spawnBlood(e.g.position.clone().setY(1),dir,24);
-  match.kills++;addProgress('kill',1);if(e.elite)addProgress('elite',1);
+  match.kills++;addProgress('kill',1);if(e.elite){addProgress('elite',1);match.elites++;}
   if(rng()<0.25)spawnPickup('relic',e.g.position.x,e.g.position.z);
 }
 
@@ -462,7 +505,7 @@ function setupMatch(){
   for(const it of interactables)scene.remove(it.m);interactables=[];
   const pool=['kill','elite','hack','ritual','cores'];for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
   const n=rng()<0.5?1:2;
-  match={conds:pool.slice(0,n).map(type=>({type,prog:0,target:COND_INFO[type].target,revealed:false})),parts:{thruster:0,fuel:0,hull:0},kills:0,launching:-1,hack:-1,ritual:-1};
+  match={conds:pool.slice(0,n).map(type=>({type,prog:0,target:COND_INFO[type].target,revealed:false})),parts:{thruster:0,fuel:0,hull:0},kills:0,elites:0,launching:-1,hack:-1,ritual:-1};
   const used=[[0,0],podCell];
   const [px,pz]=[podCell[0]*C,podCell[1]*C];match.pod=spawnPickup('pod',px,pz+2.5);
   for(let k=0;k<n+1;k++){const c=randomCell(used);used.push(c);spawnPickup('clue',...cellPos(c));}
@@ -533,7 +576,7 @@ function hurtPlayer(n,self=false){
   if(state!=='playing')return;
   if(!self&&player.shield>0)n*=0.3;n*=player.dmgTaken;
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);
-  if(player.hp<=0)endMatch(false);
+  if(player.hp<=0)beginDeath();
 }
 function updatePlayer(dt){
   const sprint=keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
@@ -666,8 +709,149 @@ function openRunes(){
 $('runeDone').onclick=()=>{$('runes').classList.remove('show');resumeGame();};
 
 // ============================================================ 开始 / 结束
-function startMatch(){
+// ============================================================ 局外：战舰整备甲板
+const hubScene=new THREE.Scene(), hubCam=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,0.1,300);
+window.__hubCam=hubCam;
+const hub={char:null,rot:0.5,drag:false,lastX:0,runes:[],orb:null,t:0};
+const texDeck=pixelTex((g,s)=>{noisy(g,s,[58,60,66],14);g.fillStyle='#1a1c22';g.fillRect(0,0,s,1);g.fillRect(0,0,1,s);g.fillStyle='#8a7a40';g.fillRect(2,2,1,1);g.fillRect(s-3,s-3,1,1);});
+const texStars=pixelTex((g,s)=>{g.fillStyle='#03040c';g.fillRect(0,0,s,s);for(let i=0;i<60;i++){g.fillStyle=Math.random()<.2?'#9ab0ff':'#ffffff';g.fillRect(Math.random()*s|0,Math.random()*s|0,1,1);}
+  g.fillStyle='#3a1a4a';g.beginPath();g.arc(s*0.8,s*0.9,s*0.35,0,7);g.fill();g.fillStyle='#5a2a6a';g.beginPath();g.arc(s*0.78,s*0.88,s*0.3,0,7);g.fill();},64);
+const texBanner=pixelTex((g,s)=>{g.fillStyle='#6a1410';g.fillRect(0,0,s,s);g.fillStyle='#d8a657';g.fillRect(0,0,s,2);g.fillRect(0,s-2,s,2);
+  g.beginPath();g.arc(s/2,s*0.42,s*0.16,0,7);g.fill();g.fillRect(s*0.15,s*0.4,s*0.7,2);g.fillRect(s/2-1,s*0.55,2,s*0.3);g.fillStyle='#6a1410';g.fillRect(s/2-3,s*0.38,2,2);g.fillRect(s/2+1,s*0.38,2,2);},32);
+function buildHub(){
+  const S=hubScene;S.background=new THREE.Color(0x04050a);S.fog=new THREE.Fog(0x04050a,16,42);
+  S.add(new THREE.HemisphereLight(0x50608a,0x140808,0.7));
+  const key=new THREE.SpotLight(0xffe2b8,160,30,0.42,0.6,2);key.position.set(2.5,9,6);key.target.position.set(0,1,0);S.add(key,key.target);
+  hub.rim=new THREE.PointLight(0x9a40ff,28,12,2);hub.rim.position.set(-2.5,3,-2);S.add(hub.rim);
+  const warm=new THREE.PointLight(0xff7a30,30,18,2);warm.position.set(6,2.5,-3);S.add(warm);
+  const warm2=new THREE.PointLight(0xff7a30,20,14,2);warm2.position.set(-7,2.5,-1);S.add(warm2);
+  const fg=new THREE.PlaneGeometry(70,70);fg.attributes.uv.array.forEach((v,i,a)=>a[i]=v*28);
+  const fl=new THREE.Mesh(fg,new THREE.MeshLambertMaterial({map:texDeck}));fl.rotation.x=-Math.PI/2;S.add(fl);
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.9,0.4,12),matMetal);ped.position.y=0.2;S.add(ped);
+  hub.ring=new THREE.Mesh(new THREE.TorusGeometry(1.72,0.05,4,28),new THREE.MeshBasicMaterial({color:0xd8a657}));hub.ring.rotation.x=Math.PI/2;hub.ring.position.y=0.42;S.add(hub.ring);
+  const winMat=new THREE.MeshBasicMaterial({map:texStars});
+  for(let i=-3;i<=3;i++){const x=i*5;
+    const w=new THREE.Mesh(scaleBoxUV(new THREE.BoxGeometry(5,16,1),5,16,1),matBrick);w.position.set(x,8,-13);S.add(w);
+    const win=new THREE.Mesh(new THREE.PlaneGeometry(2.6,7),winMat);win.position.set(x,6.5,-12.45);S.add(win);
+    const arch=new THREE.Mesh(new THREE.CircleGeometry(1.3,12,0,Math.PI),winMat);arch.position.set(x,10,-12.45);S.add(arch);
+    const pil=new THREE.Mesh(new THREE.BoxGeometry(1,16,1.4),matMetal);pil.position.set(x+2.5,8,-12.2);S.add(pil);
+    if(i%2===0){const b=new THREE.Mesh(new THREE.PlaneGeometry(1.4,4.5),new THREE.MeshLambertMaterial({map:texBanner,side:THREE.DoubleSide}));b.position.set(x+2.5,10,-11.4);S.add(b);}
+    for(const z of [-6,4]){const c=new THREE.Mesh(new THREE.BoxGeometry(.12,.35,.12),matCandle);c.position.set(x+2.5,.18,z<0?-11.2:-11.2);S.add(c);}
+  }
+  // 空降舱、货箱、线缆
+  const pod=new THREE.Group();const pb=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.5,3.2,8),matMetal);pb.position.y=1.6;pod.add(pb);
+  const pn=new THREE.Mesh(new THREE.ConeGeometry(1.1,1.3,8),matMetal);pn.position.y=3.85;pod.add(pn);
+  const door=new THREE.Mesh(new THREE.PlaneGeometry(1,1.8),new THREE.MeshBasicMaterial({color:0xff8a40}));door.position.set(0,1.3,1.32);pod.add(door);
+  pod.position.set(-6,0,-6);pod.rotation.y=0.5;S.add(pod);
+  for(const [x,z,s] of [[5,-5,1.2],[6.3,-5.4,.9],[5.6,-6.6,1],[-4,-8.5,1.3]]){const c=new THREE.Mesh(scaleBoxUV(new THREE.BoxGeometry(s,s,s),s,s,s,1),matMetal);c.position.set(x,s/2,z);c.rotation.y=x;S.add(c);}
+  for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,30,4),matDark);c.rotation.z=Math.PI/2;c.position.set(0,13+i*.25,-10+i*.6);S.add(c);}
+  hubCam.position.set(0,2.1,5.6);hubCam.lookAt(0,1.35,0);
+}
+function buildCharacter(c){
+  const g=new THREE.Group();const add=(geo,mat,x,y,z,parent=g)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);parent.add(m);return m;};
+  const gold=new THREE.MeshLambertMaterial({color:0xb8952e,emissive:0x2a1a00});
+  hub.runes=[];hub.orb=null;
+  if(c==='ward'){
+    const armor=new THREE.MeshLambertMaterial({map:texMetal,color:0x41557e});
+    const dark=new THREE.MeshLambertMaterial({color:0x1c1f28});
+    const red=new THREE.MeshLambertMaterial({color:0x7a1612});
+    for(const sx of [-1,1]){add(new THREE.BoxGeometry(.36,.95,.42),armor,sx*.26,.55,0);add(new THREE.BoxGeometry(.42,.22,.55),dark,sx*.26,.11,.05);add(new THREE.BoxGeometry(.38,.2,.1),gold,sx*.26,.62,.22);}
+    add(new THREE.BoxGeometry(.9,.25,.55),dark,0,1.08,0);
+    add(new THREE.BoxGeometry(1.0,.85,.62),armor,0,1.6,0);
+    add(new THREE.BoxGeometry(.45,.32,.08),gold,0,1.75,.32);
+    add(new THREE.PlaneGeometry(.4,.9),red,0,.75,.3);
+    add(new THREE.BoxGeometry(.85,.75,.4),dark,0,1.7,-.5);
+    for(const sx of [-1,1]){add(new THREE.CylinderGeometry(.1,.14,.35,6),dark,sx*.22,2.2,-.55);}
+    for(const sx of [-1,1]){
+      const pa=add(new THREE.SphereGeometry(.4,8,6,0,Math.PI*2,0,Math.PI/2),armor,sx*.72,1.88,0);pa.scale.set(1,.8,1.1);
+      add(new THREE.TorusGeometry(.4,.03,4,12),gold,sx*.72,1.88,0).rotation.x=Math.PI/2;
+      add(new THREE.BoxGeometry(.28,.8,.3),armor,sx*.72,1.38,.05);add(new THREE.BoxGeometry(.3,.25,.32),dark,sx*.72,.92,.12);
+    }
+    const head=add(new THREE.BoxGeometry(.44,.46,.46),armor,0,2.28,.02);
+    add(new THREE.BoxGeometry(.34,.07,.02),new THREE.MeshBasicMaterial({color:0xff3020}),0,.04,.235,head);
+    add(new THREE.BoxGeometry(.08,.2,.5),gold,0,.25,0,head);
+    const gun=new THREE.Group();gun.position.set(.38,1.2,.55);gun.rotation.set(-.2,-.5,.15);g.add(gun);
+    add(new THREE.BoxGeometry(.16,.22,1.0),dark,0,0,0,gun);add(new THREE.BoxGeometry(.1,.1,.4),armor,0,.04,.65,gun);add(new THREE.BoxGeometry(.1,.28,.14),dark,0,-.2,-.05,gun);add(new THREE.BoxGeometry(.18,.05,.6),gold,0,.13,0,gun);
+  } else {
+    const robe=new THREE.MeshLambertMaterial({map:texFlesh,color:0x3a3046});
+    const cloth=new THREE.MeshLambertMaterial({color:0x2a2232});
+    const bone=new THREE.MeshLambertMaterial({color:0x8a8070});
+    add(new THREE.ConeGeometry(.72,1.7,8),robe,0,.85,0);
+    add(new THREE.CylinderGeometry(.3,.42,.7,8),cloth,0,1.95,0);
+    add(new THREE.CylinderGeometry(.62,.5,.18,8),robe,0,2.22,0);
+    add(new THREE.BoxGeometry(.5,.08,.06),gold,0,1.7,.4);
+    for(const sx of [-1,1]){const a=add(new THREE.CylinderGeometry(.11,.15,.85,6),cloth,sx*.48,1.75,.05);a.rotation.z=sx*.25;}
+    const hood=add(new THREE.SphereGeometry(.31,8,6),cloth,0,2.55,0);hood.scale.set(1,1.15,1.05);
+    add(new THREE.PlaneGeometry(.32,.3),new THREE.MeshBasicMaterial({color:0x000000}),0,-.02,.29,hood);
+    const eyeM=new THREE.MeshBasicMaterial({color:0xc070ff});
+    add(new THREE.BoxGeometry(.06,.035,.01),eyeM,-.07,0,.3,hood);add(new THREE.BoxGeometry(.06,.035,.01),eyeM,.07,0,.3,hood);
+    for(let i=0;i<3;i++){const t=add(new THREE.CylinderGeometry(.03,.03,.9,4),bone,-.15+i*.15,2.1,-.32);t.rotation.x=.5;}
+    const staff=new THREE.Group();staff.position.set(.65,0,.25);g.add(staff);
+    add(new THREE.CylinderGeometry(.04,.05,2.6,6),bone,0,1.3,0,staff);
+    add(new THREE.BoxGeometry(.5,.05,.05),gold,0,2.45,0,staff);
+    add(new THREE.TorusGeometry(.17,.025,4,10),gold,0,2.75,0,staff);
+    hub.orb=add(new THREE.OctahedronGeometry(.13),new THREE.MeshBasicMaterial({color:0xd060ff}),0,2.75,0,staff);
+    for(let i=0;i<6;i++){const r=new THREE.Mesh(new THREE.OctahedronGeometry(.07),new THREE.MeshBasicMaterial({color:i%2?0xa040ff:0x60ffb0}));g.add(r);hub.runes.push(r);}
+  }
+  g.position.y=0.42;return g;
+}
+const CLS_INFO={
+  tide:{name:'唤潮者',desc:'帝国认可的灵能者。深渊在他耳边低语，他用符文把这股力量拧成武器。灵能用得越狠越强，也越危险。',stats:[['生命',100,150],['灵能槽',4,5],['过载上限',130,130],['枪械伤害',1,1.3],['减伤',0,.2]],
+    perks:'灵能核心 4 槽 · 过载上限 +30% · 25% 概率免疫反噬'},
+  ward:{name:'铸甲卫士',desc:'被基因改造的帝国精英，身披动力甲。枪械伤害更高、更耐打，但灵能天赋有限。',stats:[['生命',150,150],['灵能槽',3,5],['过载上限',100,130],['枪械伤害',1.3,1.3],['减伤',.2,.2]],
+    perks:'灵能核心 3 槽 · 枪械伤害 +30% · 受到伤害 -20%'}};
+function selectClass(c){
+  cls=c;document.querySelectorAll('.card').forEach(el=>el.classList.toggle('sel',el.dataset.cls===c));
+  if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);hubScene.add(hub.char);
+  const I=CLS_INFO[c];
+  $('clsInfo').innerHTML=`<h3>${I.name}</h3>${I.desc}<div style="margin:10px 0 4px">`+I.stats.map(([n,v,m])=>`<div class="stat"><span>${n}</span><i><b style="width:${Math.max(4,v/m*100)}%"></b></i></div>`).join('')+`</div><div class="small">${I.perks}</div>`;
+  play('pickup');
+}
+function updateHub(dt){
+  hub.t+=dt;if(!hub.drag)hub.rot+=dt*0.25;
+  if(hub.char){hub.char.rotation.y=hub.rot;hub.char.scale.y=1+Math.sin(hub.t*1.6)*0.008;
+    hub.runes.forEach((r,i)=>{const a=hub.t*0.9+i*Math.PI/3;r.position.set(Math.cos(a)*1.0,1.6+Math.sin(hub.t*2+i)*0.25,Math.sin(a)*1.0);r.rotation.y+=dt*2;});
+    if(hub.orb)hub.orb.rotation.y+=dt*2;}
+  hub.ring.material.color.setHSL(0.11,0.6,0.45+Math.sin(hub.t*2)*0.1);
+  hub.rim.intensity=24+Math.sin(hub.t*3)*6;
+  hubCam.position.x=Math.sin(hub.t*0.2)*0.25;hubCam.lookAt(0,1.35,0);
+}
+canvas.addEventListener('pointerdown',e=>{if(state==='hub'){hub.drag=true;hub.lastX=e.clientX;}});
+addEventListener('pointerup',()=>hub.drag=false);
+addEventListener('pointermove',e=>{if(hub.drag&&state==='hub'){hub.rot+=(e.clientX-hub.lastX)*0.01;hub.lastX=e.clientX;}});
+document.querySelectorAll('.card').forEach(el=>el.onclick=()=>{initAudio();selectClass(el.dataset.cls);});
+
+// 战舰仓库（保存在这个浏览器里）
+function loadVault(){try{return JSON.parse(localStorage.getItem('abyss_vault'))||{loot:0,rare:0,runs:0,extracted:0};}catch(e){return{loot:0,rare:0,runs:0,extracted:0};}}
+function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));}catch(e){}}
+function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<h3>战舰仓库</h3>物资：<b>${v.loot}</b> 件 · 灵能圣物：<b style="color:#d040ff">${v.rare}</b><br><span class="small">出击 ${v.runs} 次 · 成功撤离 ${v.extracted} 次</span>`;}
+function enterHub(){
+  state='hub';document.body.classList.add('inhub');document.exitPointerLock?.();
+  $('hub').classList.add('show');$('matching').classList.remove('show');$('result').classList.remove('show');$('ready').classList.remove('show');$('pause').classList.remove('show');
+  $('hurt').style.opacity=0;$('warp').style.opacity=0;canvas.style.filter='';setProgress(-1);$('announce').style.opacity=0;
+  if(actx)whisperGain.gain.value=0;
+  showVault();selectClass(cls);
+}
+
+// ============================================================ 匹配
+let mmTimers=[];
+function startMatchmaking(){
   initAudio();actx.resume?.();
+  state='matching';$('hub').classList.remove('show');$('matching').classList.add('show');
+  $('slot0').textContent='你 · '+CLS_INFO[cls].name;
+  for(const i of [1,2]){$('slot'+i).textContent='寻找中…';$('slot'+i).className='slot wait';}
+  $('mmText').textContent='正在寻找队友……';$('mmCancel').style.display='';
+  mmTimers=[
+    setTimeout(()=>{for(const i of [1,2]){$('slot'+i).textContent='无人响应';$('slot'+i).className='slot';}$('mmText').textContent='未找到可用队友——以单人身份空降';},3200),
+    setTimeout(()=>{$('mmCancel').style.display='none';$('mmText').textContent='空降舱发射中……';play('beacon');},5000),
+    setTimeout(()=>{prepareMatch();$('matching').classList.remove('show');$('ready').classList.add('show');state='ready';},6600),
+  ];
+}
+$('mmCancel').onclick=()=>{mmTimers.forEach(clearTimeout);enterHub();};
+$('goBtn').onclick=startMatchmaking;
+
+// ============================================================ 开始 / 死亡 / 结算
+function prepareMatch(){
   seed=Math.floor(Math.random()*1e9);rng=mulberry32(seed);
   for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
@@ -679,22 +863,47 @@ function startMatch(){
   spells=[{form:'bolt',elem:'fire',mods:[]},{form:'blast',elem:'void',mods:[]},{form:'bolt',elem:'lightning',mods:['split']}];
   setupMatch();updatePodLook();
   waveTimer=60;gameTime=0;setProgress(-1);
-  $('menu').classList.remove('show');$('end').classList.remove('show');
+  camera.position.set(0,1.6,0);camera.rotation.set(0,player.yaw,0,'YXZ');
+}
+$('readyBtn').onclick=()=>{
+  $('ready').classList.remove('show');document.body.classList.remove('inhub');
   announce('空降完成。撤离方式未知——寻找线索。',3.5);
   state='playing';canvas.requestPointerLock?.();
+};
+let deathT=0;
+function beginDeath(){
+  if(state!=='playing')return;state='dying';deathT=2.2;mouseDown=false;
+  play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('你倒下了……',2);
+}
+function updateDeath(dt){
+  deathT-=dt;const k=1-clamp(deathT/2.2,0,1);
+  camera.position.y=lerp(player.pos.y+1.6,0.35,Math.min(1,k*1.6));
+  camera.rotation.set(lerp(player.pitch,-0.2,k),player.yaw,lerp(0,1.25,Math.min(1,k*1.4)),'YXZ');
+  view.visible=false;canvas.style.filter=`grayscale(${k}) brightness(${1-k*0.5})`;
+  if(deathT<=0)endMatch(false);
 }
 function endMatch(win){
-  if(state==='end')return;state='end';document.exitPointerLock?.();setProgress(-1);
-  $('endTitle').textContent=win?'撤离成功':'行动失败';
-  const kept=win?player.safeLoot+player.loot:player.safeLoot;
-  $('endText').innerHTML=win?`逃生舱冲出大气层，战舰接住了你。<br>带回物资：<b>${kept}</b> 件${player.rare?' + <b style="color:#d040ff">灵能圣物</b>':''}<br>击杀恶魔：${match.kills}`
-    :`你倒在了巢都深处。<br>身上的 ${player.loot} 件物资${player.rare?'和灵能圣物':''}全部丢失。<br>回收装置保住了：<b>${player.safeLoot}</b> 件 · 击杀恶魔：${match.kills}`;
-  $('end').classList.add('show');
+  if(state==='result')return;state='result';document.exitPointerLock?.();setProgress(-1);view.visible=true;
+  const v=loadVault();v.runs++;
+  const kept=win?player.safeLoot+player.loot:player.safeLoot, lost=win?0:player.loot;
+  v.loot+=kept;if(win){v.extracted++;if(player.rare)v.rare++;}saveVault(v);
+  const t=Math.floor(gameTime),mm=String(Math.floor(t/60)).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
+  const done=match.conds.filter(c=>c.prog>=c.target).length,found=match.conds.filter(c=>c.revealed).length;
+  const parts=Object.keys(PART_NEED).reduce((a,k)=>a+match.parts[k],0),need=Object.values(PART_NEED).reduce((a,b)=>a+b,0);
+  $('resTitle').textContent=win?'撤离成功':'阵亡';
+  $('resTitle').style.color=win?'#8fd08f':'#e05a4a';
+  $('resText').textContent=win?'逃生舱冲出大气层，「永夜誓约号」接住了你。':'你倒在了巢都深处。身上的一切都留给了深渊。';
+  const row=(a,b,c='')=>`<tr><td>${a}</td><td class="${c}">${b}</td></tr>`;
+  $('resTable').innerHTML=
+    row('存活时间',mm+':'+ss)+row('击杀恶魔',match.kills+(match.elites?`（精英 ${match.elites}）`:''))+
+    row('撤离条件',`完成 ${done} / ${match.conds.length}　发现 ${found} / ${match.conds.length}`)+row('逃生舱零件',`${parts} / ${need}`)+
+    row(win?'带回物资':'回收装置保住',kept+' 件','gain')+(win?'':row('丢失物资',lost+' 件','lost'))+
+    row('灵能圣物',player.rare?(win?'带回':'丢失'):'未找到',player.rare?(win?'gain':'lost'):'')+
+    row('战舰仓库总计',`${v.loot} 件物资 · ${v.rare} 件圣物`);
+  $('result').classList.add('show');
 }
 function resumeGame(){state='playing';$('pause').classList.remove('show');canvas.requestPointerLock?.();}
-$('pickTide').onclick=()=>{cls='tide';startMatch();};
-$('pickWard').onclick=()=>{cls='ward';startMatch();};
-$('again').onclick=()=>{$('end').classList.remove('show');$('menu').classList.add('show');state='menu';};
+$('backBtn').onclick=enterHub;
 $('resume').onclick=resumeGame;
 $('quit').onclick=()=>{$('pause').classList.remove('show');endMatch(false);};
 document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&state==='playing'){state='paused';$('pause').classList.add('show');}});
@@ -720,16 +929,16 @@ let last=performance.now();
 function frame(now){
   requestAnimationFrame(frame);
   let dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(state==='hub'||state==='matching'){updateHub(dt);renderer.render(hubScene,hubCam);return;}
   if(state==='playing'){
     if(hitstop>0){hitstop-=dt;dt*=0.05;}   // 顿帧
     gameTime+=dt;
     if(mouseDown)fire();
     updatePlayer(dt);updateEnemies(dt);updateSpells(dt);updateDebris(dt);updateMatch(dt);updateHUD(dt);
-  }
+  } else if(state==='dying'){updateDeath(dt);updateDebris(dt*0.4);}
   renderer.render(scene,camera);
 }
-// 菜单背景：先生成一张图让画面不是黑的
-rng=mulberry32(7);buildLevel();camera.position.set(0,1.6,0);camera.rotation.set(0,Math.PI*0.75,0,'YXZ');
+buildHub();enterHub();
 requestAnimationFrame(frame);
 window.__dbg=()=>({state,hp:player.hp,pos:[player.pos.x.toFixed(1),player.pos.z.toFixed(1)],enemies:enemies.filter(e=>e.alive).length,gibs:gibs.length,mana:player.mana|0,ovl:player.ovl|0,conds:match&&match.conds,kills:match&&match.kills,inter:interactables.length});
 </script>
