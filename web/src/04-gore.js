@@ -24,11 +24,11 @@ function splitBox(m,P,n,capMat=null){
   const sa=a.position.clone().sub(P).dot(n)>0;return sa?{pos:[a],neg:[b]}:{pos:[b],neg:[a]};
 }
 function throwGib(m,v,spin=8){gibs.push({m,v,spin:new THREE.Vector3((Math.random()-.5)*spin,(Math.random()-.5)*spin,(Math.random()-.5)*spin),rest:false});
-  while(gibs.length>320){const o=gibs.shift();scene.remove(o.m);}}
+  capGibs();}
 function bleed(m,t=0.8,up=1){bleeders.push({m,t,up});}
 function updateBleeders(dt){for(const b of bleeders){b.t-=dt;if(Math.random()<0.8){const p=new THREE.Vector3();b.m.getWorldPosition(p);
   const bm=new THREE.Mesh(bloodGeo,matBlood);bm.position.copy(p);scene.add(bm);bloods.push({m:bm,v:new THREE.Vector3((Math.random()-.5)*2,3+Math.random()*3*b.up,(Math.random()-.5)*2),rest:false});}}
-  bleeders=bleeders.filter(b=>b.t>0);while(bloods.length>650){const o=bloods.shift();scene.remove(o.m);}}
+  bleeders=bleeders.filter(b=>b.t>0);capBloods();}
 // 按平面把整个敌人切开（致命）
 function cutApart(e,P,n,imp=4,extra={}){
   const parts=Object.keys(e.parts).filter(k=>e.parts[k].parent===e.g).map(k=>worldize(e.parts[k]));
@@ -79,7 +79,7 @@ let puffs=[],bolts=[],coolMats=[];
 function puff(p,n,color=0x555555,size=1){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.7,depthWrite:false}));
   m.position.copy(p).add(new THREE.Vector3((Math.random()-.5)*.6,(Math.random()-.5)*.6,(Math.random()-.5)*.6));m.scale.setScalar(size*(1+Math.random()));scene.add(m);
   puffs.push({m,v:new THREE.Vector3((Math.random()-.5)*1.5,.8+Math.random(),(Math.random()-.5)*1.5),life:.8+Math.random()*.6,max:1.4});}}
-function updatePuffs(dt){for(const p of puffs){p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.m.scale.multiplyScalar(1+dt*2.5);p.m.material.opacity=Math.max(0,p.life/p.max*.7);if(p.life<=0)scene.remove(p.m);}puffs=puffs.filter(p=>p.life>0);
+function updatePuffs(dt){while(puffs.length>CFG.perf.puffs){const o=puffs.shift();scene.remove(o.m);}for(const p of puffs){p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.m.scale.multiplyScalar(1+dt*2.5);p.m.material.opacity=Math.max(0,p.life/p.max*.7);if(p.life<=0)scene.remove(p.m);}puffs=puffs.filter(p=>p.life>0);
   for(const c of coolMats){c.t+=dt;const k=Math.min(1,c.t/4);c.mat.color.setRGB(lerp(1,.25,k),lerp(.55,.04,k),lerp(.15,.02,k));}coolMats=coolMats.filter(c=>c.t<4);}
 function embersBlue(p,n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0x60b0ff:0xe0f4ff}));m.position.copy(p);m.scale.setScalar(.5);scene.add(m);
   sparks.push({m,v:new THREE.Vector3((Math.random()-.5)*6,1+Math.random()*4,(Math.random()-.5)*6),life:.3+Math.random()*.3});}}
@@ -166,7 +166,7 @@ function shotgunBlast(w){
 const bloodGeo=new THREE.BoxGeometry(.12,.12,.12);
 function spawnBlood(p,dir,n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,matBlood);m.position.copy(p);scene.add(m);
   const v=new THREE.Vector3((Math.random()-.5)*5,Math.random()*5,(Math.random()-.5)*5);if(dir)v.addScaledVector(dir,4);
-  bloods.push({m,v,rest:false});if(bloods.length>500){const o=bloods.shift();scene.remove(o.m);}}}
+  bloods.push({m,v,rest:false});capBloods();}}
 function updateDebris(dt){
   for(const b of bloods){if(b.rest)continue;b.v.y-=18*dt;b.m.position.addScaledVector(b.v,dt);if(b.m.position.y<=0.01){b.m.position.y=0.01;b.rest=true;b.m.scale.set(1+Math.random()*2,.15,1+Math.random()*2);}}
   for(const g of gibs){if(g.rest)continue;g.v.y-=18*dt;g.m.position.addScaledVector(g.v,dt);g.m.rotation.x+=g.spin.x*dt;g.m.rotation.y+=g.spin.y*dt;

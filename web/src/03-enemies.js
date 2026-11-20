@@ -50,7 +50,7 @@ function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m
   e.g.remove(m);m.position.copy(wp);m.quaternion.copy(wq);m.scale.copy(ws);scene.add(m);
   const v=(dir?dir.clone():new THREE.Vector3()).multiplyScalar(4).add(new THREE.Vector3((Math.random()-.5)*4,4+Math.random()*3,(Math.random()-.5)*4));
   gibs.push({m,v,spin:new THREE.Vector3(Math.random()*10,Math.random()*10,Math.random()*10),rest:false});
-  spawnBlood(wp,dir,12);if(gibs.length>260){const old=gibs.shift();scene.remove(old.m);}
+  spawnBlood(wp,dir,12);capGibs();
 }
 function killEnemy(e,dir,explode,how={}){
   if(isHost())bcast({t:'kill',id:e.id,dir,how});

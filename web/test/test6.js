@@ -25,4 +25,7 @@ const sp=spits[0];sp.m.position.set(0,1.2,-0.4);player.blocking=true;player.bloc
 log('perfect block vs spit: dmg',Math.round(hp0-player.hp),'reflected',refl,'caster hurt by own spit',Math.round(ch0-e.hp)||(!e.alive?'killed':0));
 // 7. 击杀
 clear();e=spawnEnemy('caster',0,-4);const k=damageEnemy(e,999,'body',new THREE.Vector3(0,0,-1));step(5);log('caster killable',k,!e.alive);
+// 8. 大量碎块：上限生效、释放显存不报错
+for(let i=0;i<60;i++){const q=spawnEnemy('imp',(i%8)-4,-6-(i>>3));damageEnemy(q,999,'body',new THREE.Vector3(0,0,-1),{explode:true,how:{burst:{p:q.g.position.clone().setY(1.2),dir:new THREE.Vector3(0,0,-1)}}});}step(10);
+log('gore caps: gibs',gibs.length,'<=',CFG.perf.gibs,'bloods',bloods.length,'<=',CFG.perf.bloods,gibs.length<=CFG.perf.gibs&&bloods.length<=CFG.perf.bloods);
 log('DONE');})();

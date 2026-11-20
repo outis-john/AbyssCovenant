@@ -58,7 +58,7 @@ function sprayAlongChain(p,n){
   for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,matBlood);m.position.copy(p);scene.add(m);
     const v=blade.clone().multiplyScalar(5+Math.random()*4).addScaledVector(right,2+Math.random()*3).add(new THREE.Vector3(0,2+Math.random()*3,0)).addScaledVector(toCam,Math.random()*2);
     v.x+=(Math.random()-.5)*2;v.z+=(Math.random()-.5)*2;bloods.push({m,v,rest:false});}
-  while(bloods.length>650){const o=bloods.shift();scene.remove(o.m);}
+  capBloods();
 }
 function meleeSound(M,fin){play(M.id==='power'?'powerHit':M.id==='saw'?'grind':'clang');play('hit');if(fin)play('rip');}
 function updateMelee(dt){
@@ -96,5 +96,5 @@ function splat(){const el=$('splat');el.style.transition='none';el.style.opacity
 function hitSparks(p,dir,n){if(!p)return;for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0xffe080:0xffffff}));m.position.copy(p);m.scale.setScalar(.6);scene.add(m);
   const v=new THREE.Vector3((Math.random()-.5)*6,Math.random()*4,(Math.random()-.5)*6);if(dir)v.addScaledVector(dir,-5);sparks.push({m,v,life:.18+Math.random()*.12});}}
 let sparks=[];
-function updateSparks(dt){for(const k of sparks){k.life-=dt;k.v.y-=15*dt;k.m.position.addScaledVector(k.v,dt);if(k.life<=0)scene.remove(k.m);}sparks=sparks.filter(k=>k.life>0);}
+function updateSparks(dt){while(sparks.length>CFG.perf.sparks){const o=sparks.shift();scene.remove(o.m);}for(const k of sparks){k.life-=dt;k.v.y-=15*dt;k.m.position.addScaledVector(k.v,dt);if(k.life<=0)scene.remove(k.m);}sparks=sparks.filter(k=>k.life>0);}
 

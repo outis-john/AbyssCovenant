@@ -74,7 +74,7 @@ addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state==='playing')switchWeapon((cur+(e.deltaY>0?1:2))%3);});
 addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.charging=false;
   if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
-addEventListener('keydown',e=>{
+addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();perfMon.on=!perfMon.on;$('perf').style.display=perfMon.on?'':'none';return;}
   if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
   keys[e.code]=true;if(state!=='playing')return;
@@ -94,7 +94,7 @@ function simWorld(dt){if(isClient())updateEnemiesClient(dt);else updateEnemies(d
 function frame(now){
   requestAnimationFrame(frame);
   let dt=Math.min(0.05,(now-last)/1000);last=now;
-  netTick(dt);
+  netTick(dt);updatePerf(dt);
   if(state==='hub'||state==='matching'){updateHub(dt);renderer.render(hubScene,hubCam);return;}
   if(state==='playing'){
     if(hitstop>0){hitstop-=dt;dt*=0.05;}   // 顿帧

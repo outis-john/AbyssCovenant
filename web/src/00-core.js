@@ -52,3 +52,11 @@ const matCandle=new THREE.MeshBasicMaterial({color:0xffc070});
 const matDark=new THREE.MeshLambertMaterial({color:0x1a1210});
 const matBlood=new THREE.MeshBasicMaterial({color:0x5a0000});
 
+// ---------- 性能：移除网格时释放显存（碎块的几何体是各自独有的）
+function freeMesh(m){scene.remove(m);m.traverse(o=>{if(o.geometry&&o.geometry!==bloodGeo&&!o.geometry.userData.shared)o.geometry.dispose();});}
+function capGibs(){while(gibs.length>CFG.perf.gibs){const o=gibs.shift();freeMesh(o.m);}}
+function capBloods(){while(bloods.length>CFG.perf.bloods){const o=bloods.shift();scene.remove(o.m);}}
+// ---------- F3：帧率和对象数量
+const perfMon={on:false,t:0,n:0,fps:0};
+function updatePerf(dt){if(!perfMon.on)return;perfMon.t+=dt;perfMon.n++;if(perfMon.t<0.5)return;perfMon.fps=Math.round(perfMon.n/perfMon.t);perfMon.t=0;perfMon.n=0;
+  const i=renderer.info.render||{};$('perf').textContent=`FPS ${perfMon.fps} · 敌人 ${enemies.filter(e=>e.alive).length} · 碎块 ${gibs.length} · 血 ${bloods.length} · 粒子 ${sparks.length+puffs.length} · 绘制 ${i.calls??'-'}`;}

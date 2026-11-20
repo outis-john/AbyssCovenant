@@ -20,5 +20,6 @@ const CFG={
   },
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
+  perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
   wave:{interval:50,size:4,bruteChance:.12,casterChance:.18},   // 刷怪潮
 };
