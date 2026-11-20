@@ -18,3 +18,4 @@ Build/
 Plugins/*/Binaries/
 Plugins/*/Intermediate/
 web/test/run_*.mjs
+web/test/game_*.mjs

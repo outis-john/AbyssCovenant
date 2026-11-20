@@ -13,5 +13,7 @@ globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.window=globalT
 """
 for t in ["test.js","test2.js","test3.js","test4.js","test5.js"]:
     open('run_'+t.replace('.js','.mjs'),'w').write(pre+js+open(t).read())
+for f in ['game_a.mjs','game_b.mjs']:
+    open(f,'w').write(pre+js+"\nexport const ev=(code)=>eval(code);\n")
 PY
-node run_test.mjs && node run_test2.mjs && node run_test3.mjs && node run_test4.mjs && node run_test5.mjs
+node run_test.mjs && node run_test2.mjs && node run_test3.mjs && node run_test4.mjs && node run_test5.mjs && node mp_test.mjs
