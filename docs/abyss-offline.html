@@ -55,7 +55,7 @@
   #weapons{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
   .wslot{border:1px solid #4a3324;background:rgba(0,0,0,.55);padding:5px 12px;font-size:13px;min-width:96px;text-align:center;color:#a8977c}
   .wslot.on{border-color:#d8a657;color:#f0dcb8;background:rgba(60,30,15,.7)}.wslot b{display:block;font-size:16px;color:#f0dcb8}.wslot .low{color:#e05a4a}
-  body.inhub #weapons{display:none}
+  body.inhub #weapons,body.inhub #zab{display:none}
   #mapWrap{position:fixed;right:24px;top:20px;text-align:right}
   #minimap{width:180px;height:180px;image-rendering:pixelated;border:1px solid #5a4a3a;display:block}
   #mapWrap.big #minimap{width:400px;height:400px}
@@ -74,7 +74,7 @@
   #hub .left{position:absolute;left:28px;top:96px;width:300px;max-height:calc(100vh - 290px);overflow:auto}
   #hub .right{position:absolute;right:28px;top:96px;width:300px;max-height:calc(100vh - 290px);overflow:auto}
   #hub .bottom{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;pointer-events:none}
-  .clsrow{display:flex;gap:6px}.card{flex:1;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:9px 10px;cursor:pointer;transition:border-color .15s}
+  .clsrow{display:grid;grid-template-columns:1fr 1fr;gap:5px}.card{flex:1;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:9px 10px;cursor:pointer;transition:border-color .15s}
   .card:hover{border-color:#8a5a32}.card.sel{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
   .card b{font-size:15px;color:var(--ink)}.card div{font-size:11px;color:var(--mute);margin-top:2px}
   #clsInfo{font-size:12px;line-height:1.55;color:#cbb89a;margin-top:10px}#clsInfo h3{display:none}#clsInfo .small{margin-top:6px}
@@ -117,7 +117,7 @@
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
 <div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
-<div id="cross"></div><div id="hit"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+<div id="cross"></div><div id="hit"></div><div id="zab" style="position:fixed;left:18px;bottom:150px;color:#ffd23a;font-size:13px;text-shadow:0 0 4px #000;z-index:20"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
 <div class="layer" id="splat"></div>
@@ -148,7 +148,7 @@
   </header>
   <section class="left pnl">
     <h4>职业</h4>
-    <div class="clsrow"><div class="card" data-cls="tide"><b>唤潮者</b><div>灵能者</div></div><div class="card" data-cls="ward"><b>铸甲卫士</b><div>重甲战士</div></div></div>
+    <div class="clsrow" id="clsCards"></div>
     <div id="clsInfo"></div>
     <h4>主武器</h4><div class="lo" id="loPrimary"></div>
     <h4>近战武器</h4><div class="lo" id="loMelee"></div>
@@ -54428,7 +54428,7 @@ function spawnWave(n,near){
 // ============================================================ 玩家
 function hurtPlayer(n,self=false,att=null){
   if(state!=='playing'||ex.active)return;
-  if(!self&&player.shield>0)n*=0.3;
+  if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;
   if(!self&&player.blocking){
     if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
       play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;if(isClient()&&att.remote)sendNet({t:'stun',id:att.id,dur:1.4});att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
@@ -54439,21 +54439,21 @@ function hurtPlayer(n,self=false,att=null){
   if(player.hp<=0)beginDeath();
 }
 function updatePlayer(dt){
-  updateHold(dt);updateGunExtras(dt);
-  const sprint=keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
-  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active)sp=0;
+  updateHold(dt);updateGunExtras(dt);updateClassExtras(dt);
+  const sprint=!CLS[cls].noSprint&&keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
+  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;sp*=(player.speedMul||1)*(player.stimT>0?1.3:1);if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active)sp=0;
   if(sprint){player.stamina-=28*dt;player.stDelay=0.8;}else{player.stDelay-=dt;if(player.stDelay<=0)player.stamina=Math.min(100,player.stamina+22*dt);}
   const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
   let mx=fx*f+rx*s,mz=fz*f+rz*s;const l=Math.hypot(mx,mz);if(l>0){mx/=l;mz/=l;}
   player.pos.x+=mx*sp*dt;player.pos.z+=mz*sp*dt;
   player.vy-=22*dt;player.pos.y+=player.vy*dt;if(player.pos.y<=0){player.pos.y=0;player.vy=0;player.onGround=true;}
-  collide(player.pos,0.45);
+  collide(player.pos,player.r||0.45);
   // 镜头：后坐力恢复、震动、行走晃动
   player.recoil=Math.max(0,player.recoil-dt*0.6);player.shake=Math.max(0,player.shake-dt*1.6);
   const bob=l>0&&player.onGround?Math.sin(gameTime*(sprint?13:9))*0.05:0;
   const sh=player.shake*player.shake;
-  camera.position.set(player.pos.x+(Math.random()-.5)*sh*.4,player.pos.y+1.6+bob+(Math.random()-.5)*sh*.4,player.pos.z);
+  camera.position.set(player.pos.x+(Math.random()-.5)*sh*.4,player.pos.y+(player.eye||1.6)+bob+(Math.random()-.5)*sh*.4,player.pos.z);
   const roll=player.warp>0?Math.sin(gameTime*3)*0.08*Math.min(1,player.warp):0;
   player.punch=Math.max(0,(player.punch||0)-dt*0.5);
   camera.rotation.set(player.pitch-player.punch,player.yaw,roll+(player.swingRoll||0),'YXZ');
@@ -54767,6 +54767,7 @@ function buildHub(){
   hubCam.position.set(0,2.1,5.6);hubCam.lookAt(0,1.35,0);
 }
 function buildCharacter(c){
+  if(typeof EXTRA_MODELS!=='undefined'&&EXTRA_MODELS[c])return EXTRA_MODELS[c]();
   const g=new THREE.Group();const add=(geo,mat,x,y,z,parent=g)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);parent.add(m);return m;};
   const gold=new THREE.MeshLambertMaterial({color:0xb8952e,emissive:0x2a1a00});
   hub.runes=[];hub.orb=null;
@@ -54821,7 +54822,8 @@ const CLS_INFO={
     perks:'灵能核心 3 槽 · 枪械伤害 +30% · 受到伤害 -20%'}};
 function selectClass(c){
   cls=c;document.querySelectorAll('.card').forEach(el=>el.classList.toggle('sel',el.dataset.cls===c));
-  if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);hubScene.add(hub.char);
+  if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);if(typeof CLS!=='undefined'&&CLS[c]&&CLS[c].eye)hub.char.scale.multiplyScalar(.68);hubScene.add(hub.char);
+  if(typeof CLS!=='undefined'){fixLoadoutForClass();try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}applyLoadout();renderLoadout();}
   const I=CLS_INFO[c];
   $('clsInfo').innerHTML=`<h3>${I.name}</h3>${I.desc}<div style="margin:10px 0 4px">`+I.stats.map(([n,v,m])=>`<div class="stat"><span>${n}</span><i><b style="width:${Math.max(4,v/m*100)}%"></b></i></div>`).join('')+`</div><div class="small">${I.perks}</div>`;
   play('pickup');
@@ -54845,7 +54847,7 @@ function loadVault(){try{return JSON.parse(localStorage.getItem('abyss_vault'))|
 function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));}catch(e){}}
 function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>物资<b>${v.loot}</b></span><span>圣物<b style="color:#d070ff">${v.rare}</b></span><span title="出击 / 成功撤离">战绩<b>${v.extracted}/${v.runs}</b></span>`;}
 function renderLoadout(){
-  const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
+  const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).filter(w=>{const a=typeof CLS!=='undefined'&&CLS[cls]&&CLS[cls][key==='primary'?'guns':'melee'];return !a||a.includes(w.id);}).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
   mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
   $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>：${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>：${MELEE[loadout.melee].desc}`;
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});
@@ -54924,7 +54926,7 @@ function applyProgress(){const v=loadVault();
 // 武器：复制一份再加升级，避免改到原始数据
 function upgradeWeapons(P,M){const mg=1+0.3*upLv('mag');
   if(!P.heat){P.magSize=Math.round(P.magSize*mg);P.res0=Math.round(P.res0*mg);P.reserveMax=Math.round(P.reserveMax*mg);}else P.dmg*=1+0.2*upLv('melta');
-  M.dmg*=(1+0.15*upLv('blade'))*(player.amulet?CFG.amulet.dmg:1);}
+  M.dmg*=(1+0.15*upLv('blade'))*(player.amulet?CFG.amulet.dmg:1)*(player.meleeMul||1);}
 // ============================================================ 训练场：一步步教操作（不计入战舰仓库）
 const training={on:false,step:0,k0:0};
 const TSTEPS=[
@@ -54947,6 +54949,83 @@ function updateTraining(dt){if(player.hp<40)player.hp=40;   // 训练里不会�
   const S=TSTEPS[training.step];if(S.ok())nextTrainStep();}
 function exitTraining(){training.on=false;$('trainBox').style.display='none';for(const e of enemies){e.alive=false;scene.remove(e.g);}enemies=[];enterHub();}
 $('trainBtn').onclick=startTraining;
+// ============================================================ 职业扩展：属性、武器限制、Z 职业技能、模型
+// psy：能否用灵能（V G Q C）；guns/melee：可用武器（null = 全部）；eye：视线高度；r：碰撞半径
+const CLS={
+  tide:    {hp:100,speed:1,   dmgTaken:1,   gunMul:1,   meleeMul:1,  psy:true, guns:null,melee:null,z:'surge'},
+  ward:    {hp:150,speed:1,   dmgTaken:.8,  gunMul:1.3, meleeMul:1,  psy:false,guns:['bolter','shotgun','melta','plasma','needle'],melee:['saw','power','ssword','axe'],z:'stim'},
+  reforged:{hp:175,speed:1.08,dmgTaken:.75, gunMul:1.3, meleeMul:1.1,psy:false,guns:['bolter','shotgun','plasma','needle'],melee:['saw','power','axe','ssword'],z:'grenade'},
+  bastion: {hp:240,speed:.8,  dmgTaken:.6,  gunMul:1.2, meleeMul:1.2,psy:false,guns:['bolter','hbolter','flamer','melta'],melee:['hammer','fist','power','ssword'],z:'warp',noSprint:true,heavy:true},
+  relic:   {hp:265,speed:.78, dmgTaken:.55, gunMul:1.25,meleeMul:1.3,psy:false,guns:['plasma','hbolter','melta','flamer'],melee:['hammer','power','axe'],z:'aegis',noSprint:true,heavy:true},
+  walker:  {hp:450,speed:.66, dmgTaken:.5,  gunMul:1.4, meleeMul:1.6,psy:false,guns:['hbolter','melta','plasma'],melee:['fist'],z:'stomp',noSprint:true,noJump:true,heavy:true,eye:3.0,r:.85},
+  redeemer:{hp:520,speed:.72, dmgTaken:.48, gunMul:1.35,meleeMul:1.6,psy:false,guns:['flamer','hbolter'],melee:['fist'],z:'pyre',noSprint:true,noJump:true,heavy:true,eye:3.2,r:.9}};
+const ZAB={surge:{name:'深渊回响',cd:25,desc:'清空过载、回复 15 生命'},stim:{name:'战斗兴奋剂',cd:18,desc:'6 秒移速 +30%、伤害 +25%，回复 20 生命'},
+  grenade:{name:'震爆手雷',cd:10,desc:'投出手雷，爆炸伤害并震晕'},warp:{name:'跃迁突袭',cd:14,desc:'瞬移到前方 10 米，落地冲击波震晕敌人'},
+  aegis:{name:'圣盾领域',cd:20,desc:'6 秒内你和附近队友受到伤害减半'},stomp:{name:'践踏冲锋',cd:10,desc:'向前冲锋，撞飞并碾碎路上的敌人'},pyre:{name:'烈焰风暴',cd:14,desc:'向四周喷出火焰，点燃 6 米内所有敌人'}};
+Object.assign(CLS_INFO,{
+  reforged:{name:'新铸卫士',tag:'强化战士',desc:'第二代改造战士，骨骼与器官重新铸造。比前辈更高、更快、更耐打。',perks:'生命 175 · 枪械伤害 +30% · 移速 +8% · Z：震爆手雷'},
+  bastion:{name:'壁垒重甲',tag:'重甲突击',desc:'穿着能在虚空中行走的厚重战甲，几乎打不穿。不能冲刺，但能跃迁突入敌阵。',perks:'生命 240 · 减伤 40% · 近战 +20% · 不能冲刺 · Z：跃迁突袭'},
+  relic:{name:'圣遗壁垒',tag:'圣物重甲',desc:'从战舰圣库里请出的古老重甲，只交给最资深的战士。慢，但每一击都是审判。',perks:'生命 265 · 减伤 45% · 近战 +30% · 不能冲刺 · Z：圣盾领域'},
+  walker:{name:'长眠机神',tag:'步行机甲',desc:'一位阵亡英雄长眠在机甲的棺椁里，被唤醒再战。巨拳能捏碎一切。',perks:'生命 450 · 减伤 50% · 视线高 · 不能冲刺跳跃 · Z：践踏冲锋'},
+  redeemer:{name:'救赎机神',tag:'重型机甲',desc:'更新、更大的步行机甲，用火焰净化整条走廊。',perks:'生命 520 · 减伤 52% · 只能用火焰 / 重爆弹 · Z：烈焰风暴'}});
+CLS_INFO.tide.tag='灵能者';CLS_INFO.ward.tag='动力甲战士';CLS_INFO.tide.perks+=' · 唯一能用灵能（V G Q C）· Z：深渊回响';CLS_INFO.ward.perks+=' · Z：战斗兴奋剂';
+for(const k in CLS){const c=CLS[k];CLS_INFO[k].stats=[['生命',c.hp,520],['枪械伤害',c.gunMul,1.4],['近战伤害',c.meleeMul,1.6],['减伤',1-c.dmgTaken,.55],['速度',c.speed,1.1]];}
+// ---------- 开局套用职业
+function applyClassStats(){const c=CLS[cls]||CLS.ward;
+  Object.assign(player,{maxHp:c.hp,hp:c.hp,gunMul:c.gunMul,dmgTaken:c.dmgTaken,meleeMul:c.meleeMul,speedMul:c.speed,eye:c.eye||1.6,r:c.r||.45,zcd:0,stimT:0,auraT:0,dash:0});
+  if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}}
+function fixLoadoutForClass(){const c=CLS[cls];if(!c)return;
+  if(c.guns&&!c.guns.includes(loadout.primary))loadout.primary=c.guns[0];if(c.melee&&!c.melee.includes(loadout.melee))loadout.melee=c.melee[0];}
+// ---------- Z 技能
+function classAbility(){if(ex.active)return;const c=CLS[cls],Z=ZAB[c.z];if(player.zcd>0){announce(Z.name+' 冷却中 '+Math.ceil(player.zcd)+' 秒',0.8);return;}
+  player.zcd=Z.cd;announce(Z.name+'！',1);const fwd=fwdFlat();
+  if(c.z==='surge'){player.ovl=0;player.hp=Math.min(player.maxHp,player.hp+15);play('choir');embersBlue(player.pos.clone().setY(1.2),16);}
+  else if(c.z==='stim'){player.stimT=6;player.hp=Math.min(player.maxHp,player.hp+20);play('frenzy');}
+  else if(c.z==='grenade'){const {o,d}=aimRay(0);grenades.push({p:o.clone().addScaledVector(d,.6),v:d.clone().multiplyScalar(16).add(new THREE.Vector3(0,4,0)),t:1.1,
+    m:(()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.16),gunDark);scene.add(m);return m;})()});play('whoosh');}
+  else if(c.z==='warp'){const to=player.pos.clone();for(let i=0;i<20;i++){const n=to.clone().addScaledVector(fwd,.5);const t=n.clone();collide(t,player.r);if(t.distanceTo(n)>0.01)break;to.copy(n);}
+    embersBlue(player.pos.clone().setY(1),16);player.pos.copy(to);play('zap');play('boom');shockwave(player.pos,4,90,1.5);}
+  else if(c.z==='aegis'){auraAt(player.pos.x,player.pos.z);sendNet({t:'aura',x:player.pos.x,z:player.pos.z});if(isHost())bcast({t:'aura',x:player.pos.x,z:player.pos.z});play('choir');}
+  else if(c.z==='stomp'){player.dash=0.6;player.dashHit=new Set();play('charge');play('growl');}
+  else if(c.z==='pyre'){play('melta');for(const e of enemies){if(!e.alive)continue;const d=e.g.position.distanceTo(player.pos);if(d>6+e.r)continue;
+      damageEnemy(e,80*player.gunMul,'body',e.g.position.clone().sub(player.pos).setY(0).normalize(),{knock:1,stagger:.5,how:{melt:d<2.5}});if(!isClient())e.burn=Math.max(e.burn,4);}
+    for(let i=0;i<40;i++){const a=i/40*6.28,m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:i%2?0xff8030:0xffd060}));m.position.copy(player.pos).setY(1);m.scale.setScalar(2);scene.add(m);
+      sparks.push({m,v:new THREE.Vector3(Math.cos(a)*12,1+Math.random()*2,Math.sin(a)*12),life:.5});}}}
+function stunE2(e,d){e.stun=Math.max(e.stun,d);if(isClient()&&e.remote)sendNet({t:'stun',id:e.id,dur:d});}
+function shockwave(P,R,dmg,stun){for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.g.position.x-P.x,e.g.position.z-P.z);if(d>R+e.r)continue;
+  const dir=e.g.position.clone().sub(P).setY(0).normalize();damageEnemy(e,dmg*(1-d/(R*2)),'body',dir,{knock:2,stagger:.6,point:contactPoint(e)});if(e.alive)stunE2(e,stun);}slamFx(P.x,P.z);}
+function auraAt(x,z){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;announce('圣盾领域：受到伤害减半',1.2);}
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(7,7,.1,24,1,true),new THREE.MeshBasicMaterial({color:0xffd060,transparent:true,opacity:.35,side:2,depthWrite:false}));m.position.set(x,1,z);m.scale.y=20;scene.add(m);beams.push({m,life:6,fade:true});}
+let grenades=[];
+function updateClassExtras(dt){player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
+  for(const g of grenades){g.t-=dt;g.v.y-=18*dt;g.p.addScaledVector(g.v,dt);if(g.p.y<.1){g.p.y=.1;g.v.y*=-.3;g.v.x*=.6;g.v.z*=.6;}g.m.position.copy(g.p);
+    if(g.t>0&&enemies.some(e=>e.alive&&e.g.position.distanceTo(g.p.clone().setY(0))<e.r+.8&&g.p.y<2.5*e.g.scale.y))g.t=0;   // 碰到敌人就炸
+    if(g.t<=0){g.dead=true;scene.remove(g.m);play('boom');puff(g.p,8,0x444444,1.2);hitSparks(g.p,null,10);shockwave(g.p,3.5,120*player.gunMul,1.2);}}
+  grenades=grenades.filter(g=>!g.dead);
+  if(player.dash>0){player.dash-=dt;const f=fwdFlat();player.pos.addScaledVector(f,14*dt);collide(player.pos,player.r);player.shake=Math.max(player.shake,.2);
+    for(const e of enemies){if(!e.alive||player.dashHit.has(e))continue;if(e.g.position.distanceTo(player.pos)<player.r+e.r+.6){player.dashHit.add(e);
+      damageEnemy(e,140*player.meleeMul,'body',f,{knock:4,stagger:1,point:contactPoint(e),how:{burst:{p:contactPoint(e),dir:f}}});if(e.alive)stunE2(e,1);play('clang');hitstop=.06;}}}
+  const z=ZAB[(CLS[cls]||CLS.ward).z];$('zab').textContent=`Z ${z.name}${player.zcd>0?' · '+Math.ceil(player.zcd)+'s':' · 就绪'}`;$('zab').style.opacity=player.zcd>0?.55:1;}
+// ---------- 模型：在铸甲卫士模型上换颜色 / 加厚；机甲是独立的箱形棺椁
+function recolor(g,map){g.traverse(o=>{if(o.material&&o.material.color){const h=o.material.color.getHex();if(map[h]!==undefined){o.material=o.material.clone();o.material.color.setHex(map[h]);}}});return g;}
+const EXTRA_MODELS={
+  reforged:()=>{const g=recolor(buildCharacter('ward'),{0x41557e:0x6a2a2a});g.scale.setScalar(1.07);return g;},
+  bastion:()=>{const g=recolor(buildCharacter('ward'),{0x41557e:0xb8b0a0});g.scale.set(1.22,1.08,1.25);return g;},
+  relic:()=>{const g=recolor(buildCharacter('ward'),{0x41557e:0x8a7a3a,0x7a1612:0x2a1a50});g.scale.set(1.25,1.1,1.28);
+    const b=new THREE.Mesh(new THREE.PlaneGeometry(.5,1.1),new THREE.MeshLambertMaterial({color:0x7a1612,side:2}));b.position.set(0,2.7,-.6);g.add(b);return g;},
+  walker:()=>walkerModel(0x8a9070,false),redeemer:()=>walkerModel(0x9a6a4a,true)};
+function walkerModel(col,big){const g=new THREE.Group();const M=new THREE.MeshLambertMaterial({map:texMetal,color:col}),D=new THREE.MeshLambertMaterial({color:0x3a3a40}),Gd=new THREE.MeshLambertMaterial({color:0xb8952e,emissive:0x2a1a00});
+  const add=(w,h,d,x,y,z,m)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);g.add(b);return b;};
+  for(const sx of [-1,1]){add(.4,1.1,.5,sx*.45,.55,0,D);add(.5,.25,.7,sx*.45,.12,.1,M);}
+  add(1.4,.4,1,0,1.25,0,D);add(1.7,1.5,1.3,0,2.15,0,M);add(.9,.9,.1,0,2.2,.66,Gd);add(.7,.3,.4,0,3.0,.2,D);
+  const win=add(.5,.12,.05,0,2.55,.68,new THREE.MeshBasicMaterial({color:0xff5020}));
+  add(.55,.9,.7,-1.15,2.1,.1,M);add(.7,.6,.7,-1.15,1.45,.3,D);   // 左：巨拳
+  add(.5,.6,.6,1.12,2.2,0,M);add(.22,.22,1.1,1.05,2.0,.6,D);add(.22,.22,1.1,1.28,2.0,.6,D);   // 右：枪
+  if(big){add(.5,.4,.6,0,3.15,-.4,D);for(const sx of [-1,1])add(.18,.6,.18,sx*.5,3.2,-.55,D);g.scale.setScalar(1.08);}
+  return g;}
+// ---------- 战舰里的职业卡片
+$('clsCards').innerHTML=Object.keys(CLS).map(k=>`<div class="card" data-cls="${k}"><b>${CLS_INFO[k].name}</b><div>${CLS_INFO[k].tag}</div></div>`).join('');
+document.querySelectorAll('#clsCards .card').forEach(el=>el.onclick=()=>{initAudio();selectClass(el.dataset.cls);});
 // ============================================================ 空降过场
 const cut={t:0,pod:null,door:null,char:null,parts:[],done:false,impacted:false,opened:false};
 function makeDropPod(){
@@ -55130,6 +55209,7 @@ function renderLobby(){
 // ---------- 房主收到消息
 function hostRecv(id,m){
   let r=net.remotes.get(id);
+  if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
     if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
@@ -55159,6 +55239,7 @@ function clientRecv(m){
   else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
   else if(m.t==='ann'){announce(m.text,m.dur);}
+  else if(m.t==='aura'){auraAt(m.x,m.z);}
   else if(m.t==='fx'&&m.k==='slam'){slamFx(m.x,m.z);}
   else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
   else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}
@@ -55246,8 +55327,7 @@ function prepareMatch(seedArg){
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
-  if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}
-  else{player.maxHp=player.hp=150;player.gunMul=1.3;player.dmgTaken=0.8;}
+  applyClassStats();fixLoadoutForClass();
   player.pos.set(0,0,0);
   spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
   applyProgress();applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
@@ -55320,11 +55400,13 @@ addEventListener('mouseup',e=>{if(e.button===0){mouseDown=false;if(state==='play
   if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
 addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET.fps;saveSet();applySet();return;}
   if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}
-  if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
+  if(e.code==='Tab'){e.preventDefault();if(state==='playing'&&CLS[cls].psy)openRunes();else if(state==='runes')$('runeDone').onclick();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
   keys[e.code]=true;if(state!=='playing')return;
-  if(e.code==='Space'&&player.onGround){player.vy=7.5;player.onGround=false;}
+  if(e.code==='Space'&&player.onGround&&!CLS[cls].noJump){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
+  if(e.code==='KeyZ')classAbility();
+  if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('只有唤潮者能使用灵能 · 按 Z 使用职业技能',1.2);return;}
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
   if(e.code==='KeyE'&&!e.repeat&&WEAPONS[cur].block&&!ex.active){player.blocking=true;player.blockStart=gameTime;play('equip');}

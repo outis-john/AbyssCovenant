@@ -23,4 +23,4 @@ function applyProgress(){const v=loadVault();
 // 武器：复制一份再加升级，避免改到原始数据
 function upgradeWeapons(P,M){const mg=1+0.3*upLv('mag');
   if(!P.heat){P.magSize=Math.round(P.magSize*mg);P.res0=Math.round(P.res0*mg);P.reserveMax=Math.round(P.reserveMax*mg);}else P.dmg*=1+0.2*upLv('melta');
-  M.dmg*=(1+0.15*upLv('blade'))*(player.amulet?CFG.amulet.dmg:1);}
+  M.dmg*=(1+0.15*upLv('blade'))*(player.amulet?CFG.amulet.dmg:1)*(player.meleeMul||1);}

@@ -9,13 +9,13 @@
 ## 项目现状
 - 主线是**网页版**。**源码在 `web/src/`，只改这里**；`python3 tools/build.py` 按文件名顺序拼接成 `web/index.html`、`docs/index.html`、`docs/abyss-offline.html`（这三个是生成物，别手改，但要提交）。所有 js 在同一个 module 作用域里，顺序即原顺序。
 - 文件地图（先 grep 定位再只读需要的文件，省 token）：
-  `shell.html` HTML+CSS+界面 DOM · `00-config` **数值表 CFG** · `00-core` 工具/渲染/贴图 · `01-audio` 合成音效 · `02-level` 状态变量/关卡生成/碰撞 · `03-enemies` 敌人模型/受伤/死亡 · `04-gore` 切割断肢/爆弹/血 · `05-weapons` 枪模型/RANGED/MELEE/开火 · `06-melee` 近战连招 · `07-execution` 处决 · `08-psychic` 灵能/符文 · `09-extraction` 撤离/拾取/刷怪潮 · `10-player` 玩家 · `11-enemy-ai` 敌人 AI/瘟火术士 · `12-match-hud` 对局流程/HUD · `13-hub` 战舰/职业/仓库/配装 · `13b-settings` 设置/按键说明 · `13c-workshop` 升级/威胁/护符 · `13d-training` 训练场 · `14-cutscene` 空降 · `15-net` 联机 · `16-flow-loop` 开局结束/输入/主循环
+  `shell.html` HTML+CSS+界面 DOM · `00-config` **数值表 CFG** · `00-core` 工具/渲染/贴图 · `01-audio` 合成音效 · `02-level` 状态变量/关卡生成/碰撞 · `03-enemies` 敌人模型/受伤/死亡 · `04-gore` 切割断肢/爆弹/血 · `05-weapons` 枪模型/RANGED/MELEE/开火 · `05b-guns` 新枪 · `06-melee` 近战连招 · `06b-heavy` 重击/新近战模型 · `07-execution` 处决 · `08-psychic` 灵能/符文 · `09-extraction` 撤离/拾取/刷怪潮 · `10-player` 玩家 · `11-enemy-ai` 敌人 AI/瘟火术士 · `12-match-hud` 对局流程/HUD · `13-hub` 战舰/职业/仓库/配装 · `13b-settings` 设置/按键说明 · `13c-workshop` 升级/威胁/护符 · `13d-training` 训练场 · `13e-classes` 职业/Z 技能/机甲模型 · `14-cutscene` 空降 · `15-net` 联机 · `16-flow-loop` 开局结束/输入/主循环
 - `unreal/` 是早期的 UE5 C++ 版本，已暂停。
 - `docs/` 是 GitHub Pages 发布副本（`sh sync-pages.sh` 从 web/ 复制）。网址：https://outis-john.github.io/AbyssCovenant/
 - Claude artifact 页面：https://claude.ai/artifact/8zLjRyCQCoxMRzT6Vh8yKL （slug 40b18688-37a6-466b-89bf-0f8d60b6645f）。artifact 里**不能联机**（禁止 WebRTC），联机只能用 Pages 版。
 
 ## 已实现的系统（都在 web/index.html）
-- 局外：战舰整备甲板场景、职业（唤潮者 / 铸甲卫士）、配装（主武器：爆弹枪 / 霰弹枪 / 热熔枪；副武器爆弹手枪；近战：力场分解剑 / 链锯剑 / 剑盾）、战舰仓库（localStorage）。
+- 局外：战舰整备甲板场景、7 职业（`13e-classes` 的 CLS：唤潮者 tide、铸甲卫士 ward、新铸卫士 reforged、壁垒重甲 bastion、圣遗壁垒 relic、长眠机神 walker、救赎机神 redeemer；只有唤潮者能用灵能，其余按 Z 用职业技能 ZAB；各职业有可用武器白名单、视线高度 eye、碰撞半径 r）、配装（主武器 7 把：爆弹枪 / 霰弹枪 / 热熔枪 / 等离子枪 / 重型爆弹机枪 / 火焰喷射器 / 穿甲狙击枪（`05b-guns`）；副武器爆弹手枪；近战 6 把：链锯剑 / 力场剑 / 剑盾 / 雷殛锤 / 破甲巨拳 / 链锯战斧；短按左键轻连招 COMBOS，按住左键蓄力重击 HEAVY（`06b-heavy`））、战舰仓库（localStorage）。
 - 局外成长（`13c-workshop`）：战舰工坊用物资 / 圣物买升级（CFG.upgrades，存在 vault.up）；威胁等级 1–3（CFG.threat，联机用房主的，随 start 消息发 th）；圣物护符（带 1 件圣物出击加属性，阵亡失去）。设置 / 按键说明在 `13b-settings`（localStorage abyss_settings）。训练场（战舰“训练场”按钮，TSTEPS 七步教学，靶子不动不伤人，不计入仓库）。
 - 流程：单人行动 / 创建房间 / 加入房间 → 空降舱过场 → 对局 → 阵亡（联机时观战）→ 结算 → 返回战舰。
 - 地图：种子生成 5x5 房间网格、小地图（M）。撤离：隐藏条件 + 数据板线索、逃生舱零件、终端 / 仪式 / 能源核心、回收装置（B）。物资全队共享（match.*）。
@@ -29,7 +29,7 @@
 
 ## 测试（改代码后必须跑）
 - `web/test/`：`three-stub.mjs` 是最小 Three.js 替身（真实向量 / 四元数 / 场景树 / 射线），其余为空对象。
-- 运行：`sh web/test/run-tests.sh`（会先自动 build）（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、test7 升级/威胁/护符、test8 Boss、test9 训练场、mp_test 两份游戏 + 假 PeerJS、mp_relay_test 同流程 + 假 MQTT 服务器）。
+- 运行：`sh web/test/run-tests.sh`（会先自动 build）（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、test7 升级/威胁/护符、test8 Boss、test9 训练场、test10 轻重攻击、test11 新枪、test12 职业、mp_test 两份游戏 + 假 PeerJS、mp_relay_test 同流程 + 假 MQTT 服务器）。
 - 注意：替身里所有材质是同一个空对象，材质比较/透明度读取在测试中不可信。setTimeout 在 test4 中被改为同步执行。
 - 内置浏览器没有登录 claude.ai，无法直接看 artifact 画面；视觉效果需要用户反馈。
 

@@ -111,6 +111,7 @@ function renderLobby(){
 // ---------- 房主收到消息
 function hostRecv(id,m){
   let r=net.remotes.get(id);
+  if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
     if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
@@ -140,6 +141,7 @@ function clientRecv(m){
   else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
   else if(m.t==='ann'){announce(m.text,m.dur);}
+  else if(m.t==='aura'){auraAt(m.x,m.z);}
   else if(m.t==='fx'&&m.k==='slam'){slamFx(m.x,m.z);}
   else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
   else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}

@@ -55,7 +55,7 @@
   #weapons{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
   .wslot{border:1px solid #4a3324;background:rgba(0,0,0,.55);padding:5px 12px;font-size:13px;min-width:96px;text-align:center;color:#a8977c}
   .wslot.on{border-color:#d8a657;color:#f0dcb8;background:rgba(60,30,15,.7)}.wslot b{display:block;font-size:16px;color:#f0dcb8}.wslot .low{color:#e05a4a}
-  body.inhub #weapons{display:none}
+  body.inhub #weapons,body.inhub #zab{display:none}
   #mapWrap{position:fixed;right:24px;top:20px;text-align:right}
   #minimap{width:180px;height:180px;image-rendering:pixelated;border:1px solid #5a4a3a;display:block}
   #mapWrap.big #minimap{width:400px;height:400px}
@@ -74,7 +74,7 @@
   #hub .left{position:absolute;left:28px;top:96px;width:300px;max-height:calc(100vh - 290px);overflow:auto}
   #hub .right{position:absolute;right:28px;top:96px;width:300px;max-height:calc(100vh - 290px);overflow:auto}
   #hub .bottom{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;pointer-events:none}
-  .clsrow{display:flex;gap:6px}.card{flex:1;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:9px 10px;cursor:pointer;transition:border-color .15s}
+  .clsrow{display:grid;grid-template-columns:1fr 1fr;gap:5px}.card{flex:1;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:9px 10px;cursor:pointer;transition:border-color .15s}
   .card:hover{border-color:#8a5a32}.card.sel{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
   .card b{font-size:15px;color:var(--ink)}.card div{font-size:11px;color:var(--mute);margin-top:2px}
   #clsInfo{font-size:12px;line-height:1.55;color:#cbb89a;margin-top:10px}#clsInfo h3{display:none}#clsInfo .small{margin-top:6px}
@@ -117,7 +117,7 @@
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
 <div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
-<div id="cross"></div><div id="hit"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+<div id="cross"></div><div id="hit"></div><div id="zab" style="position:fixed;left:18px;bottom:150px;color:#ffd23a;font-size:13px;text-shadow:0 0 4px #000;z-index:20"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
 <div class="layer" id="splat"></div>
@@ -148,7 +148,7 @@
   </header>
   <section class="left pnl">
     <h4>职业</h4>
-    <div class="clsrow"><div class="card" data-cls="tide"><b>唤潮者</b><div>灵能者</div></div><div class="card" data-cls="ward"><b>铸甲卫士</b><div>重甲战士</div></div></div>
+    <div class="clsrow" id="clsCards"></div>
     <div id="clsInfo"></div>
     <h4>主武器</h4><div class="lo" id="loPrimary"></div>
     <h4>近战武器</h4><div class="lo" id="loMelee"></div>

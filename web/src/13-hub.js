@@ -37,6 +37,7 @@ function buildHub(){
   hubCam.position.set(0,2.1,5.6);hubCam.lookAt(0,1.35,0);
 }
 function buildCharacter(c){
+  if(typeof EXTRA_MODELS!=='undefined'&&EXTRA_MODELS[c])return EXTRA_MODELS[c]();
   const g=new THREE.Group();const add=(geo,mat,x,y,z,parent=g)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);parent.add(m);return m;};
   const gold=new THREE.MeshLambertMaterial({color:0xb8952e,emissive:0x2a1a00});
   hub.runes=[];hub.orb=null;
@@ -91,7 +92,8 @@ const CLS_INFO={
     perks:'灵能核心 3 槽 · 枪械伤害 +30% · 受到伤害 -20%'}};
 function selectClass(c){
   cls=c;document.querySelectorAll('.card').forEach(el=>el.classList.toggle('sel',el.dataset.cls===c));
-  if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);hubScene.add(hub.char);
+  if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);if(typeof CLS!=='undefined'&&CLS[c]&&CLS[c].eye)hub.char.scale.multiplyScalar(.68);hubScene.add(hub.char);
+  if(typeof CLS!=='undefined'){fixLoadoutForClass();try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}applyLoadout();renderLoadout();}
   const I=CLS_INFO[c];
   $('clsInfo').innerHTML=`<h3>${I.name}</h3>${I.desc}<div style="margin:10px 0 4px">`+I.stats.map(([n,v,m])=>`<div class="stat"><span>${n}</span><i><b style="width:${Math.max(4,v/m*100)}%"></b></i></div>`).join('')+`</div><div class="small">${I.perks}</div>`;
   play('pickup');
@@ -115,7 +117,7 @@ function loadVault(){try{return JSON.parse(localStorage.getItem('abyss_vault'))|
 function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));}catch(e){}}
 function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>物资<b>${v.loot}</b></span><span>圣物<b style="color:#d070ff">${v.rare}</b></span><span title="出击 / 成功撤离">战绩<b>${v.extracted}/${v.runs}</b></span>`;}
 function renderLoadout(){
-  const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
+  const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).filter(w=>{const a=typeof CLS!=='undefined'&&CLS[cls]&&CLS[cls][key==='primary'?'guns':'melee'];return !a||a.includes(w.id);}).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
   mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
   $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>：${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>：${MELEE[loadout.melee].desc}`;
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});

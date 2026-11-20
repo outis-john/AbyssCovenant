@@ -1,7 +1,7 @@
 // ============================================================ 玩家
 function hurtPlayer(n,self=false,att=null){
   if(state!=='playing'||ex.active)return;
-  if(!self&&player.shield>0)n*=0.3;
+  if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;
   if(!self&&player.blocking){
     if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
       play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;if(isClient()&&att.remote)sendNet({t:'stun',id:att.id,dur:1.4});att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
@@ -12,21 +12,21 @@ function hurtPlayer(n,self=false,att=null){
   if(player.hp<=0)beginDeath();
 }
 function updatePlayer(dt){
-  updateHold(dt);updateGunExtras(dt);
-  const sprint=keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
-  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active)sp=0;
+  updateHold(dt);updateGunExtras(dt);updateClassExtras(dt);
+  const sprint=!CLS[cls].noSprint&&keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
+  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;sp*=(player.speedMul||1)*(player.stimT>0?1.3:1);if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active)sp=0;
   if(sprint){player.stamina-=28*dt;player.stDelay=0.8;}else{player.stDelay-=dt;if(player.stDelay<=0)player.stamina=Math.min(100,player.stamina+22*dt);}
   const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
   let mx=fx*f+rx*s,mz=fz*f+rz*s;const l=Math.hypot(mx,mz);if(l>0){mx/=l;mz/=l;}
   player.pos.x+=mx*sp*dt;player.pos.z+=mz*sp*dt;
   player.vy-=22*dt;player.pos.y+=player.vy*dt;if(player.pos.y<=0){player.pos.y=0;player.vy=0;player.onGround=true;}
-  collide(player.pos,0.45);
+  collide(player.pos,player.r||0.45);
   // 镜头：后坐力恢复、震动、行走晃动
   player.recoil=Math.max(0,player.recoil-dt*0.6);player.shake=Math.max(0,player.shake-dt*1.6);
   const bob=l>0&&player.onGround?Math.sin(gameTime*(sprint?13:9))*0.05:0;
   const sh=player.shake*player.shake;
-  camera.position.set(player.pos.x+(Math.random()-.5)*sh*.4,player.pos.y+1.6+bob+(Math.random()-.5)*sh*.4,player.pos.z);
+  camera.position.set(player.pos.x+(Math.random()-.5)*sh*.4,player.pos.y+(player.eye||1.6)+bob+(Math.random()-.5)*sh*.4,player.pos.z);
   const roll=player.warp>0?Math.sin(gameTime*3)*0.08*Math.min(1,player.warp):0;
   player.punch=Math.max(0,(player.punch||0)-dt*0.5);
   camera.rotation.set(player.pitch-player.punch,player.yaw,roll+(player.swingRoll||0),'YXZ');

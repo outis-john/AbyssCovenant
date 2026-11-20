@@ -6,8 +6,7 @@ function prepareMatch(seedArg){
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
-  if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}
-  else{player.maxHp=player.hp=150;player.gunMul=1.3;player.dmgTaken=0.8;}
+  applyClassStats();fixLoadoutForClass();
   player.pos.set(0,0,0);
   spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
   applyProgress();applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
@@ -80,11 +79,13 @@ addEventListener('mouseup',e=>{if(e.button===0){mouseDown=false;if(state==='play
   if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
 addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET.fps;saveSet();applySet();return;}
   if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}
-  if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
+  if(e.code==='Tab'){e.preventDefault();if(state==='playing'&&CLS[cls].psy)openRunes();else if(state==='runes')$('runeDone').onclick();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
   keys[e.code]=true;if(state!=='playing')return;
-  if(e.code==='Space'&&player.onGround){player.vy=7.5;player.onGround=false;}
+  if(e.code==='Space'&&player.onGround&&!CLS[cls].noJump){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
+  if(e.code==='KeyZ')classAbility();
+  if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('只有唤潮者能使用灵能 · 按 Z 使用职业技能',1.2);return;}
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
   if(e.code==='KeyE'&&!e.repeat&&WEAPONS[cur].block&&!ex.active){player.blocking=true;player.blockStart=gameTime;play('equip');}
