@@ -93,6 +93,7 @@
 <div class="layer" id="warp"></div>
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
+<div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
 <div id="cross"></div><div id="hit"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
@@ -128,7 +129,7 @@
   <div class="right">
     <div class="info" id="clsInfo"></div>
     <div class="info" id="vaultInfo"></div>
-    <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击 · 右键 举盾（剑盾）· R 换弹<br>X 处决（需充满）· F 拾取 / 互动<br>V / G / Q 灵能 · Tab 符文拼装<br>B 回收装置 · M 地图 · Esc 暂停</div>
+    <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击 · 右键 格挡（剑盾，时机准可防反）/ 蓄力（热熔枪）· R 换弹<br>X 处决（需充满）· F 拾取 / 互动<br>V 锁喉提摔 · G 黑洞 · Q 子弹时间<br>C 符文技能 · Tab 符文拼装 · B 回收装置 · M 地图 · Esc 暂停</div>
   </div>
   <div class="bottom"><button id="goBtn">开始匹配</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>
 </div>
@@ -207,7 +208,7 @@ const matDark=new THREE.MeshLambertMaterial({color:0x1a1210});
 const matBlood=new THREE.MeshBasicMaterial({color:0x5a0000});
 
 // ============================================================ 音效（全部合成）
-let hum=null,humGain=null;
+let hum=null,humGain=null,masterLP=null;
 function humEngine(on,fast){if(!humGain)return;humGain.gain.setTargetAtTime(on?(fast?0.16:0.06):0,actx.currentTime,0.05);hum.frequency.setTargetAtTime(fast?95:58,actx.currentTime,0.05);}
 let actx=null, noiseBuf=null, master=null, whisperGain=null, whisperFilter=null, saw=null;
 // 链锯引擎：单缸二冲程，每转点火一次（基频 = 转速/60）。怠速约 2900 转、偶尔漏火；满油约 12500 转；锯进肉里会被拖到约 8000 转
@@ -237,7 +238,7 @@ function sawEngine(out,mode){if(!saw)return;saw.onT=out?1:0;saw.target=mode==='b
 function initAudio(){
   if(actx) return;
   actx=new (window.AudioContext||window.webkitAudioContext)();
-  master=actx.createGain();master.gain.value=0.75;const comp=actx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.attack.value=0.003;comp.release.value=0.25;master.connect(comp).connect(actx.destination);
+  master=actx.createGain();master.gain.value=0.75;const comp=actx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.attack.value=0.003;comp.release.value=0.25;masterLP=actx.createBiquadFilter();masterLP.type='lowpass';masterLP.frequency.value=20000;master.connect(masterLP).connect(comp).connect(actx.destination);
   hum=actx.createOscillator();hum.type='sawtooth';hum.frequency.value=58;const humF=actx.createBiquadFilter();humF.type='lowpass';humF.frequency.value=380;humGain=actx.createGain();humGain.gain.value=0;hum.connect(humF).connect(humGain).connect(master);hum.start();
   noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   // 过载低语层：持续的带通噪声，过载越高越响
@@ -271,6 +272,12 @@ const sfx={
   zap(){tone('sawtooth',180,520,0.08,0.12);noiseHit(4000,0.12,0.12,'highpass');},
   powerHit(){tone('sawtooth',900,150,0.2,0.18);noiseHit(3500,0.4,0.2,'bandpass');tone('sine',80,40,0.4,0.2);},
   clang(){tone('square',820,760,0.15,0.25);tone('square',1230,1150,0.08,0.3);noiseHit(3000,0.25,0.1,'highpass');},
+  parry(){tone('sine',1600,1600,0.3,0.4);tone('sine',2400,2400,0.18,0.5);noiseHit(5000,0.3,0.1,'highpass');},
+  charge(){tone('sawtooth',120,600,0.12,1.0);},
+  vent(){noiseHit(3000,0.5,1.5,'highpass');tone('sine',200,80,0.2,0.8);},
+  lift(){tone('sine',80,300,0.35,0.9);noiseHit(800,0.2,0.9,'bandpass');},
+  hole(){tone('sine',200,40,0.5,1.2);noiseHit(400,0.4,2.5,'bandpass');tone('sawtooth',55,30,0.25,3);},
+  bt(){tone('sine',600,90,0.4,0.8);noiseHit(2000,0.3,0.6,'bandpass');},
   exStart(){tone('sine',60,30,0.6,0.4);noiseHit(300,0.3,0.4);},
   equip(){tone('square',300,200,0.05,0.06);noiseHit(2500,0.08,0.08,'bandpass');},
   magOut(){tone('square',500,300,0.06,0.05);noiseHit(3000,0.1,0.06,'bandpass');},
@@ -383,7 +390,7 @@ function spawnEnemy(type,x,z,elite=false){
   scene.add(g);
   const hp=T.hp*(elite?1.6:1);
   const e={type,g,mat:flesh,parts:{body,head,armL,armR,legL,legR},hp,maxHp:hp,armHp:{armL:hp*.3,armR:hp*.3},arms:2,kv:new THREE.Vector3(),lean:0,headSnap:0,
-    speed:T.speed,dmg:T.dmg*(elite?1.3:1),reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4};
+    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1),reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4};
   for(const p of Object.values(e.parts))p.userData.enemy=e;
   head.children.forEach(c=>c.userData.enemy=e);
   enemies.push(e);return e;
@@ -391,6 +398,7 @@ function spawnEnemy(type,x,z,elite=false){
 function damageEnemy(e,dmg,part,dir,opts={}){
   if(!e.alive)return false;
   const head=part==='head';if(head)dmg*=2;
+  if(bt.t>0&&state==='playing')player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
   if(state==='playing'&&!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12);
   e.hp-=dmg;e.flash=0.08;e.stagger=Math.max(e.stagger,opts.stagger??0.12);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9);}
@@ -398,7 +406,7 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,head?10:5);
   // 部位破坏：打断手臂
   if((part==='armL'||part==='armR')&&e.parts[part].parent===e.g){e.armHp[part]-=dmg;if(e.armHp[part]<=0){detach(e,part,dir);e.arms--;}}
-  if(e.hp<=0){killEnemy(e,dir,opts.explode);return true;}
+  if(e.hp<=0){killEnemy(e,dir,opts.explode,opts.how||{});return true;}
   return false;
 }
 function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m.getWorldPosition(wp);const wq=new THREE.Quaternion();m.getWorldQuaternion(wq);const ws=new THREE.Vector3();m.getWorldScale(ws);
@@ -407,15 +415,91 @@ function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m
   gibs.push({m,v,spin:new THREE.Vector3(Math.random()*10,Math.random()*10,Math.random()*10),rest:false});
   spawnBlood(wp,dir,12);if(gibs.length>260){const old=gibs.shift();scene.remove(old.m);}
 }
-function killEnemy(e,dir,explode){
-  e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);
-  for(const k of Object.keys(e.parts))if(e.parts[k].parent===e.g)detach(e,k,dir);
-  scene.remove(e.g);spawnBlood(e.g.position.clone().setY(1),dir,24);
+function killEnemy(e,dir,explode,how={}){
+  e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
+  e.g.updateMatrixWorld(true);
+  if(how.melt){meltPuddle(e);}
+  else if(how.cut){cutApart(e,how.cut.p,how.cut.n,how.cut.imp||4,how.cut);}
+  else{if(how.headBurst)headBurst(e,dir||new THREE.Vector3());for(const k of Object.keys(e.parts))if(e.parts[k].parent===e.g)detach(e,k,dir);}
+  scene.remove(e.g);if(!how.melt)spawnBlood(e.g.position.clone().setY(1),dir,24);
   if(!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+6);
   match.kills++;addProgress('kill',1);if(e.elite){addProgress('elite',1);match.elites++;}
   if(rng()<0.25)spawnPickup('relic',e.g.position.x,e.g.position.z);
   else if(Math.random()<0.35)spawnPickup('ammo',e.g.position.x+.5,e.g.position.z);
 }
+
+// ============================================================ 切割断肢：按刀刃扫过的平面把部位切成两半
+const matCut=new THREE.MeshBasicMaterial({color:0xa80c0c});
+let bleeders=[];   // 断口持续喷血
+function worldize(m){const wp=new THREE.Vector3(),wq=new THREE.Quaternion(),ws=new THREE.Vector3();m.getWorldPosition(wp);m.getWorldQuaternion(wq);m.getWorldScale(ws);
+  if(m.parent)m.parent.remove(m);m.position.copy(wp);m.quaternion.copy(wq);m.scale.copy(ws);scene.add(m);return m;}
+function boxAxes(m){return [new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)].map(a=>a.applyQuaternion(m.quaternion));}
+// 平面是否穿过这个盒子（m 需已在世界坐标）
+function planeHits(m,P,n){const p=m.geometry.parameters;if(!p||p.width===undefined)return false;const ax=boxAxes(m);const d=m.position.clone().sub(P).dot(n);
+  const r=Math.abs(ax[0].dot(n))*p.width*m.scale.x/2+Math.abs(ax[1].dot(n))*p.height*m.scale.y/2+Math.abs(ax[2].dot(n))*p.depth*m.scale.z/2;return Math.abs(d)<r*0.92;}
+// 把世界坐标下的盒子 m 沿平面切开，返回 {pos:[...], neg:[...]}；切不到返回 null
+function splitBox(m,P,n){
+  const p=m.geometry.parameters;if(!p||p.width===undefined)return null;
+  const dims=[p.width*m.scale.x,p.height*m.scale.y,p.depth*m.scale.z],ax=boxAxes(m);
+  let k=0,best=-1;ax.forEach((a,i)=>{const v=Math.abs(a.dot(n));if(v>best){best=v;k=i;}});
+  const half=dims[k]/2,proj=ax[k].dot(n),d=m.position.clone().sub(P).dot(n),t=-d/proj;
+  if(Math.abs(t)>=half*0.9)return null;
+  const tilt=new THREE.Quaternion().setFromAxisAngle(ax[(k+1)%3],(Math.random()-.5)*0.25);
+  const make=(len,off)=>{const dd=dims.slice();dd[k]=len;const g=new THREE.BoxGeometry(...dd);const piece=new THREE.Mesh(g,m.material);
+    piece.position.copy(m.position).addScaledVector(ax[k],off);piece.quaternion.copy(m.quaternion).premultiply(tilt);
+    const cd=dims.slice();cd[k]=0.03;cd[(k+1)%3]*=0.88;cd[(k+2)%3]*=0.88;const cap=new THREE.Mesh(new THREE.BoxGeometry(...cd),matCut);
+    const cp=[0,0,0];cp[k]=off>t?-len/2+0.02:len/2-0.02;cap.position.set(...cp);piece.add(cap);scene.add(piece);return piece;};
+  const a=make(half-t,t+(half-t)/2),b=make(t+half,-half+(t+half)/2);
+  scene.remove(m);
+  const sa=a.position.clone().sub(P).dot(n)>0;return sa?{pos:[a],neg:[b]}:{pos:[b],neg:[a]};
+}
+function throwGib(m,v,spin=8){gibs.push({m,v,spin:new THREE.Vector3((Math.random()-.5)*spin,(Math.random()-.5)*spin,(Math.random()-.5)*spin),rest:false});
+  while(gibs.length>320){const o=gibs.shift();scene.remove(o.m);}}
+function bleed(m,t=0.8,up=1){bleeders.push({m,t,up});}
+function updateBleeders(dt){for(const b of bleeders){b.t-=dt;if(Math.random()<0.8){const p=new THREE.Vector3();b.m.getWorldPosition(p);
+  const bm=new THREE.Mesh(bloodGeo,matBlood);bm.position.copy(p);scene.add(bm);bloods.push({m:bm,v:new THREE.Vector3((Math.random()-.5)*2,3+Math.random()*3*b.up,(Math.random()-.5)*2),rest:false});}}
+  bleeders=bleeders.filter(b=>b.t>0);while(bloods.length>650){const o=bloods.shift();scene.remove(o.m);}}
+// 按平面把整个敌人切开（致命）
+function cutApart(e,P,n,imp=4,extra={}){
+  const parts=Object.keys(e.parts).filter(k=>e.parts[k].parent===e.g).map(k=>worldize(e.parts[k]));
+  for(const m of parts){
+    let pieces=planeHits(m,P,n)?splitBox(m,P,n):null;
+    const sideOf=x=>x.position.clone().sub(P).dot(n)>0;
+    const list=pieces?[...pieces.pos.map(x=>[x,true]),...pieces.neg.map(x=>[x,false])]:[[m,sideOf(m)]];
+    for(const [x,pos] of list){const v=pos?n.clone().multiplyScalar(imp):n.clone().multiplyScalar(-imp*0.4);
+      v.y+=pos?2.5+Math.random()*2:1;if(extra.fling&&pos)v.addScaledVector(extra.fling,1);v.x+=(Math.random()-.5);v.z+=(Math.random()-.5);
+      throwGib(x,v,pos?10:4);if(pieces)bleed(x,0.9,pos?1:0.6);}
+  }
+  spawnBlood(P,n,30);
+}
+// 非致命：刀刃扫过手臂就按切口断开，肩膀上留一截
+function severArmsByPlane(e,P,n,dmg){
+  for(const k of ['armL','armR']){const arm=e.parts[k];if(arm.parent!==e.g||e.armHp[k]===Infinity)continue;
+    e.g.updateMatrixWorld(true);const tmp=arm.clone();tmp.geometry=arm.geometry;arm.getWorldPosition(tmp.position);arm.getWorldQuaternion(tmp.quaternion);arm.getWorldScale(tmp.scale);
+    if(!planeHits(tmp,P,n))continue;e.armHp[k]-=dmg*2;if(e.armHp[k]>0)continue;
+    const w=worldize(arm);const pieces=splitBox(w,P,n);
+    if(!pieces){throwGib(w,new THREE.Vector3(n.x*3,4,n.z*3));e.armHp[k]=Infinity;e.arms--;continue;}
+    const all=[...pieces.pos,...pieces.neg].sort((a,b)=>b.position.y-a.position.y);   // 上半截留在肩上
+    const stub=all[0],lower=all[1];e.g.attach(stub);stub.userData.part=k;stub.userData.enemy=e;e.parts[k]=stub;
+    throwGib(lower,n.clone().multiplyScalar(4).add(new THREE.Vector3(0,3,0)));bleed(stub,1.2,0.7);spawnBlood(lower.position,n,14);
+    e.armHp[k]=Infinity;e.arms--;}
+}
+// 头部炸开：切成四块 + 脖子喷血
+function headBurst(e,dir){
+  const h=e.parts.head;if(h.parent!==e.g)return;const w=worldize(h);const c=w.position.clone();
+  const up=new THREE.Vector3(0,1,0),rt=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));
+  let pcs=[w];const a=splitBox(w,c,up);if(a)pcs=[...a.pos,...a.neg];
+  let out=[];for(const p of pcs){const b=splitBox(p,c,rt);out.push(...(b?[...b.pos,...b.neg]:[p]));}
+  for(const p of out){const v=p.position.clone().sub(c).normalize().multiplyScalar(5).addScaledVector(dir,4);v.y+=3;throwGib(p,v,14);}
+  spawnBlood(c,dir,40);const neck=new THREE.Object3D();neck.position.set(0,1.75,0);e.g.add(neck);bleed(neck,1.0,1.6);
+}
+// 熔化成一滩
+function meltPuddle(e){
+  const p=e.g.position.clone();const m=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.2,.06,10),new THREE.MeshBasicMaterial({color:0xff7a20}));m.position.set(p.x,.04,p.z);levelGroup.add(m);
+  puddles.push({m,t:0});for(let i=0;i<20;i++){const s=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xcccccc,transparent:true,opacity:.6}));s.position.set(p.x+(Math.random()-.5),.3,p.z+(Math.random()-.5));scene.add(s);sparks.push({m:s,v:new THREE.Vector3(0,2+Math.random()*2,0),life:1+Math.random()});}
+}
+let puddles=[];
+function updatePuddles(dt){for(const p of puddles){p.t+=dt;const k=Math.min(1,p.t/3);p.m.material.color.setRGB(lerp(1,.3,k),lerp(.48,.02,k),lerp(.12,.02,k));}}
 
 // ============================================================ 血与碎块
 const bloodGeo=new THREE.BoxGeometry(.12,.12,.12);
@@ -462,7 +546,8 @@ const pistol=new THREE.Group();view.add(pistol);pistol.visible=false;
   .forEach(([w,h,d,x,y,z,m])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);pistol.add(b);});
 const pFlash=new THREE.Mesh(new THREE.BoxGeometry(.14,.14,.04),new THREE.MeshBasicMaterial({color:0xffd080}));pFlash.position.set(0,.01,-.42);pFlash.visible=false;pistol.add(pFlash);
 const melta=new THREE.Group();view.add(melta);melta.visible=false;
-const heatMat=new THREE.MeshBasicMaterial({color:0xff6a20});
+const heatMat=new THREE.MeshBasicMaterial({color:0x5a2010});
+const heat={v:0,over:0,charge:0};
 [[.2,.2,.55,0,0,.05,gunMat],[.14,.14,.5,0,.02,-.45,gunDark],[.12,.22,.16,0,-.16,.12,gunDark],[.12,.12,.3,.14,.06,.1,new THREE.MeshLambertMaterial({color:0x3a5a7a})]]
   .forEach(([w,h,d,x,y,z,m])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);melta.add(b);});
 for(let i=0;i<3;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(.09,.02,4,8),heatMat);r.position.set(0,.02,-.3-i*.12);melta.add(r);}
@@ -494,10 +579,10 @@ function showHit(kill){const h=$('hit');h.className=kill?'kill':'';h.style.opaci
 function spawnSpark(p){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xffc060}));m.position.copy(p);scene.add(m);setTimeout(()=>scene.remove(m),80);}
 // ============================================================ 武器与配装
 const RANGED={
-  bolter:{id:'bolter',name:'爆弹枪',magSize:24,reserveMax:192,res0:120,rate:7,dmg:24,pellets:1,spread:.012,auto:true,climb:.016,kick:1.2,reload:1.8,knock:.35,snd:'bolter',desc:'全自动。爆弹命中后会小范围爆炸。',model:gun,flash:flash},
-  shotgun:{id:'shotgun',name:'霰弹枪',magSize:6,reserveMax:48,res0:30,rate:1.3,dmg:12,pellets:9,spread:.11,auto:false,climb:.06,kick:2.2,reload:2.1,knock:.5,snd:'shotgun',desc:'9 颗弹丸，近距离一枪轰飞。',model:shotgun,flash:sgFlash},
-  melta:{id:'melta',name:'热熔枪',magSize:4,reserveMax:24,res0:16,rate:1.0,dmg:150,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:2.4,range:16,pierce:true,snd:'melta',desc:'射程短，熔穿一条线上的所有敌人。',model:melta,flash:meltaFlash}};
-const PISTOL={id:'pistol',name:'爆弹手枪',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:1.3,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
+  bolter:{id:'bolter',name:'爆弹枪',magSize:24,reserveMax:192,res0:120,rate:7,dmg:24,pellets:1,spread:.012,auto:true,climb:.016,kick:1.2,reload:1.1,knock:.35,snd:'bolter',desc:'全自动。爆弹命中后会小范围爆炸。',model:gun,flash:flash},
+  shotgun:{id:'shotgun',name:'霰弹枪',magSize:6,reserveMax:48,res0:30,rate:1.3,dmg:12,pellets:9,spread:.11,auto:false,climb:.06,kick:2.2,reload:1.3,knock:.5,snd:'shotgun',desc:'9 颗弹丸，近距离一枪轰飞。',model:shotgun,flash:sgFlash},
+  melta:{id:'melta',name:'热熔枪',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:1.6,dmg:170,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:0,range:16,pierce:true,snd:'melta',desc:'无需弹药，会过热。右键蓄力、左键发射，熔穿一条线上的所有敌人。',model:melta,flash:meltaFlash}};
+const PISTOL={id:'pistol',name:'爆弹手枪',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:.8,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
 const MELEE={
   saw:{id:'saw',name:'链锯剑',melee:true,bite:true,windup:.14,slash:.17,desc:'砍中后卡在肉里持续锯切，再撕出来。'},
   power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'出手快，一刀劈开前方所有敌人。'},
@@ -507,21 +592,23 @@ function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout
 let loadout=loadLoadout();
 let WEAPONS=[],cur=0,ammo=[],reloadT=0,switchT=0,reloadFor=-1;
 function applyLoadout(){WEAPONS=[RANGED[loadout.primary],PISTOL,MELEE[loadout.melee]];sword=MELEE_GROUP[loadout.melee];
+  heat.v=0;heat.over=0;heat.charge=0;
   ammo=[{mag:WEAPONS[0].magSize,res:WEAPONS[0].res0},{mag:PISTOL.magSize,res:Infinity},{}];cur=0;reloadT=0;switchT=0;reloadFor=-1;}
 applyLoadout();
 function switchWeapon(i){if(i===cur||i<0||i>2||MS.phase==='bite'||ex.active)return;cur=i;switchT=0.3;reloadT=0;reloadFor=-1;player.blocking=false;play('equip');if(cur!==2&&MS.phase!=='none'){MS.phase='none';swing=0;}}
-function startReload(){const w=WEAPONS[cur];if(w.melee||reloadT>0||switchT>0||ex.active)return;const a=ammo[cur];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('没有备弹了',1);return;}
+function startReload(){const w=WEAPONS[cur];if(player.channelT>0){announce('施法中无法换弹',0.8);return;}if(w.heat)return;if(w.melee||reloadT>0||switchT>0||ex.active)return;const a=ammo[cur];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('没有备弹了',1);return;}
   reloadT=w.reload;reloadFor=cur;play('magOut');setTimeout(()=>{if(reloadT>0)play('magIn');},w.reload*550);}
 function finishReload(){const w=WEAPONS[reloadFor],a=ammo[reloadFor];const n=Math.min(w.magSize-a.mag,a.res);a.mag+=n;if(a.res!==Infinity)a.res-=n;play('chamber');reloadFor=-1;}
 function tryFire(pressed){if(ex.active)return;const w=WEAPONS[cur];
   if(w.melee){if(!player.blocking)melee();return;}
   if(!w.auto&&!pressed)return;
   if(reloadT>0||switchT>0||player.fireCd>0)return;
+  if(w.heat){if(!pressed)return;if(heat.over>0){play('dry');announce('热熔枪过热！',0.8);return;}fire(w);return;}
   if(ammo[cur].mag<=0){if(pressed)play('dry');startReload();return;}
   fire(w);
 }
 function fire(w){
-  player.fireCd=1/w.rate;ammo[cur].mag--;
+  player.fireCd=1/w.rate;if(!w.heat)ammo[cur].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
   play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
   player.recoil+=0.06*w.kick;gunKick=w.kick;gunRoll=(Math.random()-.5)*0.25*w.kick;player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
   if(w.kick>=2){player.shake=Math.max(player.shake,0.22);player.punch=Math.max(player.punch||0,0.035);}
@@ -529,17 +616,18 @@ function fire(w){
   if(w.pierce){ // 热熔枪：穿透一条线
     const {o,d}=aimRay(0);ray.set(o,d);ray.far=w.range;const hits=ray.intersectObjects(hitTargets(),false);const done=new Set();let end=o.clone().addScaledVector(d,w.range);
     for(const h of hits){const e=h.object.userData.enemy;if(!e){end=h.point;break;}if(done.has(e))continue;done.add(e);
-      const k=damageEnemy(e,w.dmg*player.gunMul*(1-h.distance/w.range*0.5),'body',d,{point:h.point,knock:.8,stagger:.4});e.burn=2;hitSparks(h.point,d,6);anyHit=true;anyKill=anyKill||k;}
-    heatBeam(o.clone().add(new THREE.Vector3(0,-.18,0)),end);
+      const k=damageEnemy(e,w.dmg*mScale*player.gunMul*(1-h.distance/w.range*0.5),'body',d,{point:h.point,knock:.8*mScale+.3,stagger:.4,how:Math.random()<mScale?{melt:true}:{}});e.burn=2;hitSparks(h.point,d,6);anyHit=true;anyKill=anyKill||k;}
+    heatBeam(o.clone().add(new THREE.Vector3(0,-.18,0)),end,0.5+mScale);
+    heat.v+=20+heat.charge*45;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');announce('热熔枪过热！散热中…',1.5);}
   } else for(let k=0;k<w.pellets;k++){const {o,d}=aimRay(w.spread);const h=castRay(o,d);if(!h)continue;const e=h.object.userData.enemy;
     if(e){const part=h.object.userData.part==='eye'?'head':h.object.userData.part;const killed=damageEnemy(e,w.dmg*player.gunMul,part,d,{point:h.point,knock:w.knock});hitSparks(h.point,d,w.pellets>1?2:4);anyHit=true;anyKill=anyKill||killed;head=head||part==='head';}
     else spawnSpark(h.point);
     if(w.id==='bolter')boltBurst(h.point);}
   if(anyHit){play(head?'head':'hit');showHit(anyKill);}
-  if(ammo[cur].mag<=0)setTimeout(startReload,250);
+  if(!w.heat&&ammo[cur].mag<=0)setTimeout(startReload,250);
 }
 function boltBurst(p){setTimeout(()=>{if(state!=='playing')return;hitSparks(p,null,5);for(const e of enemies)if(e.alive&&e.g.position.clone().setY(1.2).distanceTo(p)<1.6)damageEnemy(e,8,'body',null,{stagger:.1});},40);}
-function heatBeam(a,b){const len=a.distanceTo(b);const m=new THREE.Mesh(new THREE.CylinderGeometry(.09,.16,len,6),new THREE.MeshBasicMaterial({color:0xfff0c0,transparent:true,opacity:.9}));
+function heatBeam(a,b,w=1){const len=a.distanceTo(b);const m=new THREE.Mesh(new THREE.CylinderGeometry(.09*w,.16*w,len,6),new THREE.MeshBasicMaterial({color:0xfff0c0,transparent:true,opacity:.9}));
   m.position.copy(a).lerp(b,.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());scene.add(m);beams.push({m,life:.18,fade:true});
   const o=m.clone();o.material=new THREE.MeshBasicMaterial({color:0xff6a20,transparent:true,opacity:.5});o.scale.set(2.2,1,2.2);scene.add(o);beams.push({m:o,life:.25,fade:true});}
 
@@ -548,14 +636,16 @@ const MS={phase:'none',t:0,dir:1,combo:0,s:0,target:null,tick:0,hitDone:false};
 const SWING=0.6;let swing=0,swordOut=0;
 const POSE={rest:[0.02,0.3,0.12],restPos:[.3,-.42,-.3],
   a:{start:[0.8,1.5,1.05],end:[-0.85,-1.6,-0.85],ps:[.62,-.12,-.4],pe:[-.32,-.62,-.3]},
-  b:{start:[-0.75,-1.45,-0.95],end:[0.85,1.6,0.9],ps:[-.28,-.62,-.3],pe:[.62,-.1,-.4]}};
-const posAt=k=>{const P=MS.dir>0?POSE.a:POSE.b;return P.ps.map((v,i)=>lerp(v,P.pe[i],k));};
-function poseAt(k){const P=MS.dir>0?POSE.a:POSE.b;return P.start.map((v,i)=>lerp(v,P.end[i],k));}
+  b:{start:[-0.75,-1.45,-0.95],end:[0.85,1.6,0.9],ps:[-.28,-.62,-.3],pe:[.62,-.1,-.4]},
+  h:{start:[0.05,1.75,0.15],end:[0.05,-1.8,-0.15],ps:[.65,-.32,-.36],pe:[-.45,-.36,-.36]}};   // 防反后的横斩
+const poseSet=()=>MS.dir==='h'?POSE.h:MS.dir>0?POSE.a:POSE.b;
+const posAt=k=>{const P=poseSet();return P.ps.map((v,i)=>lerp(v,P.pe[i],k));};
+function poseAt(k){const P=poseSet();return P.start.map((v,i)=>lerp(v,P.end[i],k));}
 function applyPose(k){sword.rotation.set(...poseAt(k));sword.position.set(...posAt(k));}
 function blendPose(r0,p0,r1,p1,e,over){sword.rotation.set(...r0.map((v,i)=>lerp(v,r1[i]*over,e)));sword.position.set(...p0.map((v,i)=>lerp(v,p1[i],e)));}
 function melee(){
   if(player.meleeCd>0||MS.phase==='bite'||ex.active)return;const M=WEAPONS[2];
-  MS.dir=MS.combo%2===0?1:-1;MS.combo++;MS.phase='windup';MS.t=0;MS.s=0;MS.target=null;MS.hitDone=false;
+  MS.dir=MS.combo%2===0?1:-1;MS.combo++;MS.counter=false;MS.phase='windup';MS.t=0;MS.s=0;MS.target=null;MS.hitDone=false;
   player.meleeCd=M.windup+M.slash+0.24;swordOut=1.4;swing=1;
 }
 function meleeCandidates(){
@@ -566,8 +656,13 @@ function meleeCandidates(){
 }
 function contactPoint(e){return e.g.position.clone().setY(1.25*e.g.scale.y).lerp(player.pos.clone().setY(1.3),0.25);}
 function bladeDirWorld(){const q=new THREE.Quaternion();sword.getWorldQuaternion(q);return new THREE.Vector3(0,0,-1).applyQuaternion(q);}
+function swingPlane(P){const a=posAt(0),b=posAt(1);const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));
+  const fwd=new THREE.Vector3(-Math.sin(player.yaw)*Math.cos(player.pitch),Math.sin(player.pitch),-Math.cos(player.yaw)*Math.cos(player.pitch));
+  const up=new THREE.Vector3().crossVectors(right,fwd).normalize();const sweep=right.clone().multiplyScalar(b[0]-a[0]).addScaledVector(up,b[1]-a[1]).normalize();
+  return {p:P,n:new THREE.Vector3().crossVectors(sweep,fwd).normalize()};}
+const sdir=()=>MS.dir==='h'?-1:MS.dir;
 function sprayAlongChain(p,n){
-  const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)).multiplyScalar(MS.dir);
+  const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)).multiplyScalar(sdir());
   const blade=bladeDirWorld(),toCam=player.pos.clone().setY(1.6).sub(p).normalize();
   for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,matBlood);m.position.copy(p);scene.add(m);
     const v=blade.clone().multiplyScalar(5+Math.random()*4).addScaledVector(right,2+Math.random()*3).add(new THREE.Vector3(0,2+Math.random()*3,0)).addScaledVector(toCam,Math.random()*2);
@@ -582,10 +677,10 @@ function updateMelee(dt){
   else if(MS.phase==='slash'){MS.s=Math.min(1,(MS.t/M.slash)**1.6);applyPose(MS.s);
     if(!MS.hitDone&&MS.s>=0.5){MS.hitDone=true;const c=meleeCandidates();
       if(c.length&&M.bite){MS.target=c[0];MS.phase='bite';MS.t=0;MS.tick=0;MS.s=0.5;
-        hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.3);player.punch=0.06;splat();play('grind');
+        hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.3);player.punch=0.06;splat();play('grind');{const pl=swingPlane(contactPoint(MS.target));severArmsByPlane(MS.target,pl.p,pl.n,30);}
         for(const e of c.slice(1))damageEnemy(e,30,'body',fwd,{stagger:.4,knock:1.2,point:contactPoint(e)});}
-      else if(c.length){const targets=M.cleave?c:[c[0]];let k=false;
-        for(const e of targets){const p=contactPoint(e);k=damageEnemy(e,M.dmg,'body',fwd,{stagger:.45,knock:1.4,point:p})||k;sprayAlongChain(p,12);hitSparks(p,fwd.clone().negate(),M.cleave?8:4);}
+      else if(c.length){const targets=(M.cleave||MS.counter)?c:[c[0]];let k=false;const dmgv=M.dmg*(MS.counter?2.4:1);
+        for(const e of targets){const p=contactPoint(e);const pl=swingPlane(p);severArmsByPlane(e,pl.p,pl.n,dmgv);k=damageEnemy(e,dmgv,'body',fwd,{stagger:.45,knock:1.4,point:p,how:{cut:{p:pl.p,n:pl.n,imp:M.cleave?5:3.5}}})||k;sprayAlongChain(p,12);hitSparks(p,fwd.clone().negate(),M.cleave?8:4);}
         play(M.cleave?'powerHit':'clang');play('hit');hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.25);player.punch=0.05;splat();showHit(k);}}
     if(MS.s>=1){MS.phase='recover';MS.t=0;}}
   else if(MS.phase==='bite'){const e=MS.target;
@@ -594,14 +689,14 @@ function updateMelee(dt){
     if(e&&e.alive){e.stagger=Math.max(e.stagger,0.2);e.lean=Math.max(e.lean,0.6);e.g.rotation.z=(Math.random()-.5)*0.15;}
     MS.tick-=dt;if(MS.tick<=0){MS.tick=0.06;const p=e?contactPoint(e):player.pos.clone().addScaledVector(fwd,1.5).setY(1.3);
       sprayAlongChain(p,7);hitSparks(p,fwd.clone().negate(),2);
-      if(e&&e.alive){const k=damageEnemy(e,11,'body',null,{stagger:.2,point:p});if(k){showHit(true);MS.phase='rip';MS.t=0;}else play('hit');}}
+      if(e&&e.alive){const pl=swingPlane(p);const k=damageEnemy(e,11,'body',null,{stagger:.2,point:p,how:{cut:{p:pl.p,n:pl.n,imp:3}}});if(k)spawnBlood(p,null,30);if(k){showHit(true);MS.phase='rip';MS.t=0;}else play('hit');}}
     if(MS.phase==='bite'&&(MS.t>=0.34||!e||!e.alive)){MS.phase='rip';MS.t=0;}
     if(MS.phase==='rip'){play('rip');splat();player.punch=0.08;hitstop=Math.max(hitstop,0.06);
-      if(e&&e.alive){const k=damageEnemy(e,18,'body',fwd,{stagger:.6,knock:2.2,point:contactPoint(e)});showHit(k);}
+      if(e&&e.alive){const pl=swingPlane(contactPoint(e));const k=damageEnemy(e,18,'body',fwd,{stagger:.6,knock:2.2,point:contactPoint(e),how:{cut:{p:pl.p,n:pl.n,imp:4}}});showHit(k);}
       if(e)sprayAlongChain(contactPoint(e),24);}}
   else if(MS.phase==='rip'){MS.s=Math.min(1,0.5+MS.t/0.08*0.5);applyPose(MS.s);if(MS.t>=0.08){MS.phase='recover';MS.t=0;}}
   else if(MS.phase==='recover'){const k=Math.min(1,MS.t/0.22),e=k*k*(3-2*k);
-    blendPose(poseAt(1),posAt(1),POSE.rest,POSE.restPos,e,1);if(k>=1){MS.phase='none';swing=0;}}
+    blendPose(poseAt(1),posAt(1),POSE.rest,POSE.restPos,e,1);if(k>=1){MS.phase='none';swing=0;MS.counter=false;}}
 }
 function splat(){const el=$('splat');el.style.transition='none';el.style.opacity=0.75;requestAnimationFrame(()=>{el.style.transition='opacity .7s';el.style.opacity=0;});}
 function hitSparks(p,dir,n){if(!p)return;for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0xffe080:0xffffff}));m.position.copy(p);m.scale.setScalar(.6);scene.add(m);
@@ -627,8 +722,7 @@ function execute(){
 function exKill(opts={}){
   const t=ex.target;if(!t.alive)return;const dealt=Math.max(1,Math.ceil(t.hp));
   const dir=t.g.position.clone().sub(player.pos).setY(0).normalize();
-  if(opts.head&&t.parts.head.parent===t.g){detach(t,'head',new THREE.Vector3(dir.x,1.5,dir.z));}
-  damageEnemy(t,dealt+1,'body',dir.multiplyScalar(opts.fling||1),{explode:true});
+  damageEnemy(t,dealt+1,'body',dir.clone().multiplyScalar(opts.fling||1),{explode:true,how:opts.how||{}});
   const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+dealt);
   announce('处决！回复 '+Math.round(player.hp-before)+' 生命',1.6);
   hitstop=0.13;player.shake=0.45;player.punch=0.08;splat();showHit(true);play('kill');
@@ -636,42 +730,120 @@ function exKill(opts={}){
 function kf(t,keys){if(t<=keys[0][0])return keys[0][1];for(let i=1;i<keys.length;i++)if(t<=keys[i][0]){const [t0,a]=keys[i-1],[t1,b]=keys[i];const k=(t-t0)/(t1-t0);return a.map((v,j)=>lerp(v,b[j],k));}return keys[keys.length-1][1];}
 function at(name,time,fn){if(ex.t>=time&&!ex.fired[name]){ex.fired[name]=true;fn();}}
 function updateExecution(dt){
-  ex.t+=dt;const t=ex.target,T=ex.t,head=t.g.position.clone().setY(1.95*t.g.scale.y);
-  // 镜头锁定目标
+  ex.t+=dt;const t=ex.target,T=ex.t,S=t.g.scale.y,head=t.g.position.clone().setY(1.95*S);
   const to=head.clone().sub(player.pos.clone().setY(1.6));player.yaw=lerp(player.yaw,Math.atan2(-to.x,-to.z),0.25);player.pitch=lerp(player.pitch,Math.atan2(to.y,Math.hypot(to.x,to.z)),0.25);
   if(t.alive){t.stagger=99;t.g.rotation.z=(Math.random()-.5)*0.06;}
-  const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));
-  const bloodAt=n=>{if(t.alive){const p=contactPoint(t);sprayAlongChain(p,n);}};
+  const f=fwdFlat(),rt=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)),up=new THREE.Vector3(0,1,0);
+  const bloodAt=n=>{if(t.alive)sprayAlongChain(contactPoint(t),n);};
+  const tp=y=>t.g.position.clone().setY(y*S);
   switch(ex.type){
-    case 'saw': // 刺入 -> 锯 -> 向上撕开
-      sword.rotation.set(...kf(T,[[0,[0,.3,.1]],[.15,[.1,0,.05]],[.85,[.15,0,0]],[1.0,[1.2,-.2,-.4]]]));
-      sword.position.set(...kf(T,[[0,[.3,-.42,-.3]],[.15,[.08,-.3,-.75]],[.85,[.08,-.32,-.8]],[1.0,[.1,0,-.6]]]));
-      if(T>.15&&T<.85){sword.position.x+=(Math.random()-.5)*.03;texChain.offset.x-=dt*25;ex.tick=(ex.tick||0)-dt;if(ex.tick<=0){ex.tick=.05;bloodAt(8);hitSparks(contactPoint(t),fwd.clone().negate(),2);play('hit');}player.shake=Math.max(player.shake,.15);}
-      at('in',.15,()=>{play('grind');splat();});at('kill',.9,()=>{play('rip');bloodAt(40);exKill();});break;
-    case 'power': // 两刀后斩首
-      sword.rotation.set(...kf(T,[[0,[0,.3,.1]],[.12,[.6,1.4,.9]],[.24,[-.6,-1.5,-.8]],[.4,[-.5,-1.4,.9]],[.55,[.7,1.5,-.8]],[.7,[.1,1.6,.1]],[.82,[0,-1.7,0]]]));
-      sword.position.set(...kf(T,[[0,[.3,-.42,-.3]],[.24,[-.2,-.5,-.3]],[.55,[.5,-.2,-.4]],[.82,[-.3,-.2,-.35]]]));
-      at('s1',.2,()=>{play('powerHit');bloodAt(14);hitstop=.05;});at('s2',.5,()=>{play('powerHit');bloodAt(14);hitstop=.05;});at('kill',.78,()=>{play('powerHit');exKill({head:true});});break;
-    case 'ssword': // 盾击 -> 刺穿 -> 拔出
-      shieldG.position.set(...kf(T,[[0,[-.35,-.35,-.5]],[.12,[-.1,-.25,-.75]],[.25,[-.38,-.4,-.5]]]));
-      sword.rotation.set(...kf(T,[[0,[0,.3,.1]],[.4,[.05,.05,0]],[.55,[0,0,0]],[.9,[0,0,0]],[1.0,[.3,.4,.2]]]));
-      sword.position.set(...kf(T,[[0,[.3,-.42,-.3]],[.4,[.2,-.35,-.2]],[.55,[.05,-.3,-.85]],[.9,[.05,-.3,-.85]],[1.0,[.3,-.42,-.3]]]));
-      at('bash',.12,()=>{play('clang');player.shake=.3;hitstop=.06;t.lean=1.2;});at('stab',.55,()=>{play('hit');bloodAt(20);splat();});at('kill',.9,()=>{play('rip');bloodAt(30);exKill();});break;
-    case 'bolter': case 'pistol': { // 抵近射击头部
-      const m=WEAPONS[cur].model;m.position.set(...kf(T,[[0,[.32,-.28,-.55]],[.2,[.12,-.12,-.85]],[ex.dur,[.12,-.12,-.85]]]));m.rotation.set(-.05,0,0);
-      const shots=ex.type==='bolter'?[.28,.42,.56]:[.4];shots.forEach((s,i)=>at('sh'+i,s,()=>{play(WEAPONS[cur].snd);WEAPONS[cur].flash.visible=true;setTimeout(()=>WEAPONS[cur].flash.visible=false,50);gunKick=1.5;bloodAt(10);
-        if(i===shots.length-1)exKill({head:true});else hitstop=.04;}));break;}
-    case 'shotgun': { // 枪管顶进胸口，一枪轰飞
-      const m=shotgun;m.position.set(...kf(T,[[0,[.32,-.28,-.55]],[.15,[.1,-.3,-1.0]],[.45,[.1,-.3,-.95]],[.6,[.2,-.2,-.55]]]));m.rotation.set(...kf(T,[[0,[0,0,0]],[.45,[.05,0,.1]],[.55,[.5,0,.2]],[.8,[0,0,0]]]));
-      at('shove',.15,()=>{play('clang');hitstop=.05;t.lean=1;});at('kill',.45,()=>{play('shotgun');sgFlash.visible=true;setTimeout(()=>sgFlash.visible=false,60);bloodAt(50);exKill({fling:3});});break;}
-    case 'melta': { // 抵近熔化
-      const m=melta;m.position.set(...kf(T,[[0,[.32,-.28,-.55]],[.2,[.1,-.2,-.8]],[ex.dur,[.1,-.2,-.8]]]));
-      if(T>.25&&T<.85&&t.alive){t.mat.emissive.setRGB(1,(T-.25)*0.8,0);if(Math.random()<.5)heatBeam(camera.position.clone().add(new THREE.Vector3(0,-.2,0)),contactPoint(t));t.g.scale.y=Math.max(.5,t.g.scale.y-dt*0.5);player.shake=Math.max(player.shake,.1);}
-      at('fire',.25,()=>play('melta'));at('kill',.85,()=>{play('melta');play('boom');exKill();});break;}
+    case 'saw': // 竖着锯进去，从中间劈成左右两半
+      sword.rotation.set(...kf(T,[[0,[0,.3,.1]],[.15,[1.3,0,0]],[.85,[1.35,0,0]],[1.0,[1.5,0,0]]]));
+      sword.position.set(...kf(T,[[0,[.3,-.42,-.3]],[.15,[0,.2,-.55]],[.85,[0,-.55,-.6]],[1.0,[0,-.7,-.5]]]));
+      if(T>.15&&T<.85){sword.position.x+=(Math.random()-.5)*.04;texChain.offset.x-=dt*25;ex.tick=(ex.tick||0)-dt;if(ex.tick<=0){ex.tick=.05;bloodAt(10);hitSparks(contactPoint(t),f.clone().negate(),2);}player.shake=Math.max(player.shake,.18);player.swingRoll=(Math.random()-.5)*.04;}
+      at('in',.15,()=>{play('grind');splat();});
+      at('kill',.88,()=>{play('rip');exKill({how:{cut:{p:tp(1.2),n:rt.clone(),imp:3.5}}});});break;
+    case 'power': // 断臂 -> 斩首 -> 拦腰斩断
+      sword.rotation.set(...kf(T,[[0,[0,.3,.1]],[.12,[.6,1.4,.9]],[.24,[-.6,-1.5,-.8]],[.4,[.1,-1.6,.05]],[.52,[.1,1.6,-.05]],[.66,[.05,1.7,0]],[.8,[.05,-1.7,0]]]));
+      sword.position.set(...kf(T,[[0,[.3,-.42,-.3]],[.24,[-.2,-.5,-.3]],[.4,[-.35,-.2,-.35]],[.52,[.55,-.2,-.35]],[.66,[.55,-.4,-.35]],[.8,[-.35,-.4,-.35]]]));
+      player.swingRoll=kf(T,[[0,[0]],[.24,[-.08]],[.52,[.1]],[.8,[-.1]],[1,[0]]])[0];
+      at('arm',.2,()=>{play('powerHit');severArmsByPlane(t,tp(1.3),new THREE.Vector3().crossVectors(rt.clone().add(up).normalize(),f).normalize(),999);bloodAt(14);hitstop=.06;});
+      at('head',.5,()=>{play('powerHit');if(t.parts.head.parent===t.g){const h=worldize(t.parts.head);throwGib(h,f.clone().multiplyScalar(2).add(new THREE.Vector3(0,7,0)),12);const neck=new THREE.Object3D();neck.position.set(0,1.75,0);t.g.add(neck);bleed(neck,1.2,2);}hitstop=.07;});
+      at('kill',.78,()=>{play('powerHit');exKill({how:{cut:{p:tp(1.0),n:up.clone(),imp:4}}});});break;
+    case 'ssword': // 盾击 -> 刺穿并挑起 -> 踹开
+      shieldG.position.set(...kf(T,[[0,[-.35,-.35,-.5]],[.12,[-.05,-.2,-.8]],[.25,[-.38,-.4,-.5]]]));
+      sword.rotation.set(...kf(T,[[0,[0,.3,.1]],[.4,[.05,.05,0]],[.55,[0,0,0]],[.75,[.35,0,0]],[1.0,[.3,.4,.2]]]));
+      sword.position.set(...kf(T,[[0,[.3,-.42,-.3]],[.4,[.2,-.35,-.2]],[.55,[.05,-.3,-.85]],[.75,[.05,-.05,-.85]],[1.0,[.3,-.42,-.3]]]));
+      if(T>.55&&T<.85&&t.alive){t.g.position.y=Math.min(.7,(T-.55)*3);}
+      at('bash',.12,()=>{play('clang');player.shake=.35;hitstop=.07;t.lean=1.2;t.headSnap=1;});
+      at('stab',.55,()=>{play('hit');bloodAt(20);splat();});
+      at('kill',.85,()=>{play('rip');t.g.position.y=0;exKill({how:{cut:{p:tp(1.3),n:new THREE.Vector3().crossVectors(rt.clone().sub(up).normalize(),f).normalize(),imp:3,fling:f.clone().multiplyScalar(7)}}});});break;
+    case 'bolter': case 'pistol': { // 抵近爆头
+      const m=WEAPONS[cur].model;m.position.set(...kf(T,[[0,[.32,-.28,-.55]],[.2,[.05,-.08,-.8]],[ex.dur,[.05,-.08,-.8]]]));m.rotation.set(-.08,0,0);
+      const shots=ex.type==='bolter'?[.28,.42,.56]:[.4];shots.forEach((s,i)=>at('sh'+i,s,()=>{play(WEAPONS[cur].snd);WEAPONS[cur].flash.visible=true;setTimeout(()=>WEAPONS[cur].flash.visible=false,50);gunKick=1.6;player.punch=.04;bloodAt(8);
+        if(i===shots.length-1)exKill({how:{headBurst:true}});else{hitstop=.05;t.headSnap=1;t.lean=1;}}));break;}
+    case 'shotgun': { // 枪管顶进胸口，上半身被轰飞
+      const m=shotgun;m.position.set(...kf(T,[[0,[.32,-.28,-.55]],[.15,[.08,-.32,-1.0]],[.45,[.08,-.32,-.95]],[.6,[.2,-.15,-.5]]]));m.rotation.set(...kf(T,[[0,[0,0,0]],[.45,[.05,0,.1]],[.55,[.6,0,.25]],[.8,[0,0,0]]]));
+      at('shove',.15,()=>{play('clang');hitstop=.05;t.lean=1;});
+      at('kill',.45,()=>{play('shotgun');sgFlash.visible=true;setTimeout(()=>sgFlash.visible=false,60);bloodAt(40);player.punch=.12;exKill({how:{cut:{p:tp(1.25),n:up.clone(),imp:1.5,fling:f.clone().multiplyScalar(14)}}});});break;}
+    case 'melta': { // 抵近熔化成一滩
+      const m=melta;m.position.set(...kf(T,[[0,[.32,-.28,-.55]],[.2,[.08,-.2,-.8]],[ex.dur,[.08,-.2,-.8]]]));
+      if(T>.25&&T<.85&&t.alive){const k=(T-.25)/.6;t.mat.emissive.setRGB(1,k*0.7,k*0.2);if(Math.random()<.6)heatBeam(camera.position.clone().add(new THREE.Vector3(0,-.2,0)),contactPoint(t),.7);t.g.scale.y=t.s0*(1-k*0.75);t.g.scale.x=t.g.scale.z=t.s0*(1+k*0.3);player.shake=Math.max(player.shake,.1);}
+      at('fire',.25,()=>play('melta'));at('kill',.88,()=>{play('melta');play('boom');exKill({how:{melt:true}});});break;}
   }
   if(T>=ex.dur){ex.active=false;if(t.alive)exKill();shieldG.position.set(-.35,-.35,-.5);}
 }
 
+// ============================================================ 新灵能技能：V 锁喉提摔 · G 黑洞 · Q 子弹时间（C 为符文技能）
+const PSY={lift:{cd:0,max:6},hole:{cd:0,max:10},bt:{cd:0,max:30}};
+const bt={t:0};let lifts=[],holes=[];
+function payPsy(cost,ovlMul=1){const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
+function fwdFlat(){return new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));}
+function castLift(){
+  if(PSY.lift.cd>0){announce('锁喉冷却中',0.8);return;}
+  const f=fwdFlat(),list=[];
+  for(const e of enemies){if(!e.alive||e.lifted)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<16&&to.normalize().dot(f)>Math.cos(0.66))list.push([d,e]);}
+  list.sort((a,b)=>a[0]-b[0]);const targets=list.slice(0,cls==='tide'?10:6).map(x=>x[1]);
+  // 扇形范围提示
+  const fan=new THREE.Mesh(new THREE.CircleGeometry(16,20,Math.PI/2-0.66,1.32),new THREE.MeshBasicMaterial({color:0xa040ff,transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));
+  const fg=new THREE.Group();fg.position.set(player.pos.x,.05,player.pos.z);fg.rotation.y=player.yaw;fan.rotation.x=-Math.PI/2;fg.add(fan);scene.add(fg);beams.push({m:fg,life:.45,fadeChild:fan});
+  if(!targets.length){announce('扇形范围内没有目标',1);return;}
+  payPsy(30);PSY.lift.cd=PSY.lift.max;player.channelT=1.7;play('lift');
+  targets.forEach((e,i)=>{e.lifted=true;e.kv.set(0,0,0);lifts.push({e,t:-i*0.05,vy:0,phase:'rise',tend:0});});
+  if(player.ovl>=player.maxOvl)backlash();
+}
+function updateLifts(dt){
+  const hand=camera.position.clone().add(new THREE.Vector3(Math.cos(player.yaw)*-.25,-.35,-Math.sin(player.yaw)*-.25));
+  for(const L of lifts){const e=L.e;if(!e.alive){L.done=true;continue;}L.t+=dt;if(L.t<0)continue;
+    const g=e.g;
+    if(L.phase==='rise'){const k=Math.min(1,L.t/0.9);g.position.y=(1-(1-k)**3)*5.5;if(k>=1){L.phase='hold';L.t=0;}}
+    else if(L.phase==='hold'){g.position.y=5.5+Math.sin(L.t*20)*.08;if(L.t>=0.4){L.phase='slam';L.vy=-6;play('whoosh');}}
+    else if(L.phase==='slam'){L.vy-=70*dt;g.position.y+=L.vy*dt;
+      if(g.position.y<=0){g.position.y=0;e.lifted=false;L.done=true;g.rotation.set(0,g.rotation.y,0);
+        play('boom');player.shake=Math.max(player.shake,0.3);hitstop=Math.max(hitstop,0.05);dust(g.position,18);
+        damageEnemy(e,e.elite?90:70,'body',new THREE.Vector3(0,1,0),{stagger:.9,point:g.position.clone().setY(.5)});
+        for(const o of enemies)if(o!==e&&o.alive&&!o.lifted&&o.g.position.distanceTo(g.position)<2.6)damageEnemy(o,20,'body',o.g.position.clone().sub(g.position).normalize(),{knock:1.2});}}
+    if(L.phase!=='slam'){g.rotation.x=Math.sin(L.t*18)*0.25;g.rotation.z=Math.sin(L.t*13)*0.2;
+      e.parts.legL.rotation.x=Math.sin(L.t*26)*.9;e.parts.legR.rotation.x=-Math.sin(L.t*26)*.9;
+      if(e.parts.armL.parent===g)e.parts.armL.rotation.x=-2.7;if(e.parts.armR.parent===g)e.parts.armR.rotation.x=-2.7;
+      L.tend-=dt;if(L.tend<=0){L.tend=0.1;beam(hand.clone(),g.position.clone().add(new THREE.Vector3(0,1.9*g.scale.y,0)),0xb060ff);}}
+  }
+  lifts=lifts.filter(L=>!L.done);
+}
+function dust(p,n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x6a6058}));m.position.set(p.x,.2,p.z);m.scale.setScalar(2);scene.add(m);const a=Math.random()*6.28,s=3+Math.random()*4;sparks.push({m,v:new THREE.Vector3(Math.cos(a)*s,1+Math.random()*2,Math.sin(a)*s),life:.5+Math.random()*.4});}}
+function castHole(){
+  if(PSY.hole.cd>0){announce('黑洞冷却中',0.8);return;}
+  const {o,d}=aimRay(0);const h=castRay(o,d,30);const P=(h?h.point:o.clone().addScaledVector(d,18)).addScaledVector(d,-0.8);P.y=1.3;
+  payPsy(40);PSY.hole.cd=PSY.hole.max;play('hole');
+  const g=new THREE.Group();g.position.copy(P);scene.add(g);
+  const core=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8),new THREE.MeshBasicMaterial({color:0x000000}));g.add(core);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.3,.12,4,24),new THREE.MeshBasicMaterial({color:0xb050ff}));ring.rotation.x=Math.PI/2.3;g.add(ring);
+  const halo=new THREE.Mesh(new THREE.SphereGeometry(2.2,12,8),new THREE.MeshBasicMaterial({color:0x3a0060,transparent:true,opacity:.35,depthWrite:false}));g.add(halo);
+  holes.push({P,t:0,dur:3,g,ring,halo,tick:0,caught:new Set()});
+  if(player.ovl>=player.maxOvl)backlash();
+}
+function updateHoles(dt){
+  for(const H of holes){H.t+=dt;H.ring.rotation.z+=dt*6;H.halo.scale.setScalar(1+Math.sin(H.t*8)*.08);H.tick-=dt;const tick=H.tick<=0;if(tick)H.tick=0.25;
+    if(Math.random()<0.7){const a=Math.random()*6.28,r=6;const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x8040c0}));m.position.set(H.P.x+Math.cos(a)*r,H.P.y+(Math.random()-.5)*2,H.P.z+Math.sin(a)*r);scene.add(m);
+      sparks.push({m,v:H.P.clone().sub(m.position).multiplyScalar(2.2),life:.45});}
+    for(const e of enemies){if(!e.alive||e.lifted)continue;const to=H.P.clone().setY(0).sub(e.g.position.clone().setY(0));const d=to.length();
+      if(d>9){if(H.caught.has(e)){H.caught.delete(e);e.inHole=false;e.g.scale.setScalar(e.s0);e.g.position.y=0;}continue;}
+      H.caught.add(e);e.inHole=true;const k=1-d/9;
+      if(d>0.6)e.g.position.addScaledVector(to.normalize(),Math.min(d-0.5,(3+k*9)*dt));
+      e.g.position.y=lerp(e.g.position.y,k*1.0,dt*3);e.g.rotation.y+=dt*(3+k*10);
+      e.g.scale.set(e.s0*(1-0.5*k),e.s0*(1-0.35*k),e.s0*(1-0.5*k));       // 被挤压
+      if(tick)damageEnemy(e,5+k*5,'body',null,{stagger:.3});}
+    if(H.t>=H.dur){H.done=true;scene.remove(H.g);play('boom');player.shake=Math.max(player.shake,.4);
+      const fl=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),new THREE.MeshBasicMaterial({color:0xe0b0ff,transparent:true,opacity:.8}));fl.position.copy(H.P);scene.add(fl);beams.push({m:fl,life:.3,grow:true});
+      for(const e of H.caught){if(!e.alive)continue;e.inHole=false;const dir=e.g.position.clone().sub(H.P).setY(.4).normalize();
+        e.g.scale.setScalar(e.s0);e.g.position.y=0;if(e.g.position.distanceTo(H.P.clone().setY(0))<5)damageEnemy(e,60,'body',dir,{knock:2.5,stagger:.6,explode:true});}}}
+  holes=holes.filter(H=>!H.done);
+}
+function castBT(){
+  if(PSY.bt.cd>0){announce('子弹时间冷却中',0.8);return;}
+  payPsy(60,0.8);PSY.bt.cd=PSY.bt.max;bt.t=cls==='tide'?8:6;play('bt');announce('子弹时间 · 攻击吸血',1.6);
+  if(player.ovl>=player.maxOvl)backlash();
+}
 // ============================================================ 灵能
 const FORMS={bolt:'射线',blast:'爆炸',shield:'护盾',summon:'召唤'};
 const ELEMS={fire:'火',lightning:'雷',void:'虚空',mind:'心灵'};
@@ -818,7 +990,7 @@ function interact(){
   if(it.type==='terminal'&&match.hack<0){match.hack=0;announce('开始破解——恶魔被惊动了！',2.5);spawnWave(5,true);return;}
   if(it.type==='pod'){const c=player.carried;
     if(c.thruster+c.fuel+c.hull>0){for(const k of Object.keys(c)){match.parts[k]=Math.min(PART_NEED[k],match.parts[k]+c[k]);c[k]=0;}play('pickup');announce('零件已安装：'+podPartsText(),2.5);updatePodLook();return;}
-    if(podReady()&&match.launching<0){match.launching=12;announce('逃生舱点火！坚守 12 秒！',3);spawnWave(7,true);}}
+    if(podReady()&&match.launching<0){match.launching=7;announce('逃生舱点火！坚守 7 秒！',3);spawnWave(7,true);}}
 }
 function podPartsText(){return Object.keys(PART_NEED).map(k=>PART_NAME[k]+' '+match.parts[k]+'/'+PART_NEED[k]).join('  ');}
 function updatePodLook(){const p=match.pod.m;const add=(geo,y,col)=>{const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:.3}));m.position.y=y;p.add(m);};
@@ -843,10 +1015,15 @@ function spawnWave(n,near){
 }
 
 // ============================================================ 玩家
-function hurtPlayer(n,self=false){
+function hurtPlayer(n,self=false,att=null){
   if(state!=='playing'||ex.active)return;
   if(!self&&player.shield>0)n*=0.3;
-  if(!self&&player.blocking){n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
+  if(!self&&player.blocking){
+    if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
+      play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
+      $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);announce('防反！',0.8);
+      player.blocking=false;MS.dir='h';MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
+    n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);
   if(player.hp<=0)beginDeath();
 }
@@ -871,6 +1048,11 @@ function updatePlayer(dt){
   // 视角模型
   gunKick=Math.max(0,gunKick-dt*11);
   if(switchT>0)switchT=Math.max(0,switchT-dt);
+  if(heat.over>0){heat.over-=dt;heat.v=Math.max(0,heat.over/2.5*100);if(heat.over<=0){heat.v=0;heat.over=0;}}else heat.v=Math.max(0,heat.v-dt*14);
+  if(player.charging&&WEAPONS[cur].heat&&heat.over<=0)heat.charge=Math.min(1,heat.charge+dt);else heat.charge=Math.max(0,heat.charge-dt*2);
+  heatMat.color.setRGB(lerp(.35,1,Math.max(heat.v/100,heat.charge)),lerp(.12,.55,heat.charge),lerp(.06,.2,heat.charge));
+  if(WEAPONS[cur].heat){meltaFlash.visible=heat.charge>0.05||meltaFlash.visible&&player.fireCd>0;if(heat.charge>0.05)meltaFlash.scale.setScalar(.4+heat.charge*1.2);}
+  player.channelT=Math.max(0,(player.channelT||0)-dt);
   if(reloadT>0){reloadT-=dt;if(reloadT<=0)finishReload();}
   const W=WEAPONS[cur];let rl=0;if(reloadT>0&&!W.melee){rl=Math.sin(Math.PI*(1-reloadT/W.reload));}
   const sw=switchT/0.3;
@@ -894,7 +1076,8 @@ function updatePlayer(dt){
   const showShield=M.id==='ssword'&&meleeShown;shieldG.visible=showShield;
   if(showShield&&!ex.active){const b=player.blocking?1:0;shieldG.position.set(lerp(-.38,-.08,b),lerp(-.38,-.22,b)-sw*.5,lerp(-.5,-.42,b));shieldG.rotation.set(0,lerp(.5,.05,b),lerp(.15,0,b));}
   if(ex.active)updateExecution(dt);
-  player.swingRoll=lerp(player.swingRoll||0,MS.phase==='slash'||MS.phase==='rip'?-MS.dir*0.1:MS.phase==='bite'?-MS.dir*0.05:0,0.3);
+  {const want=ex.active?60:(bt.t>0?88:80);if(Math.abs(camera.fov-want)>0.05){camera.fov=lerp(camera.fov,want,0.12);camera.updateProjectionMatrix();}}
+  player.swingRoll=lerp(player.swingRoll||0,MS.phase==='slash'||MS.phase==='rip'?-sdir()*0.1:MS.phase==='bite'?-sdir()*0.05:0,0.3);
   player.fireCd-=dt;player.meleeCd-=dt;
   // 灵能恢复与过载衰减
   player.mana=Math.min(player.maxMana,player.mana+8*dt);player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
@@ -910,6 +1093,7 @@ function updateEnemies(dt){
     e.lean=Math.max(0,e.lean-dt*4);e.headSnap=Math.max(0,e.headSnap-dt*5);
     e.parts.body.rotation.x=-e.lean*0.45;e.parts.head.rotation.z=Math.sin(gameTime*40)*0.1*e.headSnap;
     e.flash-=dt;if(!(ex.active&&ex.target===e&&ex.type==='melta'))e.mat.emissive.setHex(e.flash>0?0xffffff:(canExecute(e)?0x774400:0x000000));
+    if(e.lifted||e.inHole){if(e.burn>0)e.burn-=dt;continue;}
     if(e.burn>0){e.burn-=dt;if(Math.random()<dt*4){damageEnemy(e,5,'body',null,{stagger:0});}}
     e.growl-=dt;if(e.growl<=0){e.growl=4+Math.random()*6;if(e.g.position.distanceTo(pp)<14)play('growl');}
     if(e.stun>0){e.stun-=dt;e.g.rotation.z=Math.sin(gameTime*20)*0.1;continue;}
@@ -927,7 +1111,7 @@ function updateEnemies(dt){
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
-      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6)hurtPlayer(e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1));e.cd=1.1;}continue;}
+      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6)hurtPlayer(e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1),false,e);e.cd=1.1;}continue;}
     e.cd-=dt;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
     else{const sp=e.speed*(e.legsLost?0.5:1);e.g.position.addScaledVector(dir,sp*dt);e.walk+=dt*sp*2;
@@ -950,23 +1134,23 @@ function updateMatch(dt){
   waveTimer-=dt;if(waveTimer<=0){waveTimer=50;spawnWave(4,false);announce('远处传来裂隙撕开的声音……',2);}
   // 终端破解
   const term=interactables.find(i=>i.type==='terminal');
-  if(term&&match.hack>=0&&match.hack<15){if(Math.hypot(term.x-player.pos.x,term.z-player.pos.z)<6){match.hack+=dt;if(Math.random()<dt*0.25)spawnWave(1,true);}
-    setProgress(match.hack/15,'破解中');if(match.hack>=15){addProgress('hack',1);term.used=true;announce('终端破解完成',2);setProgress(-1);}}
+  if(term&&match.hack>=0&&match.hack<8){if(Math.hypot(term.x-player.pos.x,term.z-player.pos.z)<6){match.hack+=dt;if(Math.random()<dt*0.25)spawnWave(1,true);}
+    setProgress(match.hack/8,'破解中');if(match.hack>=8){addProgress('hack',1);term.used=true;announce('终端破解完成',2);setProgress(-1);}}
   // 仪式法阵
   const rit=interactables.find(i=>i.type==='ritual');
   if(rit&&!rit.used){const inside=Math.hypot(rit.x-player.pos.x,rit.z-player.pos.z)<3;
-    if(inside){if(match.ritual<0){match.ritual=0;announce('仪式开始——守住法阵 20 秒！',2.5);spawnWave(5,true);}match.ritual+=dt;setProgress(match.ritual/20,'仪式');player.ovl+=dt*1.5;
-      if(Math.random()<dt*0.3)spawnWave(1,true);if(match.ritual>=20){rit.used=true;addProgress('ritual',1);announce('仪式完成',2);setProgress(-1);rit.m.material.color.setHex(0x40ff80);}}
+    if(inside){if(match.ritual<0){match.ritual=0;announce('仪式开始——守住法阵 12 秒！',2.5);spawnWave(5,true);}match.ritual+=dt;setProgress(match.ritual/12,'仪式');player.ovl+=dt*1.5;
+      if(Math.random()<dt*0.3)spawnWave(1,true);if(match.ritual>=12){rit.used=true;addProgress('ritual',1);announce('仪式完成',2);setProgress(-1);rit.m.material.color.setHex(0x40ff80);}}
     else if(match.ritual>=0)setProgress(-1);}
   // 发射倒计时
-  if(match.launching>=0){match.launching-=dt;setProgress(1-match.launching/12,'发射倒计时');if(match.launching<=0){match.launching=-2;endMatch(true);}}
+  if(match.launching>=0){match.launching-=dt;setProgress(1-match.launching/7,'发射倒计时');if(match.launching<=0){match.launching=-2;endMatch(true);}}
   // 最近的蜡烛光
   if(Math.floor(gameTime*2)!==Math.floor((gameTime-dt)*2)){const near=candles.slice().sort((a,b)=>a.distanceToSquared(player.pos)-b.distanceToSquared(player.pos));
     candleLights.forEach((l,i)=>{if(near[i])l.position.copy(near[i]);});}
   candleLights.forEach((l,i)=>l.intensity=18+Math.sin(gameTime*9+i*3)*4+Math.random()*3);
   // 拾取物旋转
   for(const it of interactables)if(!it.used&&it.type==='ammo'&&Math.hypot(it.x-player.pos.x,it.z-player.pos.z)<1.5){it.used=true;scene.remove(it.m);
-    {const add=Math.ceil(WEAPONS[0].magSize*1.5);ammo[0].res=Math.min(WEAPONS[0].reserveMax,ammo[0].res+add);play('pickup');announce(WEAPONS[0].name+' 弹药 +'+add,1);}}
+    if(!WEAPONS[0].heat){const add=Math.ceil(WEAPONS[0].magSize*1.5);ammo[0].res=Math.min(WEAPONS[0].reserveMax,ammo[0].res+add);play('pickup');announce(WEAPONS[0].name+' 弹药 +'+add,1);}}
   for(const it of interactables)if(!it.used&&['ammo','clue','thruster','fuel','hull','core','relic','rare'].includes(it.type)){it.m.rotation.y+=dt*1.5;it.m.position.y=0.8+Math.sin(gameTime*2+it.x)*0.1;}
   for(const b of beams)if(b.rise)b.m.position.y+=dt*6;
 }
@@ -996,14 +1180,17 @@ function updateHUD(dt){
   const bar=(id,v)=>$(id).firstElementChild.style.width=(clamp(v,0,1)*100)+'%';
   bar('hp',player.hp/player.maxHp);bar('st',player.stamina/100);bar('mana',player.mana/player.maxMana);bar('ovl',player.ovl/player.maxOvl);
   $('hpTxt').textContent=Math.ceil(Math.max(0,player.hp))+' / '+player.maxHp;$('manaTxt').textContent=Math.floor(player.mana);$('ovlTxt').textContent=Math.floor(player.ovl/player.maxOvl*100)+'%';
-  $('spells').innerHTML=spells.map((s,i)=>`<div class="spell" style="border-color:#${ELEM_COLOR[s.elem].toString(16).padStart(6,'0')}">${['V','G','Q'][i]} ${spellName(s)}<br><span class="small">${spellCost(s)} 灵能</span></div>`).join('');
+  const sk=[['V','锁喉提摔',PSY.lift],['G','黑洞',PSY.hole],['Q','子弹时间',PSY.bt]];
+  $('spells').innerHTML=sk.map(([k,n,P])=>`<div class="spell" style="border-color:${P.cd>0?'#3a2a20':'#a040ff'}">${k} ${n}<br><span class="small">${P.cd>0?Math.ceil(P.cd)+' 秒':'就绪'}</span></div>`).join('')+`<div class="spell">C ${spellName(spells[0])}<br><span class="small">${spellCost(spells[0])} 灵能</span></div>`;
+  if(bt.t>0){canvas.style.filter='saturate(.35) contrast(1.15) brightness(1.1)';$('btfx').style.opacity=1;}else $('btfx').style.opacity=0;
+  if(masterLP)masterLP.frequency.setTargetAtTime(bt.t>0?650:20000,actx.currentTime,0.1);
   let h='<h3>撤离条件</h3>';
   for(const c of match.conds)h+=c.revealed?`<div class="${c.prog>=c.target?'done':''}">${c.prog>=c.target?'✔':'◇'} ${COND_INFO[c.type].name} ${c.target>1?c.prog+'/'+c.target:''}</div>`:`<div class="hidden">？ 未知条件——寻找数据板线索</div>`;
   h+=`<div style="margin-top:6px">逃生舱：${podPartsText()}</div>`;
   const c=player.carried;const carry=Object.keys(c).filter(k=>c[k]).map(k=>PART_NAME[k]+'×'+c[k]).join(' ');if(carry)h+=`<div>携带零件：${carry}</div>`;
   h+=`<div>身上物资：${player.loot}${player.rare?' + 灵能圣物':''} · 已送回：${player.safeLoot} · 回收装置：${player.beacons}</div>`;
   $('obj').innerHTML=h;
-  $('weapons').innerHTML=WEAPONS.map((w,i)=>{const a=ammo[i];const txt=w.melee?'—':`<span class="${a.mag<=w.magSize*0.25?'low':''}">${a.mag}</span> / ${a.res===Infinity?'∞':a.res}`;return `<div class="wslot ${i===cur?'on':''}">${i+1} ${w.name}<b>${reloadT>0&&i===cur?'换弹中…':txt}</b></div>`;}).join('');
+  $('weapons').innerHTML=WEAPONS.map((w,i)=>{const a=ammo[i];const txt=w.heat?(heat.over>0?'<span class="low">过热</span>':`热量 ${Math.round(heat.v)}%`+(heat.charge>0.05?` · 蓄力 ${Math.round(heat.charge*100)}%`:'')):w.melee?'—':`<span class="${a.mag<=w.magSize*0.25?'low':''}">${a.mag}</span> / ${a.res===Infinity?'∞':a.res}`;return `<div class="wslot ${i===cur?'on':''}">${i+1} ${w.name}<b>${reloadT>0&&i===cur?'换弹中…':txt}</b></div>`;}).join('');
   mapT-=dt;if(mapT<=0){mapT=0.1;drawMinimap();}
   interactTarget=nearestInteractable();
   const xt=executeTarget();$('prompt').textContent=ex.active?'':xt?'按 X 处决':promptFor(interactTarget);
@@ -1259,7 +1446,7 @@ function prepareMatch(){
   if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}
   else{player.maxHp=player.hp=150;player.gunMul=1.3;player.dmgTaken=0.8;}
   player.pos.set(0,0,0);
-  spells=[{form:'bolt',elem:'fire',mods:[]},{form:'blast',elem:'void',mods:[]},{form:'bolt',elem:'lightning',mods:['split']}];
+  spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
   applyLoadout();swordOut=0;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
   setupMatch();updatePodLook();
   waveTimer=60;gameTime=0;setProgress(-1);
@@ -1314,17 +1501,18 @@ $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene()
 let mouseDown=false;
 addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;player.yaw-=e.movementX*0.0022;player.pitch=clamp(player.pitch-e.movementY*0.0022,-1.5,1.5);});
 addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&document.pointerLockElement)tryFire(true);}
-  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.blocking=true;play('equip');}});
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active&&MS.phase==='none'){player.blocking=true;player.blockStart=gameTime;play('equip');}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].heat&&!ex.active){player.charging=true;if(!heat.over)play('charge');}});
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state==='playing')switchWeapon((cur+(e.deltaY>0?1:2))%3);});
-addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)player.blocking=false;});
+addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.blocking=false;player.charging=false;}});
 addEventListener('keydown',e=>{
   if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
   keys[e.code]=true;if(state!=='playing')return;
   if(e.code==='Space'&&player.onGround){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
-  if(e.code==='KeyV')castSpell(0);if(e.code==='KeyG')castSpell(1);if(e.code==='KeyQ')castSpell(2);
+  if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
   if(e.code==='KeyX')execute();if(e.code==='KeyF'||e.code==='KeyE')interact();if(e.code==='KeyR')startReload();if(e.code==='KeyB')callBeacon();
 });
@@ -1341,7 +1529,8 @@ function frame(now){
     if(hitstop>0){hitstop-=dt;dt*=0.05;}   // 顿帧
     gameTime+=dt;
     if(mouseDown&&document.pointerLockElement)tryFire(false);
-    updatePlayer(dt);updateEnemies(dt);updateSpells(dt);updateDebris(dt);updateSparks(dt);updateMatch(dt);updateHUD(dt);
+    const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt);
+    updatePlayer(dt);updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
   } else if(state==='dying'){updateDeath(dt);updateDebris(dt*0.4);}
   else if(state==='cutscene')updateCutscene(dt);
   renderer.render(scene,camera);
