@@ -75,7 +75,7 @@ addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='pla
   if(e.button===2&&state==='playing'&&WEAPONS[cur].heat&&!ex.active){player.charging=true;if(!heat.over)play('charge');}});
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state==='playing')switchWeapon((cur+(e.deltaY>0?1:2))%3);});
-addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.charging=false;
+addEventListener('mouseup',e=>{if(e.button===0){mouseDown=false;if(state==='playing')meleeRelease();}if(e.button===2){player.charging=false;
   if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
 addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET.fps;saveSet();applySet();return;}
   if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}

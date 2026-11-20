@@ -71,9 +71,12 @@ const RANGED={
   melta:{id:'melta',name:'热熔枪',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:1.6,dmg:170,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:0,range:16,pierce:true,snd:'melta',desc:'无需弹药，会过热。右键蓄力、左键发射，直接烧穿一条线上所有敌人的身体。',model:melta,flash:meltaFlash}};
 const PISTOL={id:'pistol',name:'爆弹手枪',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:.8,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
 const MELEE={
-  saw:{id:'saw',name:'链锯剑',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'四段连招：斜劈、横斩、突刺锯入、切开。右键按住蓄力，松开进入狂热（移速和攻速提升）。'},
-  power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'四段连招：左劈、右劈、突刺、上挑，每刀都能劈开前方所有敌人。右键：分解力场（8 秒，伤害 ×1.6，挥砍时吟诵祷言）。'},
-  ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'按住 E 举盾格挡（时机准可防反）；右键切换剑 / 爆弹手枪。'}};
+  saw:{id:'saw',name:'链锯剑',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'四段连招：斜劈、横斩、突刺锯入、切开。右键按住蓄力，松开进入狂热（移速和攻速提升）。重击（按住左键）：回旋锯斩，拦腰锯断周围一圈敌人。'},
+  power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'四段连招：左劈、右劈、突刺、上挑，每刀都能劈开前方所有敌人。右键：分解力场（8 秒，伤害 ×1.6，挥砍时吟诵祷言）。重击（按住左键）：裂地斩，劈开前方一条直线上的所有敌人。'},
+  hammer:{id:'hammer',name:'雷殛锤',melee:true,cleave:true,dmg:72,windup:.24,slash:.2,desc:'三段大范围横扫，打退一片。重击：雷霆砸地，震晕周围所有敌人。'},
+  fist:{id:'fist',name:'破甲巨拳',melee:true,dmg:50,windup:.1,slash:.11,desc:'刺拳、直拳、上勾拳，拳拳打碎血肉。重击：抓住面前的敌人当场捏碎（精英要先打残）。'},
+  axe:{id:'axe',name:'链锯战斧',melee:true,bite:true,dmg:54,windup:.16,slash:.16,desc:'沉重的劈砍会咬进敌人身体。重击：横斩斩首。'},
+  ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'按住 E 举盾格挡（时机准可防反）；右键切换剑 / 爆弹手枪。重击（按住左键）：盾击，撞飞并震晕前方敌人。'}};
 for(const k in CFG.guns)Object.assign(RANGED[k],CFG.guns[k]);for(const k in CFG.melee)Object.assign(MELEE[k],CFG.melee[k]);
 const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
@@ -90,7 +93,7 @@ function startReload(){const G=activeGun();if(!G)return;const w=G.w;if(player.ch
   reloadT=w.reload;reloadFor=G.slot;play('magOut');setTimeout(()=>{if(reloadT>0)play('magIn');},w.reload*550);}
 function finishReload(){const w=reloadFor===1?PISTOL:WEAPONS[reloadFor],a=ammo[reloadFor];const n=Math.min(w.magSize-a.mag,a.res);a.mag+=n;if(a.res!==Infinity)a.res-=n;play('chamber');reloadFor=-1;}
 function tryFire(pressed){if(ex.active)return;const G=activeGun();
-  if(!G){if(!player.blocking)melee();return;}const w=G.w,slot=G.slot;
+  if(!G){if(pressed&&!player.blocking)meleePress();return;}const w=G.w,slot=G.slot;
   if(!w.auto&&!pressed)return;
   if(reloadT>0||switchT>0||player.fireCd>0)return;
   if(w.heat){if(!pressed)return;if(heat.over>0){play('dry');announce('热熔枪过热！',0.8);return;}fire(w);return;}

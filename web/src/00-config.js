@@ -20,7 +20,11 @@ const CFG={
     saw:   {dmg:35,windup:.13,slash:.17},   // 链锯剑
     power: {dmg:48,windup:.09,slash:.12},   // 力场分解剑
     ssword:{dmg:42,windup:.14,slash:.17},   // 剑盾
+    hammer:{dmg:72,windup:.24,slash:.2},    // 雷殛锤
+    fist:  {dmg:50,windup:.1, slash:.11},   // 破甲巨拳
+    axe:   {dmg:54,windup:.16,slash:.16},   // 链锯战斧
   },
+  heavyHold:0.28,   // 按住左键多少秒算重击
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
