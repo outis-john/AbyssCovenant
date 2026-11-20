@@ -34,7 +34,7 @@
 - 内置浏览器没有登录 claude.ai，无法直接看 artifact 画面；视觉效果需要用户反馈。
 
 - 试玩问卷：`Docs/试玩反馈问卷.md`。
-- 离线单文件版 `docs/abyss-offline.html`：build.py 把 `web/vendor/three.module.js`（r160）内嵌进去，发给国内朋友用。
+- 离线单文件版 `docs/abyss-offline.html`：**用户要的时候才生成和发送**（`python3 tools/build.py --offline`），build.py 把 `web/vendor/three.module.js`（r160）内嵌进去，发给国内朋友用。
 
 ## 已知坑
 - 不要 `clone()` 带 `userData.enemy` 的网格（循环引用会让 Three.js 的 JSON 复制抛错）。

@@ -13,6 +13,8 @@ use('hbolter');es=[spawnEnemy('brute',0,-8)];es[0].hp=es[0].maxHp=99999;es[0].cd
 log('heavy bolter shots in 1st 0.5s',early,'| next 1s',late,'| spin',player.spin.toFixed(2));
 // 火焰：锥形多目标、点燃
 use('flamer');es=[spawnEnemy('imp',-1,-4),spawnEnemy('imp',1,-4),spawnEnemy('imp',0,-12)];es.forEach(e=>{e.hp=e.maxHp=500;e.cd=99;});mouseDown=true;step(30);mouseDown=false;
+const fp=firePatches.length;const onFire=spawnEnemy('imp',firePatches[0]?firePatches[0].x:0,firePatches[0]?firePatches[0].z:-4);onFire.hp=onFire.maxHp=500;onFire.cd=99;onFire.speed=0;step(40);
+log('flamer ground fire patches',fp,'| enemy standing in fire hurt',onFire.hp<500);
 log('flamer: burned in cone',es.slice(0,2).filter(e=>e.hp<500).length,'/2 | out of range untouched',es[2].hp===500,'| burning',es[0].burn>0);
 // 穿甲狙击：穿透 3 个 + 开镜
 use('needle');es=[0,1,2,3].map(i=>{const e=spawnEnemy('brute',0,-4-i*2);e.hp=e.maxHp=9999;e.cd=99;return e;});step(1);player.pitch=Math.atan2(1.2*1.7-1.6,4);
