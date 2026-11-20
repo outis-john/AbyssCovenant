@@ -77,7 +77,7 @@ const MELEE={
   fist:{id:'fist',name:'破甲巨拳',melee:true,dmg:50,windup:.1,slash:.11,desc:'刺拳、直拳、上勾拳，拳拳打碎血肉。重击：抓住面前的敌人当场捏碎（精英要先打残）。'},
   axe:{id:'axe',name:'链锯战斧',melee:true,bite:true,dmg:54,windup:.16,slash:.16,desc:'沉重的劈砍会咬进敌人身体。重击：横斩斩首。'},
   ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'按住 E 举盾格挡（时机准可防反）；右键切换剑 / 爆弹手枪。重击（按住左键）：盾击，撞飞并震晕前方敌人。'}};
-for(const k in CFG.guns)Object.assign(RANGED[k],CFG.guns[k]);for(const k in CFG.melee)Object.assign(MELEE[k],CFG.melee[k]);
+for(const k in CFG.guns)if(RANGED[k])Object.assign(RANGED[k],CFG.guns[k]);for(const k in CFG.melee)Object.assign(MELEE[k],CFG.melee[k]);
 const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
 let loadout=loadLoadout();
@@ -101,12 +101,13 @@ function tryFire(pressed){if(ex.active)return;const G=activeGun();
   fire(w,slot);
 }
 function fire(w,slot=cur){
-  player.fireCd=1/w.rate;if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
+  player.fireCd=1/(w.rate*(w.spin?0.23+0.77*(player.spin||0):1));if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
   play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
   player.recoil+=0.06*w.kick;gunKick=w.kick;gunRoll=(Math.random()-.5)*0.25*w.kick;player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
   if(w.kick>=2){player.shake=Math.max(player.shake,0.22);player.punch=Math.max(player.punch||0,0.035);}
   let anyHit=false,anyKill=false,head=false;
-  if(w.pierce){ // 热熔枪：穿透一条线
+  if(fireSpecial(w,mScale)){}
+  else if(w.pierce){ // 热熔枪：穿透一条线
     const {o,d}=aimRay(0);ray.set(o,d);ray.far=w.range;const hits=ray.intersectObjects(hitTargets(),false);const done=new Set();let end=o.clone().addScaledVector(d,w.range);
     for(const h of hits){const e=h.object.userData.enemy;if(!e){end=h.point;break;}if(done.has(e))continue;done.add(e);
       const part=h.object.userData.part;
@@ -115,7 +116,7 @@ function fire(w,slot=cur){
       e.burn=2;embers(h.point,6);puff(h.point,2,0x333333,.8);anyHit=true;anyKill=anyKill||k;}
     heatBeam(o.clone().add(new THREE.Vector3(0,-.18,0)),end,0.5+mScale);
     heat.v+=20+heat.charge*45;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');announce('热熔枪过热！散热中…',1.5);}
-  } else if(w.id==='bolter'){const {o,d}=aimRay(w.spread);spawnBolt(o,d,w);}
+  } else if(w.id==='bolter'||w.spin){const {o,d}=aimRay(w.spread*(w.spin?1.6-player.spin:1));spawnBolt(o,d,w);}
   else if(w.id==='shotgun'){const r=shotgunBlast(w);anyHit=r.anyHit;anyKill=r.anyKill;head=r.head;}
   else for(let k=0;k<w.pellets;k++){const {o,d}=aimRay(w.spread);const h=castRay(o,d);if(!h)continue;const e=h.object.userData.enemy;
     if(e){const part=h.object.userData.part==='eye'?'head':h.object.userData.part;const killed=damageEnemy(e,w.dmg*player.gunMul,part,d,{point:h.point,knock:w.knock,how:part==='head'?{headBurst:true}:{}});hitSparks(h.point,d,4);anyHit=true;anyKill=anyKill||killed;head=head||part==='head';}

@@ -15,6 +15,10 @@ const CFG={
     bolter: {dmg:24, rate:7,  magSize:24,res0:120,reserveMax:192,reload:1.1,spread:.012},  // 爆弹枪
     shotgun:{dmg:16, rate:1.3,magSize:6, res0:30, reserveMax:48, reload:1.3,spread:.1,pellets:10},  // 霰弹枪
     melta:  {dmg:170,rate:1.6,range:16},                                                    // 热熔枪
+    plasma: {dmg:46, rate:3,  splash:2.2},                                                  // 等离子枪（右键过充 ×3）
+    hbolter:{dmg:20, rate:13, magSize:120,res0:240,reserveMax:480,reload:2.6},              // 重型爆弹机枪（转速 0→1）
+    flamer: {dmg:9,  rate:12, magSize:100,res0:200,reserveMax:300,range:7},                 // 火焰喷射器（每次喷射对锥形内所有敌人）
+    needle: {dmg:150,rate:1.1,magSize:5,res0:20,reserveMax:30,reload:1.8},                  // 穿甲狙击枪（穿透 3 个）
   },
   melee:{
     saw:   {dmg:35,windup:.13,slash:.17},   // 链锯剑
