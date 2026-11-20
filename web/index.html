@@ -129,7 +129,7 @@
   <div class="right">
     <div class="info" id="clsInfo"></div>
     <div class="info" id="vaultInfo"></div>
-    <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击 · 右键 格挡（剑盾，时机准可防反）/ 蓄力（热熔枪）· R 换弹<br>X 处决（需充满）· F 拾取 / 互动<br>V 锁喉提摔 · G 黑洞 · Q 子弹时间<br>C 符文技能 · Tab 符文拼装 · B 回收装置 · M 地图 · Esc 暂停</div>
+    <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击（近战可连招）· R 换弹<br>右键：链锯蓄力狂热 / 热熔蓄力 / 剑盾切换剑与手枪<br>E 举盾格挡（剑盾，时机准可防反）<br>X 处决（需充满）· F 拾取 / 互动<br>V 锁喉提摔 · G 黑洞 · Q 子弹时间<br>C 符文技能 · Tab 符文拼装 · B 回收装置 · M 地图 · Esc 暂停</div>
   </div>
   <div class="bottom"><button id="goBtn">开始匹配</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>
 </div>
@@ -234,7 +234,7 @@ function initSaw(){
   const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1500;lp.Q.value=0.5;
   const g=actx.createGain();g.gain.value=0.5;sp.connect(muff).connect(lp).connect(g).connect(master);
 }
-function sawEngine(out,mode){if(!saw)return;saw.onT=out?1:0;saw.target=mode==='bite'?8000:mode==='swing'?12500:2900;saw.loadT=mode==='bite'?1:0;}
+function sawEngine(out,mode,rc=0){if(!saw)return;saw.onT=out?1:0;saw.target=mode==='bite'?8000:mode==='rev'?4000+rc*9500:mode==='swing'?12500:2900;saw.loadT=mode==='bite'?1:0;}
 function initAudio(){
   if(actx) return;
   actx=new (window.AudioContext||window.webkitAudioContext)();
@@ -272,6 +272,7 @@ const sfx={
   zap(){tone('sawtooth',180,520,0.08,0.12);noiseHit(4000,0.12,0.12,'highpass');},
   powerHit(){tone('sawtooth',900,150,0.2,0.18);noiseHit(3500,0.4,0.2,'bandpass');tone('sine',80,40,0.4,0.2);},
   clang(){tone('square',820,760,0.15,0.25);tone('square',1230,1150,0.08,0.3);noiseHit(3000,0.25,0.1,'highpass');},
+  frenzy(){tone('sawtooth',90,240,0.25,0.5);noiseHit(2000,0.3,0.4,'bandpass');},
   parry(){tone('sine',1600,1600,0.3,0.4);tone('sine',2400,2400,0.18,0.5);noiseHit(5000,0.3,0.1,'highpass');},
   charge(){tone('sawtooth',120,600,0.12,1.0);},
   vent(){noiseHit(3000,0.5,1.5,'highpass');tone('sine',200,80,0.2,0.8);},
@@ -589,9 +590,9 @@ const RANGED={
   melta:{id:'melta',name:'热熔枪',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:1.6,dmg:170,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:0,range:16,pierce:true,snd:'melta',desc:'无需弹药，会过热。右键蓄力、左键发射，熔穿一条线上的所有敌人。',model:melta,flash:meltaFlash}};
 const PISTOL={id:'pistol',name:'爆弹手枪',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:.8,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
 const MELEE={
-  saw:{id:'saw',name:'链锯剑',melee:true,bite:true,windup:.14,slash:.17,desc:'砍中后卡在肉里持续锯切，再撕出来。'},
-  power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'出手快，一刀劈开前方所有敌人。'},
-  ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'右键举盾：正面伤害 -80%，移动变慢。'}};
+  saw:{id:'saw',name:'链锯剑',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'四段连招：斜劈、横斩、突刺锯入、切开。右键按住蓄力，松开进入狂热（移速和攻速提升）。'},
+  power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'四段连招：左劈、右劈、突刺、上挑，每刀都能劈开前方所有敌人。'},
+  ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'按住 E 举盾格挡（时机准可防反）；右键切换剑 / 爆弹手枪。'}};
 const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
 let loadout=loadLoadout();
@@ -600,20 +601,22 @@ function applyLoadout(){WEAPONS=[RANGED[loadout.primary],PISTOL,MELEE[loadout.me
   heat.v=0;heat.over=0;heat.charge=0;
   ammo=[{mag:WEAPONS[0].magSize,res:WEAPONS[0].res0},{mag:PISTOL.magSize,res:Infinity},{}];cur=0;reloadT=0;switchT=0;reloadFor=-1;}
 applyLoadout();
-function switchWeapon(i){if(i===cur||i<0||i>2||MS.phase==='bite'||ex.active)return;cur=i;switchT=0.3;reloadT=0;reloadFor=-1;player.blocking=false;play('equip');if(cur!==2&&MS.phase!=='none'){MS.phase='none';swing=0;}}
-function startReload(){const w=WEAPONS[cur];if(player.channelT>0){announce('施法中无法换弹',0.8);return;}if(w.heat)return;if(w.melee||reloadT>0||switchT>0||ex.active)return;const a=ammo[cur];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('没有备弹了',1);return;}
-  reloadT=w.reload;reloadFor=cur;play('magOut');setTimeout(()=>{if(reloadT>0)play('magIn');},w.reload*550);}
-function finishReload(){const w=WEAPONS[reloadFor],a=ammo[reloadFor];const n=Math.min(w.magSize-a.mag,a.res);a.mag+=n;if(a.res!==Infinity)a.res-=n;play('chamber');reloadFor=-1;}
-function tryFire(pressed){if(ex.active)return;const w=WEAPONS[cur];
-  if(w.melee){if(!player.blocking)melee();return;}
+function activeGun(){const w=WEAPONS[cur];if(w.melee)return (w.block&&player.ssPistol)?{w:PISTOL,slot:1}:null;return {w,slot:cur};}
+function switchWeapon(i){if(i===cur||i<0||i>2||MS.phase==='bite'||ex.active)return;cur=i;switchT=0.3;reloadT=0;reloadFor=-1;player.blocking=false;player.revving=false;
+  if(i!==2){swordOut=0;sword.visible=false;ghost.visible=false;shieldG.visible=false;}MS.phase='none';swing=0;MS.queued=false;play('equip');if(cur!==2&&MS.phase!=='none'){MS.phase='none';swing=0;}}
+function startReload(){const G=activeGun();if(!G)return;const w=G.w;if(player.channelT>0){announce('施法中无法换弹',0.8);return;}if(w.heat)return;if(reloadT>0||switchT>0||ex.active)return;const a=ammo[G.slot];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('没有备弹了',1);return;}
+  reloadT=w.reload;reloadFor=G.slot;play('magOut');setTimeout(()=>{if(reloadT>0)play('magIn');},w.reload*550);}
+function finishReload(){const w=reloadFor===1?PISTOL:WEAPONS[reloadFor],a=ammo[reloadFor];const n=Math.min(w.magSize-a.mag,a.res);a.mag+=n;if(a.res!==Infinity)a.res-=n;play('chamber');reloadFor=-1;}
+function tryFire(pressed){if(ex.active)return;const G=activeGun();
+  if(!G){if(!player.blocking)melee();return;}const w=G.w,slot=G.slot;
   if(!w.auto&&!pressed)return;
   if(reloadT>0||switchT>0||player.fireCd>0)return;
   if(w.heat){if(!pressed)return;if(heat.over>0){play('dry');announce('热熔枪过热！',0.8);return;}fire(w);return;}
-  if(ammo[cur].mag<=0){if(pressed)play('dry');startReload();return;}
-  fire(w);
+  if(ammo[slot].mag<=0){if(pressed)play('dry');startReload();return;}
+  fire(w,slot);
 }
-function fire(w){
-  player.fireCd=1/w.rate;if(!w.heat)ammo[cur].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
+function fire(w,slot=cur){
+  player.fireCd=1/w.rate;if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
   play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
   player.recoil+=0.06*w.kick;gunKick=w.kick;gunRoll=(Math.random()-.5)*0.25*w.kick;player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
   if(w.kick>=2){player.shake=Math.max(player.shake,0.22);player.punch=Math.max(player.punch||0,0.035);}
@@ -629,7 +632,7 @@ function fire(w){
     else spawnSpark(h.point);
     if(w.id==='bolter')boltBurst(h.point);}
   if(anyHit){play(head?'head':'hit');showHit(anyKill);}
-  if(!w.heat&&ammo[cur].mag<=0)setTimeout(startReload,250);
+  if(!w.heat&&ammo[slot].mag<=0)setTimeout(startReload,250);
 }
 function boltBurst(p){setTimeout(()=>{if(state!=='playing')return;hitSparks(p,null,5);for(const e of enemies)if(e.alive&&e.g.position.clone().setY(1.2).distanceTo(p)<1.6)damageEnemy(e,8,'body',null,{stagger:.1});},40);}
 function heatBeam(a,b,w=1){const len=a.distanceTo(b);const m=new THREE.Mesh(new THREE.CylinderGeometry(.09*w,.16*w,len,6),new THREE.MeshBasicMaterial({color:0xfff0c0,transparent:true,opacity:.9}));
@@ -643,65 +646,84 @@ const POSE={rest:[0.02,0.3,0.12],restPos:[.3,-.42,-.3],
   a:{start:[0.8,1.5,1.05],end:[-0.85,-1.6,-0.85],ps:[.62,-.12,-.4],pe:[-.32,-.62,-.3]},
   b:{start:[-0.75,-1.45,-0.95],end:[0.85,1.6,0.9],ps:[-.28,-.62,-.3],pe:[.62,-.1,-.4]},
   h:{start:[0.05,1.75,0.15],end:[0.05,-1.8,-0.15],ps:[.65,-.32,-.36],pe:[-.45,-.36,-.36]}};   // 防反后的横斩
-const poseSet=()=>MS.dir==='h'?POSE.h:MS.dir>0?POSE.a:POSE.b;
 const posAt=k=>{const P=poseSet();return P.ps.map((v,i)=>lerp(v,P.pe[i],k));};
 function poseAt(k){const P=poseSet();return P.start.map((v,i)=>lerp(v,P.end[i],k));}
 function applyPose(k){sword.rotation.set(...poseAt(k));sword.position.set(...posAt(k));}
 function blendPose(r0,p0,r1,p1,e,over){sword.rotation.set(...r0.map((v,i)=>lerp(v,r1[i]*over,e)));sword.position.set(...p0.map((v,i)=>lerp(v,p1[i],e)));}
+// 连招：每段有自己的刀路姿势，切割平面按刀路计算
+Object.assign(POSE,{
+  r:{start:[0.8,-1.5,-1.05],end:[-0.85,1.6,0.85],ps:[-.3,-.12,-.4],pe:[.62,-.62,-.3]},      // 右劈：左上 -> 右下
+  t:{start:[0.08,0.25,0.0],end:[-0.04,0.02,0.0],ps:[.32,-.38,-.12],pe:[.06,-.26,-.82]},     // 突刺
+  u:{start:[-0.85,0.35,0.25],end:[1.05,-0.25,-0.2],ps:[.2,-.7,-.32],pe:[.22,.02,-.46]}});   // 上挑
+const COMBOS={
+  power:[{p:'a',dm:1,name:'左劈'},{p:'r',dm:1,name:'右劈'},{p:'t',dm:1.3,thrust:true,name:'突刺'},{p:'u',dm:1.7,fin:true,name:'上挑'}],
+  saw:[{p:'a',dm:1,name:'斜劈'},{p:'h',dm:1,name:'横斩'},{p:'t',dm:1,thrust:true,bite:true,biteDur:.62,name:'突刺锯入'},{p:'u',dm:2.2,fin:true,name:'切开'}],
+  ssword:[{p:'a',dm:1},{p:'b',dm:1}]};
+const frenzyMul=()=>player.frenzy>0?0.62:1;
 function melee(){
-  if(player.meleeCd>0||MS.phase==='bite'||ex.active)return;const M=WEAPONS[2];
-  MS.dir=MS.combo%2===0?1:-1;MS.combo++;MS.counter=false;MS.phase='windup';MS.t=0;MS.s=0;MS.target=null;MS.hitDone=false;
-  player.meleeCd=M.windup+M.slash+0.24;swordOut=1.4;swing=1;
+  if(ex.active||player.revving)return;if(player.meleeCd>0||MS.phase==='bite'){MS.queued=true;return;}MS.queued=false;const M=WEAPONS[2],list=COMBOS[M.id];
+  if(MS.phase==='none'&&gameTime-(MS.lastEnd??-9)>1.0)MS.combo=0;
+  MS.step=list[MS.combo%list.length];MS.combo++;MS.dir=stepDir();MS.counter=false;
+  MS.phase='windup';MS.t=0;MS.s=0;MS.target=null;MS.hitDone=false;
+  const fm=frenzyMul();player.meleeCd=(M.windup+M.slash*(MS.step.thrust?1.2:1))*fm+0.14*fm;swordOut=1.4;swing=1;
 }
-function meleeCandidates(){
-  const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const out=[];
-  for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();
-    if(d<3.0+e.r&&to.normalize().dot(fwd)>0.45)out.push([d,e]);}
+function poseSet(){return MS.step?POSE[MS.step.p]:POSE.a;}
+function stepDir(){const P=poseSet();return P.pe[0]<P.ps[0]?1:-1;}
+const sdir=()=>typeof MS.dir==='number'?MS.dir:-1;
+function meleeCandidates(range=3.0,cos=0.45){
+  const fwd=fwdFlat();const out=[];
+  for(const e of enemies){if(!e.alive||e.lifted)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();
+    if(d<range+e.r&&to.normalize().dot(fwd)>cos)out.push([d,e]);}
   return out.sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 }
 function contactPoint(e){return e.g.position.clone().setY(1.25*e.g.scale.y).lerp(player.pos.clone().setY(1.3),0.25);}
 function bladeDirWorld(){const q=new THREE.Quaternion();sword.getWorldQuaternion(q);return new THREE.Vector3(0,0,-1).applyQuaternion(q);}
-function swingPlane(P){const a=posAt(0),b=posAt(1);const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));
+function swingPlane(P){
+  const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));
+  if(MS.step&&MS.step.thrust)return {p:P,n:right};              // 突刺：沿前进方向竖着剖开
+  const a=posAt(0),b=posAt(1);
   const fwd=new THREE.Vector3(-Math.sin(player.yaw)*Math.cos(player.pitch),Math.sin(player.pitch),-Math.cos(player.yaw)*Math.cos(player.pitch));
   const up=new THREE.Vector3().crossVectors(right,fwd).normalize();const sweep=right.clone().multiplyScalar(b[0]-a[0]).addScaledVector(up,b[1]-a[1]).normalize();
   return {p:P,n:new THREE.Vector3().crossVectors(sweep,fwd).normalize()};}
-const sdir=()=>MS.dir==='h'?-1:MS.dir;
 function sprayAlongChain(p,n){
   const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)).multiplyScalar(sdir());
   const blade=bladeDirWorld(),toCam=player.pos.clone().setY(1.6).sub(p).normalize();
   for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,matBlood);m.position.copy(p);scene.add(m);
     const v=blade.clone().multiplyScalar(5+Math.random()*4).addScaledVector(right,2+Math.random()*3).add(new THREE.Vector3(0,2+Math.random()*3,0)).addScaledVector(toCam,Math.random()*2);
     v.x+=(Math.random()-.5)*2;v.z+=(Math.random()-.5)*2;bloods.push({m,v,rest:false});}
-  while(bloods.length>600){const o=bloods.shift();scene.remove(o.m);}
+  while(bloods.length>650){const o=bloods.shift();scene.remove(o.m);}
 }
+function meleeSound(M,fin){play(M.id==='power'?'powerHit':M.id==='saw'?'grind':'clang');play('hit');if(fin)play('rip');}
 function updateMelee(dt){
-  if(MS.phase==='none')return;MS.t+=dt;const M=WEAPONS[2];
-  const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));
-  if(MS.phase==='windup'){const k=Math.min(1,MS.t/M.windup),e=1-(1-k)*(1-k);
-    blendPose(POSE.rest,POSE.restPos,poseAt(0),posAt(0),e,1.12);if(MS.t>=M.windup){MS.phase='slash';MS.t=0;play(M.id==='power'?'zap':'whoosh');}}
-  else if(MS.phase==='slash'){MS.s=Math.min(1,(MS.t/M.slash)**1.6);applyPose(MS.s);
-    if(!MS.hitDone&&MS.s>=0.5){MS.hitDone=true;const c=meleeCandidates();
-      if(c.length&&M.bite){MS.target=c[0];MS.phase='bite';MS.t=0;MS.tick=0;MS.s=0.5;
-        hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.3);player.punch=0.06;splat();play('grind');{const pl=swingPlane(contactPoint(MS.target));severArmsByPlane(MS.target,pl.p,pl.n,30);}
+  if(MS.phase==='none')return;MS.t+=dt;const M=WEAPONS[2],st=MS.step||{dm:1},fm=frenzyMul();
+  const fwd=fwdFlat(),W=M.windup*fm,SL=M.slash*fm*(st.thrust?1.2:1);
+  if(MS.phase==='windup'){const k=Math.min(1,MS.t/W),e=1-(1-k)*(1-k);
+    blendPose(POSE.rest,POSE.restPos,poseAt(0),posAt(0),e,1.1);if(MS.t>=W){MS.phase='slash';MS.t=0;play(M.id==='power'?'zap':'whoosh');}}
+  else if(MS.phase==='slash'){MS.s=Math.min(1,(MS.t/SL)**(st.thrust?1:1.6));applyPose(MS.s);
+    if(!MS.hitDone&&MS.s>=0.5){MS.hitDone=true;const c=meleeCandidates(st.thrust?3.8:3.0,st.thrust?0.8:0.45);
+      if(c.length&&st.bite){MS.target=c[0];MS.phase='bite';MS.t=0;MS.tick=0;MS.s=0.5;MS.biteDur=st.biteDur||0.34;
+        hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.3);player.punch=0.06;splat();play('grind');
         for(const e of c.slice(1))damageEnemy(e,30,'body',fwd,{stagger:.4,knock:1.2,point:contactPoint(e)});}
-      else if(c.length){const targets=(M.cleave||MS.counter)?c:[c[0]];let k=false;const dmgv=M.dmg*(MS.counter?2.4:1);
-        for(const e of targets){const p=contactPoint(e);const pl=swingPlane(p);severArmsByPlane(e,pl.p,pl.n,dmgv);k=damageEnemy(e,dmgv,'body',fwd,{stagger:.45,knock:1.4,point:p,how:{cut:{p:pl.p,n:pl.n,imp:M.cleave?5:3.5}}})||k;sprayAlongChain(p,12);hitSparks(p,fwd.clone().negate(),M.cleave?8:4);}
-        play(M.cleave?'powerHit':'clang');play('hit');hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.25);player.punch=0.05;splat();showHit(k);}}
+      else if(c.length){const targets=(M.cleave||st.cleave||st.thrust&&M.id==='power')?c:[c[0]];let k=false;const dmgv=M.dmg*st.dm;
+        for(const e of targets){const p=contactPoint(e);const pl=swingPlane(p);if(!st.thrust)severArmsByPlane(e,pl.p,pl.n,dmgv);
+          k=damageEnemy(e,dmgv,'body',fwd,{stagger:st.fin?.8:.45,knock:st.fin?2.4:0.45,point:p,how:{cut:{p:pl.p,n:pl.n,imp:st.fin?6:M.cleave?5:3.5}}})||k;
+          sprayAlongChain(p,st.fin?24:12);hitSparks(p,fwd.clone().negate(),M.id==='power'?8:4);}
+        meleeSound(M,st.fin);hitstop=Math.max(hitstop,st.fin?0.12:0.07);player.shake=Math.max(player.shake,st.fin?0.4:0.25);player.punch=st.fin?0.09:0.05;splat();showHit(k);}}
     if(MS.s>=1){MS.phase='recover';MS.t=0;}}
   else if(MS.phase==='bite'){const e=MS.target;
-    const j=()=>(Math.random()-.5)*0.07;const P=poseAt(0.5+Math.min(0.08,MS.t*0.25));sword.rotation.set(P[0]+j(),P[1]+j(),P[2]+j());
-    {const q=posAt(0.5);sword.position.set(q[0],q[1],q[2]+Math.sin(MS.t*60)*0.025);}player.shake=Math.max(player.shake,0.12);
+    const j=()=>(Math.random()-.5)*0.07;const P=poseAt(0.5+Math.min(0.12,MS.t*0.3));sword.rotation.set(P[0]+j(),P[1]+j(),P[2]+j());
+    {const q=posAt(st.thrust?0.5+Math.min(0.4,MS.t*0.8):0.5);sword.position.set(q[0],q[1],q[2]+Math.sin(MS.t*60)*0.025);}player.shake=Math.max(player.shake,0.14);
     if(e&&e.alive){e.stagger=Math.max(e.stagger,0.2);e.lean=Math.max(e.lean,0.6);e.g.rotation.z=(Math.random()-.5)*0.15;}
     MS.tick-=dt;if(MS.tick<=0){MS.tick=0.06;const p=e?contactPoint(e):player.pos.clone().addScaledVector(fwd,1.5).setY(1.3);
-      sprayAlongChain(p,7);hitSparks(p,fwd.clone().negate(),2);
-      if(e&&e.alive){const pl=swingPlane(p);const k=damageEnemy(e,11,'body',null,{stagger:.2,point:p,how:{cut:{p:pl.p,n:pl.n,imp:3}}});if(k)spawnBlood(p,null,30);if(k){showHit(true);MS.phase='rip';MS.t=0;}else play('hit');}}
-    if(MS.phase==='bite'&&(MS.t>=0.34||!e||!e.alive)){MS.phase='rip';MS.t=0;}
+      sprayAlongChain(p,8);hitSparks(p,fwd.clone().negate(),2);
+      if(e&&e.alive){const pl=swingPlane(p);const k=damageEnemy(e,11,'body',null,{stagger:.2,point:p,how:{cut:{p:pl.p,n:pl.n,imp:3}}});if(k){spawnBlood(p,null,30);showHit(true);MS.phase='rip';MS.t=0;}else play('hit');}}
+    if(MS.phase==='bite'&&(MS.t>=MS.biteDur||!e||!e.alive)){MS.phase='rip';MS.t=0;}
     if(MS.phase==='rip'){play('rip');splat();player.punch=0.08;hitstop=Math.max(hitstop,0.06);
-      if(e&&e.alive){const pl=swingPlane(contactPoint(e));const k=damageEnemy(e,18,'body',fwd,{stagger:.6,knock:2.2,point:contactPoint(e),how:{cut:{p:pl.p,n:pl.n,imp:4}}});showHit(k);}
+      if(e&&e.alive){const pl=swingPlane(contactPoint(e));const k=damageEnemy(e,18,'body',fwd,{stagger:.6,knock:(MS.step&&MS.step.thrust)?0.4:2.2,point:contactPoint(e),how:{cut:{p:pl.p,n:pl.n,imp:4}}});showHit(k);}
       if(e)sprayAlongChain(contactPoint(e),24);}}
   else if(MS.phase==='rip'){MS.s=Math.min(1,0.5+MS.t/0.08*0.5);applyPose(MS.s);if(MS.t>=0.08){MS.phase='recover';MS.t=0;}}
-  else if(MS.phase==='recover'){const k=Math.min(1,MS.t/0.22),e=k*k*(3-2*k);
-    blendPose(poseAt(1),posAt(1),POSE.rest,POSE.restPos,e,1);if(k>=1){MS.phase='none';swing=0;MS.counter=false;}}
+  else if(MS.phase==='recover'){const k=Math.min(1,MS.t/(0.22*fm)),e=k*k*(3-2*k);
+    blendPose(poseAt(1),posAt(1),POSE.rest,POSE.restPos,e,1);if(k>=1){MS.phase='none';swing=0;MS.counter=false;MS.lastEnd=gameTime;}}
 }
 function splat(){const el=$('splat');el.style.transition='none';el.style.opacity=0.75;requestAnimationFrame(()=>{el.style.transition='opacity .7s';el.style.opacity=0;});}
 function hitSparks(p,dir,n){if(!p)return;for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0xffe080:0xffffff}));m.position.copy(p);m.scale.setScalar(.6);scene.add(m);
@@ -1027,14 +1049,14 @@ function hurtPlayer(n,self=false,att=null){
     if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
       play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
       $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);announce('防反！',0.8);
-      player.blocking=false;MS.dir='h';MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
+      player.blocking=false;MS.step={p:'h',dm:2.4,cleave:true,fin:true};MS.dir=stepDir();MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
     n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);
   if(player.hp<=0)beginDeath();
 }
 function updatePlayer(dt){
   const sprint=keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
-  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(ex.active)sp=0;
+  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;if(ex.active)sp=0;
   if(sprint){player.stamina-=28*dt;player.stDelay=0.8;}else{player.stDelay-=dt;if(player.stDelay<=0)player.stamina=Math.min(100,player.stamina+22*dt);}
   const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
@@ -1059,24 +1081,27 @@ function updatePlayer(dt){
   if(WEAPONS[cur].heat){meltaFlash.visible=heat.charge>0.05||meltaFlash.visible&&player.fireCd>0;if(heat.charge>0.05)meltaFlash.scale.setScalar(.4+heat.charge*1.2);}
   player.channelT=Math.max(0,(player.channelT||0)-dt);
   if(reloadT>0){reloadT-=dt;if(reloadT<=0)finishReload();}
-  const W=WEAPONS[cur];let rl=0;if(reloadT>0&&!W.melee){rl=Math.sin(Math.PI*(1-reloadT/W.reload));}
+  const W=WEAPONS[cur],AG=activeGun();let rl=0;if(reloadT>0&&AG&&AG.w.reload){rl=Math.sin(Math.PI*(1-reloadT/AG.w.reload));}
   const sw=switchT/0.3;
   for(const m of RANGED_MODELS){const k=W.kick||1;
     m.position.set(.32+Math.sin(gameTime*4.5)*.004,-.28+bob*.3-gunKick*.015-rl*.22-sw*.5,-.55+player.recoil*0.4+gunKick*0.08);
     m.rotation.set(player.recoil*1.0+gunKick*0.14-rl*0.7,rl*0.3,gunRoll*gunKick+rl*0.5);}
   for(const g of [sawG,powG,ssG])if(g!==sword)g.visible=false;
+  if(player.revving){player.revCharge=Math.min(1,(player.revCharge||0)+dt/1.2);player.shake=Math.max(player.shake,0.04+player.revCharge*0.08);}
+  if(player.frenzy>0)player.frenzy-=dt;
   if(cur===2)swordOut=Math.max(swordOut,0.5);
   const M=WEAPONS[2],meleeShown=swordOut>0&&(!ex.active||ex.melee);
   if(meleeShown){if(MS.phase==='none'&&cur!==2&&!ex.active)swordOut-=dt;sword.visible=true;RANGED_MODELS.forEach(m=>m.visible=false);
     const fast=MS.phase==='slash'||MS.phase==='rip'||MS.phase==='bite';if(M.id==='saw')texChain.offset.x-=dt*(fast?22:6);
     sword.rotation.order='YXZ';sword.position.set(.3,-.42-sw*.5,-.3);
-    if(MS.phase==='none'){const j=M.id==='saw'?(Math.random()-.5)*0.008:0;sword.rotation.set(POSE.rest[0]+j,POSE.rest[1],POSE.rest[2]+j);}
+    if(MS.phase==='none'){const rv=player.revving?player.revCharge:0;const j=M.id==='saw'?(Math.random()-.5)*(0.008+rv*0.03):0;sword.rotation.set(POSE.rest[0]+j+rv*0.25,POSE.rest[1]-rv*0.2,POSE.rest[2]+j);if(rv)texChain.offset.x-=dt*30*rv;}
     else updateMelee(dt);
     ghost.visible=MS.phase==='slash'||MS.phase==='rip';ghost.material.color.setHex(M.id==='power'?0x8fd0ff:0xd8d0c0);
     ghost.rotation.order='YXZ';ghost.position.copy(sword.position);
     ghost.rotation.x=lerp(ghost.rotation.x,sword.rotation.x,0.45);ghost.rotation.y=lerp(ghost.rotation.y,sword.rotation.y,0.45);ghost.rotation.z=lerp(ghost.rotation.z,sword.rotation.z,0.45);
-    sawEngine(M.id==='saw',(MS.phase==='bite'||(ex.active&&ex.type==='saw'&&ex.t>.15&&ex.t<.85))?'bite':(fast||MS.phase==='windup')?'swing':'idle');humEngine(M.id==='power',fast);
+    sawEngine(M.id==='saw',(MS.phase==='bite'||(ex.active&&ex.type==='saw'&&ex.t>.15&&ex.t<.85))?'bite':player.revving?'rev':(fast||MS.phase==='windup'||player.frenzy>0)?'swing':'idle',player.revCharge||0);humEngine(M.id==='power',fast);
   } else {sword.visible=false;ghost.visible=false;RANGED_MODELS.forEach(m=>m.visible=m===W.model||(ex.active&&!ex.melee&&m===WEAPONS[cur].model));sawEngine(false,'idle');humEngine(false,false);}
+  if(M.block&&player.ssPistol&&cur===2&&!ex.active){sword.visible=false;ghost.visible=false;pistol.visible=true;}
   // 盾牌
   const showShield=M.id==='ssword'&&meleeShown;shieldG.visible=showShield;
   if(showShield&&!ex.active){const b=player.blocking?1:0;shieldG.position.set(lerp(-.38,-.08,b),lerp(-.38,-.22,b)-sw*.5,lerp(-.5,-.42,b));shieldG.rotation.set(0,lerp(.5,.05,b),lerp(.15,0,b));}
@@ -1084,6 +1109,7 @@ function updatePlayer(dt){
   {const want=ex.active?60:(bt.t>0?88:80);if(Math.abs(camera.fov-want)>0.05){camera.fov=lerp(camera.fov,want,0.12);camera.updateProjectionMatrix();}}
   player.swingRoll=lerp(player.swingRoll||0,MS.phase==='slash'||MS.phase==='rip'?-sdir()*0.1:MS.phase==='bite'?-sdir()*0.05:0,0.3);
   player.fireCd-=dt;player.meleeCd-=dt;
+  if(MS.queued&&player.meleeCd<=0&&MS.phase!=='bite'&&cur===2&&!activeGun()&&!ex.active)melee();
   // 灵能恢复与过载衰减
   player.mana=Math.min(player.maxMana,player.mana+8*dt);player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
 }
@@ -1195,7 +1221,7 @@ function updateHUD(dt){
   const c=player.carried;const carry=Object.keys(c).filter(k=>c[k]).map(k=>PART_NAME[k]+'×'+c[k]).join(' ');if(carry)h+=`<div>携带零件：${carry}</div>`;
   h+=`<div>身上物资：${player.loot}${player.rare?' + 灵能圣物':''} · 已送回：${player.safeLoot} · 回收装置：${player.beacons}</div>`;
   $('obj').innerHTML=h;
-  $('weapons').innerHTML=WEAPONS.map((w,i)=>{const a=ammo[i];const txt=w.heat?(heat.over>0?'<span class="low">过热</span>':`热量 ${Math.round(heat.v)}%`+(heat.charge>0.05?` · 蓄力 ${Math.round(heat.charge*100)}%`:'')):w.melee?'—':`<span class="${a.mag<=w.magSize*0.25?'low':''}">${a.mag}</span> / ${a.res===Infinity?'∞':a.res}`;return `<div class="wslot ${i===cur?'on':''}">${i+1} ${w.name}<b>${reloadT>0&&i===cur?'换弹中…':txt}</b></div>`;}).join('');
+  $('weapons').innerHTML=WEAPONS.map((w,i)=>{const a=ammo[i];const txt=(w.block&&player.ssPistol)?`手枪 ${ammo[1].mag} / ∞`:(w.id==='saw'&&player.frenzy>0)?`<span style="color:#ffb040">狂热 ${player.frenzy.toFixed(1)}</span>`:w.heat?(heat.over>0?'<span class="low">过热</span>':`热量 ${Math.round(heat.v)}%`+(heat.charge>0.05?` · 蓄力 ${Math.round(heat.charge*100)}%`:'')):w.melee?'—':`<span class="${a.mag<=w.magSize*0.25?'low':''}">${a.mag}</span> / ${a.res===Infinity?'∞':a.res}`;return `<div class="wslot ${i===cur?'on':''}">${i+1} ${w.name}<b>${reloadT>0&&i===cur?'换弹中…':txt}</b></div>`;}).join('');
   mapT-=dt;if(mapT<=0){mapT=0.1;drawMinimap();}
   interactTarget=nearestInteractable();
   const xt=executeTarget();$('prompt').textContent=ex.active?'':xt?'按 X 处决':promptFor(interactTarget);
@@ -1452,7 +1478,7 @@ function prepareMatch(){
   else{player.maxHp=player.hp=150;player.gunMul=1.3;player.dmgTaken=0.8;}
   player.pos.set(0,0,0);
   spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
-  applyLoadout();swordOut=0;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
+  applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
   setupMatch();updatePodLook();
   waveTimer=60;gameTime=0;setProgress(-1);
   camera.position.set(0,1.6,0);camera.rotation.set(0,player.yaw,0,'YXZ');
@@ -1506,11 +1532,13 @@ $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene()
 let mouseDown=false;
 addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;player.yaw-=e.movementX*0.0022;player.pitch=clamp(player.pitch-e.movementY*0.0022,-1.5,1.5);});
 addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&document.pointerLockElement)tryFire(true);}
-  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active&&MS.phase==='none'){player.blocking=true;player.blockStart=gameTime;play('equip');}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'右手：爆弹手枪':'右手：剑',0.7);}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='saw'&&cur===2&&!ex.active&&MS.phase==='none'){player.revving=true;player.revCharge=0;}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].heat&&!ex.active){player.charging=true;if(!heat.over)play('charge');}});
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state==='playing')switchWeapon((cur+(e.deltaY>0?1:2))%3);});
-addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.blocking=false;player.charging=false;}});
+addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.charging=false;
+  if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
 addEventListener('keydown',e=>{
   if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
@@ -1519,9 +1547,10 @@ addEventListener('keydown',e=>{
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
-  if(e.code==='KeyX')execute();if(e.code==='KeyF'||e.code==='KeyE')interact();if(e.code==='KeyR')startReload();if(e.code==='KeyB')callBeacon();
+  if(e.code==='KeyE'&&!e.repeat&&WEAPONS[cur].block&&!ex.active){player.blocking=true;player.blockStart=gameTime;play('equip');}
+  if(e.code==='KeyX')execute();if(e.code==='KeyF')interact();if(e.code==='KeyR')startReload();if(e.code==='KeyB')callBeacon();
 });
-addEventListener('keyup',e=>{keys[e.code]=false;});
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyE')player.blocking=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseDown=false;});
 
 // ============================================================ 主循环
