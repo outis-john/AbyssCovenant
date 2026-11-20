@@ -1,6 +1,6 @@
 // 联机测试：同一进程里跑两份游戏，用假的 Peer 连接
 import {U} from './three-stub.mjs';
-globalThis.AudioContext=U;
+globalThis.AudioContext=U;globalThis.location={hash:'#p2p'};
 const reg=new Map(),queue=[];
 class FakeConn{constructor(peerId){this.peer=peerId;this.open=false;this.h={};this.other=null;}
   on(ev,fn){this.h[ev]=fn;} send(d){const o=this.other;queue.push(()=>o.h.data&&o.h.data(d));} close(){}}

@@ -54726,25 +54726,81 @@ function sendTo(id,o){const c=net.conns.get(id);if(c&&c.open)c.send(ser(o));}
 function bcast(o,except){const s=ser(o);for(const [id,c] of net.conns)if(id!==except&&c.open)c.send(s);}
 function annTeam(t,d=2){announce(t,d);if(isHost())bcast({t:'ann',text:t,dur:d});}
 const enemyById=id=>enemies.find(e=>e.id===id);
+// ---------- 中继联机：用公共 MQTT 服务器转发数据（国内外都能连，不需要 P2P）
+// 接口模仿 PeerJS（on/open/connection/data/close、connect、send），游戏其余代码不用改
+const RELAYS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+const RALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const relayOf=code=>Math.max(0,RALPH.indexOf(code[code.length-1]))%2;          // 房间码最后一位的奇偶 = 用哪台服务器
+const withRelay=(code,bi)=>{const i=RALPH.indexOf(code[code.length-1]);return code.slice(0,-1)+RALPH[i-i%2+bi];};
+function mqttConnect(url,cid,onMsg,onClose){return new Promise((res,rej)=>{
+  const enc=new TextEncoder(),dec=new TextDecoder();let ws;try{ws=new WebSocket(url,'mqtt');}catch(e){return rej(e);}ws.binaryType='arraybuffer';
+  const str=t=>{const b=enc.encode(t);return [b.length>>8,b.length&255,...b];};
+  const pkt=(h,body)=>{const L=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;L.push(d);}while(n>0);return new Uint8Array([h,...L,...body]);};
+  let buf=new Uint8Array(0),pid=1,ok=false,ping=null;const timer=setTimeout(()=>{if(!ok){try{ws.close();}catch(e){}rej(new Error('timeout'));}},6000);
+  const api={pub(t,m){if(ws.readyState!==1)return;const b=enc.encode(m),tt=str(t);const body=new Uint8Array(tt.length+b.length);body.set(tt);body.set(b,tt.length);ws.send(pkt(0x30,body));},
+    sub(t){ws.send(pkt(0x82,[pid>>8,pid&255,...str(t),0]));pid++;},close(){clearInterval(ping);try{ws.send(new Uint8Array([0xE0,0]));ws.close();}catch(e){}}};
+  ws.onopen=()=>ws.send(pkt(0x10,[...str('MQTT'),4,2,0,30,...str(cid)]));
+  ws.onerror=()=>{if(!ok){clearTimeout(timer);rej(new Error('ws'));}};
+  ws.onclose=()=>{clearInterval(ping);if(ok&&onClose)onClose();};
+  ws.onmessage=ev=>{const a=new Uint8Array(ev.data),nb=new Uint8Array(buf.length+a.length);nb.set(buf);nb.set(a,buf.length);buf=nb;
+    for(;;){if(buf.length<2)break;let len=0,mul=1,i=1,d;do{if(i>=buf.length)return;d=buf[i++];len+=(d&127)*mul;mul*=128;}while(d&128);
+      if(buf.length<i+len)break;const type=buf[0]>>4,b=buf.subarray(i,i+len);buf=buf.slice(i+len);
+      if(type===2){clearTimeout(timer);if(b[1]!==0)return rej(new Error('refused'));ok=true;ping=setInterval(()=>{if(ws.readyState===1)ws.send(new Uint8Array([0xC0,0]));},20000);res(api);}
+      else if(type===3){const tl=(b[0]<<8)|b[1];const t=dec.decode(b.subarray(2,2+tl));onMsg(t,dec.decode(b.subarray(2+tl)));}}};
+});}
+class RelayConn{constructor(peer,other){this.p=peer;this.peer=other;this.open=false;this.h={};this.rx=Date.now();}
+  on(ev,fn){this.h[ev]=fn;}emit(ev,a){this.h[ev]&&this.h[ev](a);}
+  send(d){this.p._send(this.peer,'m',d);}
+  close(){if(!this.open)return;this.open=false;this.p._send(this.peer,'bye');this.p.conns.delete(this.peer);this.emit('close');}
+  _drop(){if(!this.open&&!this.h)return;this.open=false;this.p.conns.delete(this.peer);this.emit('close');}}
+const RTOPIC='abysscov/v1/';
+class RelayPeer{
+  constructor(id,bi=0){this.h={};this.relay=true;this.conns=new Map();this.host=!!id;this.code=id?id.slice(PEER_PREFIX.length):'';
+    this.id=id||('c'+Math.random().toString(36).slice(2,10));setTimeout(()=>this._start(bi),0);
+    this.watch=setInterval(()=>{const now=Date.now();for(const c of [...this.conns.values()])if(c.open&&now-c.rx>12000)c._drop();
+      for(const c of this.conns.values())if(c.open&&now-(c.tx||0)>3000){c.tx=now;this._send(c.peer,'k');}},1000);}
+  on(ev,fn){this.h[ev]=fn;}emit(ev,a){this.h[ev]&&this.h[ev](a);}
+  inbox(){return this.host?RTOPIC+this.code+'/h':RTOPIC+this.room+'/c/'+this.id;}
+  async _start(bi){
+    if(this.host)this.code=withRelay(this.code,bi);
+    try{this.m=await mqttConnect(RELAYS[bi],'ac-'+this.id+'-'+Math.random().toString(36).slice(2,6),(t,s)=>this._rx(s),()=>{for(const c of [...this.conns.values()])c._drop();});}
+    catch(e){if(this.dead)return;if(this.host&&bi+1<RELAYS.length)return this._start(bi+1);return this.emit('error',{type:'relay-unreachable'});}
+    if(this.dead)return this.m.close();this.bi=bi;if(this.host){this.m.sub(this.inbox());this.id=PEER_PREFIX+this.code;}this.emit('open',this.id);}
+  _send(to,k,d){if(!this.m)return;const c=this.conns.get(to);if(c)c.tx=Date.now();
+    this.m.pub(this.host?RTOPIC+this.code+'/c/'+to:RTOPIC+this.room+'/h',JSON.stringify({f:this.id,k,d}));}
+  _rx(s){let o;try{o=JSON.parse(s);}catch(e){return;}let c=this.conns.get(this.host?o.f:'host');
+    if(this.host&&o.k==='hi'){if(!c){c=new RelayConn(this,o.f);this.conns.set(o.f,c);this.emit('connection',c);c.open=true;c.emit('open');}this._send(o.f,'ok');c.rx=Date.now();return;}
+    if(!c)return;c.rx=Date.now();
+    if(o.k==='ok'&&!c.open){c.open=true;clearInterval(c.retry);c.emit('open');}
+    else if(o.k==='m'&&c.open)c.emit('data',o.d);
+    else if(o.k==='bye')c._drop();}
+  connect(id){this.room=id.slice(PEER_PREFIX.length);const c=new RelayConn(this,'host');this.conns.set('host',c);
+    // 队友这边：所有消息都来自房主，用固定的 'host' 作为发送方
+    this.m.sub(this.inbox());let n=0;const hi=()=>{if(c.open)return clearInterval(c.retry);if(++n>8){clearInterval(c.retry);this.conns.delete('host');this.emit('error',{type:'peer-unavailable'});return;}this._send('host','hi');};
+    c.retry=setInterval(hi,1000);setTimeout(hi,200);return c;}
+  destroy(){this.dead=true;clearInterval(this.watch);for(const c of [...this.conns.values()])c.close();if(this.m)this.m.close();}
+}
+const useP2P=()=>location.hash==='#p2p';   // 网址末尾加 #p2p 改用旧的 PeerJS 直连
 function loadPeerJS(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';s.onload=()=>res();s.onerror=()=>rej(new Error('load'));document.head.appendChild(s);});}
 const PEER_PREFIX='abysscov-';
 function netErrText(err){const t=err&&err.type;if(t==='peer-unavailable')return'找不到这个房间，请检查房间码。';
   if(t==='unavailable-id')return'房间码冲突，请再试一次。';
+  if(t==='relay-unreachable')return'连不上中继服务器（broker.emqx.io）。请检查网络；Claude 页面里不能联机，请用 GitHub Pages 版或离线版。';
   return'无法连接联机服务器。注意：Claude 页面里不能联机，请在 GitHub Pages 版本中打开游戏。'+(t?'（'+t+'）':'');}
 function myName(){return CLS_INFO[cls].name;}
 async function hostRoom(){
-  try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
+  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
   netReset();net.code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
-  let peer;try{peer=new Peer(PEER_PREFIX+net.code);}catch(e){return netFail(netErrText(e));}
+  let peer;try{peer=useP2P()?new Peer(PEER_PREFIX+net.code):new RelayPeer(PEER_PREFIX+net.code);}catch(e){return netFail(netErrText(e));}
   net.peer=peer;net.mode='host';showLobby('正在创建房间…');
-  peer.on('open',id=>{net.myId=id;net.lobby=[{id,name:myName()+'（房主）',cls}];renderLobby();});
+  peer.on('open',id=>{net.myId=id;if(peer.relay)net.code=peer.code;net.lobby=[{id,name:myName()+'（房主）',cls}];renderLobby();});
   peer.on('connection',c=>{c.on('open',()=>{net.conns.set(c.peer,c);});c.on('data',d=>{try{hostRecv(c.peer,deser(d));}catch(err){console.error('net',err);}});c.on('close',()=>hostDrop(c.peer));});
   peer.on('error',err=>netFail(netErrText(err)));
 }
 async function joinRoom(code){
   code=(code||'').trim().toUpperCase();if(code.length<4){$('netMsg').textContent='请输入房间码';return;}
-  try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
-  netReset();let peer;try{peer=new Peer();}catch(e){return netFail(netErrText(e));}
+  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
+  netReset();let peer;try{peer=useP2P()?new Peer():new RelayPeer(null,relayOf(code));}catch(e){return netFail(netErrText(e));}
   net.peer=peer;showLobby('正在连接房间 '+code+' …');
   peer.on('open',id=>{net.myId=id;const c=peer.connect(PEER_PREFIX+code,{reliable:true});net.conn=c;
     c.on('open',()=>{net.mode='client';net.code=code;sendNet({t:'hello',cls,name:myName()});});

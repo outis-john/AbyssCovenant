@@ -22,13 +22,15 @@
 - 敌人：小恶魔 imp、巨魔 brute、瘟火术士 caster（保持距离吐可躲避的瘟火球；砍掉右臂就不能施法；完美格挡把火球弹回去并追踪术士）。快照里类型用 `ETYPES` 下标；火球 `spits` 由房主判定伤害，`spit` 事件让队友端播放画面。
 - 灵能：V 锁喉提摔、G 黑洞、Q 子弹时间（攻击吸血）、C 符文技能（Tab 拼装）；过载反噬。
 - 音效全部 WebAudio 合成；链锯引擎按二冲程点火模拟（ScriptProcessor）。
-- 联机：PeerJS（unpkg）房间码，房主权威；队友本地判定命中，把 dmg / sever / stun / interact / cast / beacon 发给房主；房主 12Hz 快照；kill 事件带死法参数各端重现。
+- 联机：默认走**中继**（`RelayPeer`，自写的最小 MQTT-over-WebSocket 客户端，公共服务器 broker.emqx.io，备用 hivemq；接口模仿 PeerJS，房间码最后一位奇偶表示用哪台服务器），这样国内朋友也能连；网址加 `#p2p` 才用旧的 PeerJS 直连。房主权威；队友本地判定命中，把 dmg / sever / stun / interact / cast / beacon 发给房主；房主 12Hz 快照；kill 事件带死法参数各端重现。
 
 ## 测试（改代码后必须跑）
 - `web/test/`：`three-stub.mjs` 是最小 Three.js 替身（真实向量 / 四元数 / 场景树 / 射线），其余为空对象。
-- 运行：`sh web/test/run-tests.sh`（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、mp_test 两份游戏 + 假网络联机）。
+- 运行：`sh web/test/run-tests.sh`（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、mp_test 两份游戏 + 假 PeerJS、mp_relay_test 同流程 + 假 MQTT 服务器）。
 - 注意：替身里所有材质是同一个空对象，材质比较/透明度读取在测试中不可信。setTimeout 在 test4 中被改为同步执行。
 - 内置浏览器没有登录 claude.ai，无法直接看 artifact 画面；视觉效果需要用户反馈。
+
+- 离线单文件版：`python3 tools/build-offline.py` → `docs/abyss-offline.html`（Three.js 内嵌，来自 `web/vendor/three.module.js` r160；`sync-pages.sh` 会自动生成）。用于发给国内朋友。
 
 ## 已知坑
 - 不要 `clone()` 带 `userData.enemy` 的网格（循环引用会让 Three.js 的 JSON 复制抛错）。
