@@ -6,8 +6,8 @@ const CLS={
   reforged:{hp:175,speed:1.08,dmgTaken:.75, gunMul:1.3, meleeMul:1.1,psy:false,guns:['bolter','shotgun','plasma','needle'],melee:['saw','power','axe','ssword'],z:'grenade'},
   bastion: {hp:240,speed:.8,  dmgTaken:.6,  gunMul:1.2, meleeMul:1.2,psy:false,guns:['bolter','hbolter','flamer','melta'],melee:['hammer','fist','power','ssword'],z:'warp',noSprint:true,heavy:true},
   relic:   {hp:265,speed:.78, dmgTaken:.55, gunMul:1.25,meleeMul:1.3,psy:false,guns:['plasma','hbolter','melta','flamer'],melee:['hammer','power','axe'],z:'aegis',noSprint:true,heavy:true},
-  walker:  {hp:450,speed:.66, dmgTaken:.5,  gunMul:1.4, meleeMul:1.6,psy:false,guns:['hbolter','melta','plasma'],melee:['fist'],z:'stomp',noSprint:true,noJump:true,heavy:true,eye:3.0,r:.85},
-  redeemer:{hp:520,speed:.72, dmgTaken:.48, gunMul:1.35,meleeMul:1.6,psy:false,guns:['flamer','hbolter'],melee:['fist'],z:'pyre',noSprint:true,noJump:true,heavy:true,eye:3.2,r:.9}};
+  walker:  {hp:450,speed:.66, dmgTaken:.5,  gunMul:1.4, meleeMul:1.6,psy:false,guns:['hbolter','melta','plasma'],melee:['fist'],z:'stomp',noSprint:true,noJump:true,noPistol:true,heavy:true,eye:3.0,r:.85},
+  redeemer:{hp:520,speed:.72, dmgTaken:.48, gunMul:1.35,meleeMul:1.6,psy:false,guns:['flamer','hbolter'],melee:['fist'],z:'pyre',noSprint:true,noJump:true,noPistol:true,heavy:true,eye:3.2,r:.9}};
 const ZAB={surge:{name:'深渊回响',cd:25,desc:'清空过载、回复 15 生命'},stim:{name:'战斗兴奋剂',cd:18,desc:'6 秒移速 +30%、伤害 +25%，回复 20 生命'},
   grenade:{name:'震爆手雷',cd:10,desc:'投出手雷，爆炸伤害并震晕'},warp:{name:'跃迁突袭',cd:14,desc:'瞬移到前方 10 米，落地冲击波震晕敌人'},
   aegis:{name:'圣盾领域',cd:20,desc:'6 秒内你和附近队友受到伤害减半'},stomp:{name:'践踏冲锋',cd:10,desc:'向前冲锋，撞飞并碾碎路上的敌人'},pyre:{name:'烈焰风暴',cd:14,desc:'向四周喷出火焰，点燃 6 米内所有敌人'}};
@@ -63,15 +63,65 @@ const EXTRA_MODELS={
   bastion:()=>{const g=recolor(buildCharacter('ward'),{0x41557e:0xb8b0a0});g.scale.set(1.22,1.08,1.25);return g;},
   relic:()=>{const g=recolor(buildCharacter('ward'),{0x41557e:0x8a7a3a,0x7a1612:0x2a1a50});g.scale.set(1.25,1.1,1.28);
     const b=new THREE.Mesh(new THREE.PlaneGeometry(.5,1.1),new THREE.MeshLambertMaterial({color:0x7a1612,side:2}));b.position.set(0,2.7,-.6);g.add(b);return g;},
-  walker:()=>walkerModel(0x8a9070,false),redeemer:()=>walkerModel(0x9a6a4a,true)};
-function walkerModel(col,big){const g=new THREE.Group();const M=new THREE.MeshLambertMaterial({map:texMetal,color:col}),D=new THREE.MeshLambertMaterial({color:0x3a3a40}),Gd=new THREE.MeshLambertMaterial({color:0xb8952e,emissive:0x2a1a00});
-  const add=(w,h,d,x,y,z,m)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);g.add(b);return b;};
-  for(const sx of [-1,1]){add(.4,1.1,.5,sx*.45,.55,0,D);add(.5,.25,.7,sx*.45,.12,.1,M);}
-  add(1.4,.4,1,0,1.25,0,D);add(1.7,1.5,1.3,0,2.15,0,M);add(.9,.9,.1,0,2.2,.66,Gd);add(.7,.3,.4,0,3.0,.2,D);
-  const win=add(.5,.12,.05,0,2.55,.68,new THREE.MeshBasicMaterial({color:0xff5020}));
-  add(.55,.9,.7,-1.15,2.1,.1,M);add(.7,.6,.7,-1.15,1.45,.3,D);   // 左：巨拳
-  add(.5,.6,.6,1.12,2.2,0,M);add(.22,.22,1.1,1.05,2.0,.6,D);add(.22,.22,1.1,1.28,2.0,.6,D);   // 右：枪
-  if(big){add(.5,.4,.6,0,3.15,-.4,D);for(const sx of [-1,1])add(.18,.6,.18,sx*.5,3.2,-.55,D);g.scale.setScalar(1.08);}
+  walker:()=>venerableModel(),redeemer:()=>redeemerModel()};
+// ---------- 机甲模型（正面朝 +z）：躯干正面嵌着棺椁，一侧巨拳、一侧重武器
+function mk(g){const add=(geo,mat,x,y,z,rx=0,ry=0,rz=0,par=g)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);par.add(m);return m;};
+  const B=(w,h,d,mat,x,y,z,rx,ry,rz,par)=>add(new THREE.BoxGeometry(w,h,d),mat,x,y,z,rx,ry,rz,par);
+  const Cy=(r1,r2,h,mat,x,y,z,rx,ry,rz,par,seg=10)=>add(new THREE.CylinderGeometry(r1,r2,h,seg),mat,x,y,z,rx,ry,rz,par);
+  const S=(r,mat,x,y,z,sx=1,sy=1,sz=1,par)=>{const m=add(new THREE.SphereGeometry(r,10,8),mat,x,y,z,0,0,0,par);m.scale.set(sx,sy,sz);return m;};
+  return {add,B,Cy,S};}
+function legs(T,armor,trim,joint,wide){const {B,Cy}=T;const w=wide?1.15:1;
+  for(const sx of [-1,1]){const x=sx*.46*w;
+    Cy(.2*w,.2*w,.5,joint,x,1.35,0,0,0,Math.PI/2);                                    // 髋关节
+    B(.42*w,.85,.5*w,armor,x,1.05,.04,-.22);                                          // 大腿甲
+    B(.52*w,.42,.56*w,armor,x,.66,.22,.25);B(.54*w,.08,.58*w,trim,x,.86,.2,.25);       // 膝甲 + 金边
+    B(.38*w,.62,.44*w,armor,x,.4,.02,.18);Cy(.12,.12,.4,joint,x,.48,-.24,.6);          // 小腿 + 液压杆
+    B(.62*w,.18,.9*w,joint,x,.09,.16);for(const t of [-1,0,1])B(.14*w,.12,.26,armor,x+t*.2*w,.07,.66*w);}}   // 脚掌 + 脚趾
+function sarcophagus(T,y,z,w,h,trim,core){const {B}=T;B(w,h,.12,core,0,y,z);
+  B(w+.14,.1,.16,trim,0,y+h/2,z);B(w+.14,.1,.16,trim,0,y-h/2,z);B(.1,h,.16,trim,-w/2-.02,y,z);B(.1,h,.16,trim,w/2+.02,y,z);
+  B(.08,h*.7,.06,trim,0,y,z+.08);B(w*.6,.08,.06,trim,0,y+h*.12,z+.08);                // 棺椁上的十字形金饰（原创纹样）
+  B(w*.35,.12,.05,new THREE.MeshBasicMaterial({color:0xff4020}),0,y+h*.36,z+.08);}   // 棺椁里透出的生命维持灯
+function fist(T,armor,trim,joint,glow,x,y,z,s){const {B,Cy}=T;
+  B(.62*s,.78*s,.66*s,armor,x,y+.45*s,z);B(.66*s,.1*s,.7*s,trim,x,y+.86*s,z);           // 前臂护甲
+  for(let i=0;i<3;i++)Cy(.2*s,.2*s,.04,glow,x,y+.1*s+i*.18*s,z,0,0,Math.PI/2);         // 力场线圈
+  B(.58*s,.42*s,.6*s,joint,x,y-.22*s,z+.06);
+  for(let i=0;i<4;i++){B(.12*s,.36*s,.14*s,armor,x-.21*s+i*.14*s,y-.56*s,z+.2*s,.25);B(.13*s,.06*s,.15*s,trim,x-.21*s+i*.14*s,y-.4*s,z+.2*s,.25);}
+  B(.14*s,.3*s,.14*s,armor,x+(x>0?-.36:.36)*s,y-.36*s,z+.18*s,0,0,x>0?.5:-.5);}         // 拇指
+// 长眠机神：圆桶形躯干、骨白重甲配金边、圆肩甲；左巨拳，右手蓝光重型能量炮
+function venerableModel(){const g=new THREE.Group();const T=mk(g);const {B,Cy,S}=T;
+  const armor=new THREE.MeshLambertMaterial({map:texMetal,color:0xe0d8c4,emissive:0x2a2620}),trim=new THREE.MeshLambertMaterial({color:0xc8a040,emissive:0x2a1800}),
+    joint=new THREE.MeshLambertMaterial({color:0x34343c}),red=new THREE.MeshLambertMaterial({color:0x9a1a14}),glow=new THREE.MeshBasicMaterial({color:0x60c8ff});
+  legs(T,armor,trim,joint,false);
+  B(1.05,.42,.75,joint,0,1.5,0);B(1.1,.12,.8,trim,0,1.72,0);                           // 腰
+  const tor=Cy(.78,.66,1.25,armor,0,2.35,0,0,0,0,g,14);tor.scale.z=.82;Cy(.8,.8,.1,trim,0,2.95,0,0,0,0,g,14).scale.z=.84;
+  S(.72,armor,0,2.98,-.05,1,.5,.85);                                                   // 顶部弧形甲
+  sarcophagus(T,2.3,.62,.72,.95,trim,red);
+  B(.36,.3,.34,joint,0,3.02,.52);B(.26,.05,.02,new THREE.MeshBasicMaterial({color:0x80ff60}),0,3.02,.7);   // 低伏的头部
+  for(const sx of [-1,1]){S(.52,armor,sx*1.02,2.82,0,1,.82,1);T.add(new THREE.TorusGeometry(.52,.05,4,14),trim,sx*1.02,2.7,0,Math.PI/2);
+    B(.42,.55,.46,joint,sx*1.05,2.25,.02);}
+  fist(T,armor,trim,joint,glow,-1.1,1.35,.18,1);
+  const ax=1.1;B(.52,.62,.66,armor,ax,1.75,.12);B(.56,.08,.7,trim,ax,2.05,.12);             // 右臂：能量炮
+  Cy(.16,.18,1.25,joint,ax,1.68,.82,Math.PI/2);for(let i=0;i<3;i++)Cy(.22,.22,.06,glow,ax,1.68,.45+i*.25,Math.PI/2);
+  Cy(.2,.2,.12,trim,ax,1.68,1.45,Math.PI/2);B(.18,.3,.4,joint,ax,1.35,.3);
+  for(const sx of [-.32,.32])Cy(.1,.12,.6,joint,sx,3.0,-.55);                              // 背后排气管
+  return g;}
+// 救赎机神：更宽更低、弓背前倾的箱形躯干，顶部装甲盖和双联小炮；右巨拳带喷火口，左手六管加特林
+function redeemerModel(){const g=new THREE.Group();const T=mk(g);const {B,Cy,S}=T;
+  const armor=new THREE.MeshLambertMaterial({map:texMetal,color:0x5a7ca4,emissive:0x0e1826}),dark=new THREE.MeshLambertMaterial({color:0x2c405e,emissive:0x080e18}),trim=new THREE.MeshLambertMaterial({color:0xc8a040,emissive:0x2a1800}),
+    joint=new THREE.MeshLambertMaterial({color:0x2e2e34}),bone=new THREE.MeshLambertMaterial({color:0xd8ccb0}),glow=new THREE.MeshBasicMaterial({color:0xffa040});
+  legs(T,armor,trim,joint,true);
+  B(1.45,.46,.95,joint,0,1.55,0);B(1.5,.1,1,trim,0,1.8,0);
+  const body=new THREE.Group();body.position.set(0,2.35,0);body.rotation.x=.14;g.add(body);const TB=mk(body);
+  TB.B(2.1,1.35,1.5,armor,0,0,0);TB.B(2.2,.32,1.6,dark,0,.8,-.05,-.12);TB.B(2.24,.08,1.64,trim,0,.66,-.05,-.12);   // 躯干 + 顶盖
+  TB.B(.6,.5,1.2,armor,0,.25,-.95);for(const sx of [-.5,0,.5])TB.Cy(.1,.12,.7,joint,sx,.75,-.9);                // 背包 + 烟囱
+  sarcophagus(TB,-.05,.8,.95,1.0,trim,bone);
+  TB.B(.42,.32,.36,joint,0,.62,.78);TB.B(.3,.05,.02,new THREE.MeshBasicMaterial({color:0xff3020}),0,.62,.97);        // 低伏头部
+  for(const sx of [-.42,.42]){TB.B(.22,.22,.5,dark,sx,1.05,.35);TB.Cy(.05,.05,.5,joint,sx,1.05,.8,Math.PI/2);}       // 顶部双联小炮
+  for(const sx of [-1,1]){TB.B(.75,.7,1.15,armor,sx*1.36,.55,0);TB.Cy(.38,.38,1.16,dark,sx*1.36,.9,0,Math.PI/2);TB.B(.78,.08,1.2,trim,sx*1.36,.2,0);}
+  fist(T,armor,trim,joint,glow,1.55,1.25,.32,1.3);Cy(.08,.1,.6,joint,1.95,1.55,.75,Math.PI/2);B(.06,.1,.06,glow,1.95,1.55,1.06);   // 右：巨拳 + 喷火口
+  const gx=-1.52;B(.72,.72,.95,armor,gx,1.75,.25);B(.76,.08,1,trim,gx,2.1,.25);B(.5,.5,.4,dark,gx,1.75,-.35);                      // 左：加特林
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2;Cy(.07,.07,1.3,joint,gx+Math.cos(a)*.17,1.72+Math.sin(a)*.17,1.25,Math.PI/2);}
+  for(const z of [.85,1.75])Cy(.26,.26,.08,trim,gx,1.72,z,Math.PI/2);
   return g;}
 // ---------- 战舰里的职业卡片
 $('clsCards').innerHTML=Object.keys(CLS).map(k=>`<div class="card" data-cls="${k}"><b>${CLS_INFO[k].name}</b><div>${CLS_INFO[k].tag}</div></div>`).join('');

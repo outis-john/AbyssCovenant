@@ -8,4 +8,5 @@ for(const c of Object.keys(CLS)){cls=c;loadout.primary='needle';loadout.melee='s
 cls='ward';prepareMatch(3);state='playing';PSY.lift.cd=0;const ann=$('announce');keys.KeyV=false;
 log('ward cannot use psychic: CLS.ward.psy',CLS.ward.psy,'| walker no jump',CLS.walker.noJump);
 const m=buildCharacter('walker');let n=0;m.traverse(()=>n++);log('walker model parts',n);
+cls='walker';prepareMatch(3);state='playing';cur=0;switchWeapon(1);const c1=cur;switchWeapon(2);step(20);log('walker pistol blocked: after switch(1) cur',c1,'| switch(2) cur',cur);
 log('DONE');})();
