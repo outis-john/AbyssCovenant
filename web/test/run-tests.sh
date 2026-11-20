@@ -11,7 +11,7 @@ globalThis.innerWidth=1280;globalThis.innerHeight=720;globalThis.addEventListene
 globalThis.document={getElementById:()=>U,querySelectorAll:()=>[],createElement:()=>U,addEventListener(){},exitPointerLock(){},body:U,pointerLockElement:U};
 globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.window=globalThis;
 """
-for t in ["test.js","test2.js","test3.js"]:
+for t in ["test.js","test2.js","test3.js","test4.js"]:
     open('run_'+t.replace('.js','.mjs'),'w').write(pre+js+open(t).read())
 PY
-node run_test.mjs && node run_test2.mjs && node run_test3.mjs
+node run_test.mjs && node run_test2.mjs && node run_test3.mjs && node run_test4.mjs

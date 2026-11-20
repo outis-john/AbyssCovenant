@@ -50,7 +50,15 @@ export class Scene extends Object3D{constructor(){super();this.background=U;this
 export class Mesh extends Object3D{constructor(g,m){super();this.geometry=g||U;this.material=m||U;}}
 export class PerspectiveCamera extends Object3D{constructor(f,a){super();this.fov=f;this.aspect=a;}updateProjectionMatrix(){}}
 export class BoxGeometry{constructor(width=1,height=1,depth=1){this.parameters={width,height,depth};this.attributes={uv:{getX:()=>0,getY:()=>0,setXY(){},needsUpdate:true}};}translate(){return this}}
+export class Raycaster{constructor(){this.o=new Vector3();this.d=new Vector3(0,0,-1);this.far=Infinity;}
+ set(o,d){this.o.copy(o);this.d.copy(d).normalize();}
+ intersectObjects(objs){const out=[];for(const m of objs){const p=m&&m.geometry&&m.geometry.parameters;if(!p||p.width===undefined)continue;
+  const c=m._w(),hw=[p.width*c.s.x/2,p.height*c.s.y/2,p.depth*c.s.z/2],cc=[c.p.x,c.p.y,c.p.z],o=[this.o.x,this.o.y,this.o.z],d=[this.d.x,this.d.y,this.d.z];
+  let t0=0,t1=this.far,ok=true;for(let i=0;i<3;i++){if(Math.abs(d[i])<1e-9){if(Math.abs(o[i]-cc[i])>hw[i]){ok=false;break;}continue;}
+   let a=(cc[i]-hw[i]-o[i])/d[i],b=(cc[i]+hw[i]-o[i])/d[i];if(a>b)[a,b]=[b,a];t0=Math.max(t0,a);t1=Math.min(t1,b);if(t0>t1){ok=false;break;}}
+  if(ok)out.push({distance:t0,point:this.o.clone().addScaledVector(this.d,t0),object:m});}
+  return out.sort((a,b)=>a.distance-b.distance);}}
 export const NearestFilter=1,RepeatWrapping=1,SRGBColorSpace=1,DoubleSide=2;
-const real={Vector3,Quaternion,Euler,Object3D,Group,Scene,Mesh,PerspectiveCamera,BoxGeometry,NearestFilter,RepeatWrapping,SRGBColorSpace,DoubleSide};
+const real={Raycaster,Vector3,Quaternion,Euler,Object3D,Group,Scene,Mesh,PerspectiveCamera,BoxGeometry,NearestFilter,RepeatWrapping,SRGBColorSpace,DoubleSide};
 export default real;
 export {U};
