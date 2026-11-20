@@ -60,7 +60,7 @@ function endMatch(win){
 function resumeGame(){state='playing';$('pause').classList.remove('show');canvas.requestPointerLock?.();}
 $('backBtn').onclick=enterHub;
 $('resume').onclick=resumeGame;
-$('quit').onclick=()=>{$('pause').classList.remove('show');endMatch(false);};
+$('quit').onclick=()=>{$('pause').classList.remove('show');if(training.on)exitTraining();else endMatch(false);};
 document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&state==='playing'){state='paused';$('pause').classList.add('show');}});
 canvas.addEventListener('click',()=>{if(state==='playing'&&!document.pointerLockElement)canvas.requestPointerLock?.();});
 $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene();});

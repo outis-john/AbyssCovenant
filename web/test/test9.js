@@ -1,0 +1,12 @@
+;(async()=>{globalThis.AudioContext=U;globalThis.setTimeout=(f)=>{f();return 0;};let now=0;const step=n=>{for(let i=0;i<n;i++){now+=16;frame(now);}};const log=console.log;
+startTraining();step(3);const st=[training.step];const dm=enemies.filter(e=>e.alive&&e.dummy);
+log('training started',state,'| dummies',dm.length,'| dummies stand still & harmless',dm[0].speed===0&&dm[0].dmg===0);
+damageEnemy(dm[0],999,'body',new THREE.Vector3(0,0,-1));step(3);st.push(training.step);
+switchWeapon(2);step(20);MS.combo=4;step(2);st.push(training.step);
+player.mana=999;castLift();step(2);st.push(training.step);
+castHole();step(2);st.push(training.step);
+const d=enemies.find(e=>e.alive&&e.dummy);d.g.position.set(0,0,-2);player.yaw=0;step(1);execute();step(2);st.push(training.step);
+for(let i=0;i<200;i++)step(1);damageEnemy(training.caster,999,'body',new THREE.Vector3(0,0,-1));step(3);st.push(training.step);
+log('steps progressed',st.join(' -> '),'| player never dies hp',Math.round(player.hp));
+const runs=loadVault().runs;exitTraining();log('exit -> state',state,'| vault runs unchanged',loadVault().runs===runs,'| training off',!training.on);
+log('DONE');})();
