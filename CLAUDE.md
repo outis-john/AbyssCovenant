@@ -7,7 +7,9 @@
 - 世界观原创（借鉴战锤 40K 的氛围，但不使用其名字、种族、原文）。
 
 ## 项目现状
-- 主线是**网页版**：`web/index.html`（单文件，Three.js 0.160 从 jsdelivr 加载，复古像素风）。
+- 主线是**网页版**。**源码在 `web/src/`，只改这里**；`python3 tools/build.py` 按文件名顺序拼接成 `web/index.html`、`docs/index.html`、`docs/abyss-offline.html`（这三个是生成物，别手改，但要提交）。所有 js 在同一个 module 作用域里，顺序即原顺序。
+- 文件地图（先 grep 定位再只读需要的文件，省 token）：
+  `shell.html` HTML+CSS+界面 DOM · `00-config` **数值表 CFG** · `00-core` 工具/渲染/贴图 · `01-audio` 合成音效 · `02-level` 状态变量/关卡生成/碰撞 · `03-enemies` 敌人模型/受伤/死亡 · `04-gore` 切割断肢/爆弹/血 · `05-weapons` 枪模型/RANGED/MELEE/开火 · `06-melee` 近战连招 · `07-execution` 处决 · `08-psychic` 灵能/符文 · `09-extraction` 撤离/拾取/刷怪潮 · `10-player` 玩家 · `11-enemy-ai` 敌人 AI/瘟火术士 · `12-match-hud` 对局流程/HUD · `13-hub` 战舰/职业/仓库/配装 · `14-cutscene` 空降 · `15-net` 联机 · `16-flow-loop` 开局结束/输入/主循环
 - `unreal/` 是早期的 UE5 C++ 版本，已暂停。
 - `docs/` 是 GitHub Pages 发布副本（`sh sync-pages.sh` 从 web/ 复制）。网址：https://outis-john.github.io/AbyssCovenant/
 - Claude artifact 页面：https://claude.ai/artifact/8zLjRyCQCoxMRzT6Vh8yKL （slug 40b18688-37a6-466b-89bf-0f8d60b6645f）。artifact 里**不能联机**（禁止 WebRTC），联机只能用 Pages 版。
@@ -26,11 +28,11 @@
 
 ## 测试（改代码后必须跑）
 - `web/test/`：`three-stub.mjs` 是最小 Three.js 替身（真实向量 / 四元数 / 场景树 / 射线），其余为空对象。
-- 运行：`sh web/test/run-tests.sh`（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、mp_test 两份游戏 + 假 PeerJS、mp_relay_test 同流程 + 假 MQTT 服务器）。
+- 运行：`sh web/test/run-tests.sh`（会先自动 build）（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、mp_test 两份游戏 + 假 PeerJS、mp_relay_test 同流程 + 假 MQTT 服务器）。
 - 注意：替身里所有材质是同一个空对象，材质比较/透明度读取在测试中不可信。setTimeout 在 test4 中被改为同步执行。
 - 内置浏览器没有登录 claude.ai，无法直接看 artifact 画面；视觉效果需要用户反馈。
 
-- 离线单文件版：`python3 tools/build-offline.py` → `docs/abyss-offline.html`（Three.js 内嵌，来自 `web/vendor/three.module.js` r160；`sync-pages.sh` 会自动生成）。用于发给国内朋友。
+- 离线单文件版 `docs/abyss-offline.html`：build.py 把 `web/vendor/three.module.js`（r160）内嵌进去，发给国内朋友用。
 
 ## 已知坑
 - 不要 `clone()` 带 `userData.enemy` 的网格（循环引用会让 Three.js 的 JSON 复制抛错）。

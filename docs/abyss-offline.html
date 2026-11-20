@@ -162,6 +162,30 @@
 <div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="backBtn">返回战舰</button></div></div>
 
 <script type="module">
+// ============================================================ 数值表（想调手感改这里就行，改完运行 python3 tools/build.py）
+// hp 血量 / speed 移速（米每秒）/ dmg 伤害 / reach 攻击距离 / rate 每秒发射数 / magSize 弹匣 / res0 开局备弹 / reload 换弹秒数
+// windup 抬手秒数 / slash 挥砍秒数 / cd 冷却秒数
+const CFG={
+  enemies:{
+    imp:   {hp:60, speed:5.2,dmg:12,reach:1.7,scale:1.0,color:0x9a2a22},                 // 小恶魔
+    brute: {hp:420,speed:3.0,dmg:30,reach:2.6,scale:1.7,color:0x5a1a3a},                 // 巨魔
+    caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
+  },
+  spit:{speed:12,castTime:0.7,cooldown:[2.4,4.0],range:24,reflectMul:4},                 // 瘟火球
+  guns:{
+    bolter: {dmg:24, rate:7,  magSize:24,res0:120,reserveMax:192,reload:1.1,spread:.012},  // 爆弹枪
+    shotgun:{dmg:16, rate:1.3,magSize:6, res0:30, reserveMax:48, reload:1.3,spread:.1,pellets:10},  // 霰弹枪
+    melta:  {dmg:170,rate:1.6,range:16},                                                    // 热熔枪
+  },
+  melee:{
+    saw:   {dmg:35,windup:.13,slash:.17},   // 链锯剑
+    power: {dmg:48,windup:.09,slash:.12},   // 力场分解剑
+    ssword:{dmg:42,windup:.14,slash:.17},   // 剑盾
+  },
+  field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
+  psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
+  wave:{interval:50,size:4,bruteChance:.12,casterChance:.18},   // 刷怪潮
+};
 const THREE=(()=>{
 /**
  * @license
@@ -53431,11 +53455,7 @@ function collide(p,r){
 }
 
 // ============================================================ 恶魔
-const ENEMY={
-  imp:  {hp:60, speed:5.2,dmg:12,reach:1.7,scale:1.0,color:0x9a2a22},
-  brute:{hp:420,speed:3.0,dmg:30,reach:2.6,scale:1.7,color:0x5a1a3a},
-  caster:{hp:90,speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},   // 瘟火术士：保持距离，右手吐出可躲避的瘟火球；砍掉右臂就不能施法
-};
+const ENEMY=CFG.enemies;
 const ETYPES=['imp','brute','caster'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
@@ -53758,6 +53778,7 @@ const MELEE={
   saw:{id:'saw',name:'链锯剑',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'四段连招：斜劈、横斩、突刺锯入、切开。右键按住蓄力，松开进入狂热（移速和攻速提升）。'},
   power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'四段连招：左劈、右劈、突刺、上挑，每刀都能劈开前方所有敌人。右键：分解力场（8 秒，伤害 ×1.6，挥砍时吟诵祷言）。'},
   ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'按住 E 举盾格挡（时机准可防反）；右键切换剑 / 爆弹手枪。'}};
+for(const k in CFG.guns)Object.assign(RANGED[k],CFG.guns[k]);for(const k in CFG.melee)Object.assign(MELEE[k],CFG.melee[k]);
 const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
 let loadout=loadLoadout();
@@ -53833,9 +53854,9 @@ const LITANIES=['以圣约之名，斩断深渊的低语。','斥退亚空间之
   '不洁之物，回到你们来的黑暗里去。','退去吧，地狱的造物——此地仍有人守望。','每一次挥剑，都是一次祷告。','沉睡者在注视着我，我不会令祂失望。',
   '恐惧是叛徒，怜悯是破绽。','以钢铁与圣火，净化此地。','我不求胜利，只求无愧。','黑暗终有尽头，而我便是那尽头。'];
 let litIdx=0,litT=0;
-const fieldMul=()=>(WEAPONS[2].id==='power'&&player.field>0)?1.6:1;
+const fieldMul=()=>(WEAPONS[2].id==='power'&&player.field>0)?CFG.field.mul:1;
 function activateField(){if(player.fieldCd>0){announce('分解力场冷却中 '+Math.ceil(player.fieldCd)+' 秒',0.8);return;}
-  player.field=8;player.fieldCd=16;play('fieldOn');play('choir');announce('分解力场 · 激活',1.2);showLitany();}
+  player.field=CFG.field.dur;player.fieldCd=CFG.field.cd;play('fieldOn');play('choir');announce('分解力场 · 激活',1.2);showLitany();}
 function showLitany(){const el=$('litany');el.textContent='「'+LITANIES[litIdx++%LITANIES.length]+'」';el.style.transition='none';el.style.opacity=1;litT=1.8;}
 function melee(){
   if(ex.active||player.revving)return;if(player.meleeCd>0||MS.phase==='bite'){MS.queued=true;return;}MS.queued=false;const M=WEAPONS[2],list=COMBOS[M.id];
@@ -53979,7 +54000,7 @@ function updateExecution(dt){
 }
 
 // ============================================================ 新灵能技能：V 锁喉提摔 · G 黑洞 · Q 子弹时间（C 为符文技能）
-const PSY={lift:{cd:0,max:6},hole:{cd:0,max:10},bt:{cd:0,max:30}};
+const PSY={lift:{cd:0,max:CFG.psy.lift},hole:{cd:0,max:CFG.psy.hole},bt:{cd:0,max:CFG.psy.bt}};
 const bt={t:0};let lifts=[],holes=[];
 function payPsy(cost,ovlMul=1){const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
 function fwdFlat(){return new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));}
@@ -54218,7 +54239,7 @@ function spawnWave(n,near){
   const [pi,pj]=cellOf(player.pos);const d=bfs(pi,pj);
   const cand=[];for(let i=0;i<G;i++)for(let j=0;j<G;j++)if(d[i][j]>=1&&d[i][j]<=(near?1:2))cand.push([i,j]);
   if(!cand.length)cand.push([pi,pj]);
-  for(let k=0;k<n;k++){const c=cand[Math.floor(Math.random()*cand.length)];{const r=Math.random();spawnEnemy(r<0.12?'brute':r<0.3?'caster':'imp',...cellPos(c,5),false);}}
+  for(let k=0;k<n;k++){const c=cand[Math.floor(Math.random()*cand.length)];{const r=Math.random();spawnEnemy(r<CFG.wave.bruteChance?'brute':r<CFG.wave.bruteChance+CFG.wave.casterChance?'caster':'imp',...cellPos(c,5),false);}}
   play('growl');
 }
 
@@ -54356,10 +54377,10 @@ function casterAI(e,T,pp,to,dist,dt){
   if(!canCast(e))return false;               // 没了右臂：退化成近战
   const arm=e.parts.armR;e.orb.scale.setScalar(1+Math.sin(gameTime*8)*.15+(e.casting>0?(0.7-e.casting)*1.6:0));
   if(e.casting>0){e.casting-=dt;arm.rotation.x=-1.5;arm.rotation.z=.2;
-    if(e.casting<=0){arm.rotation.z=0;if(T)fireSpit(e,T);e.cast=2.4+Math.random()*1.6;}return true;}
+    if(e.casting<=0){arm.rotation.z=0;if(T)fireSpit(e,T);e.cast=CFG.spit.cooldown[0]+Math.random()*(CFG.spit.cooldown[1]-CFG.spit.cooldown[0]);}return true;}
   e.cast-=dt;if(dist<=e.reach)return false;
   const see=hasLOS(e,pp);if(!see)return false;     // 看不到就照常追
-  if(dist<24&&dist>3&&e.cast<=0){e.casting=0.7;play('hiss');return true;}
+  if(dist<CFG.spit.range&&dist>3&&e.cast<=0){e.casting=CFG.spit.castTime;play('hiss');return true;}
   if(dist<16){const away=to.clone().normalize().multiplyScalar(dist<8?-1:0);
     const side=new THREE.Vector3(-to.z,0,to.x).normalize().multiplyScalar(Math.sin(gameTime*.7+e.id)*.6);
     const mv=away.add(side);if(mv.lengthSq()>0.01){const sp=e.speed*.7*(e.legsLost?0.5:1);e.g.position.addScaledVector(mv.normalize(),sp*dt);e.walk+=dt*sp*2;
@@ -54369,7 +54390,7 @@ function casterAI(e,T,pp,to,dist,dt){
 }
 function fireSpit(e,T){
   const o=new THREE.Vector3();e.orb.getWorldPosition(o);
-  const t=new THREE.Vector3(T.pos.x,(T.pos.y||0)+1.2,T.pos.z);const v=t.sub(o).normalize().multiplyScalar(12);
+  const t=new THREE.Vector3(T.pos.x,(T.pos.y||0)+1.2,T.pos.z);const v=t.sub(o).normalize().multiplyScalar(CFG.spit.speed);
   addSpit(o,v,e.dmg,e,false);play('spit');
   if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});
 }
@@ -54388,7 +54409,7 @@ function updateSpits(dt){
     const tl=[];if(state==='playing'&&player.hp>0)tl.push({pos:player.pos,local:true});for(const r of net.remotes.values())if(r.inMatch&&!r.dead)tl.push({pos:r.pos,remote:r});
     if(s.reflected){if(s.att&&s.att.alive){const want=s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize().multiplyScalar(20);s.v.lerp(want,Math.min(1,dt*8));}
       let hitE=null;for(const e of enemies){if(!e.alive)continue;const q=e.g.position;if((P.x-q.x)**2+(P.z-q.z)**2<(e.r+.35)**2&&P.y<2.4*e.s0){hitE=e;break;}}
-      if(hitE){damageEnemy(hitE,s.dmg*4,'body',s.v.clone().normalize(),{knock:.6,stagger:.6,how:{burst:{p:P.clone(),dir:s.v.clone().normalize()}}});showHit(!hitE.alive);spitPop(s);}continue;}
+      if(hitE){damageEnemy(hitE,s.dmg*CFG.spit.reflectMul,'body',s.v.clone().normalize(),{knock:.6,stagger:.6,how:{burst:{p:P.clone(),dir:s.v.clone().normalize()}}});showHit(!hitE.alive);spitPop(s);}continue;}
     for(const t of tl){const dx=P.x-t.pos.x,dz=P.z-t.pos.z,dy=P.y-((t.pos.y||0)+1);if(dx*dx+dz*dz<0.5&&Math.abs(dy)<1.1){
       if(!s.visual&&t.local&&player.blocking&&gameTime-player.blockStart<0.3){   // 完美格挡：把瘟火球弹回去
         const back=s.att&&s.att.alive?s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize():s.v.clone().negate().normalize();
@@ -54404,7 +54425,7 @@ function updateMatch(dt){
   {const [ci,cj]=cellOf(player.pos);match.explored.add(ci+','+cj);}
   // 刷怪潮
   if(isClient()){if(match.hack>=0&&match.hack<8)setProgress(match.hack/8);else if(match.launching>=0)setProgress(1-match.launching/7);else if(match.ritual>=0&&match.ritual<12)setProgress(match.ritual/12);else setProgress(-1);}
-  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=50;spawnWave(4,false);annTeam('远处传来裂隙撕开的声音……',2);}}
+  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=CFG.wave.interval;spawnWave(CFG.wave.size,false);annTeam('远处传来裂隙撕开的声音……',2);}}
   // 终端破解
   const term=interactables.find(i=>i.type==='terminal');
   if(!isClient()&&term&&match.hack>=0&&match.hack<8){if(anyPlayerNear(term.x,term.z,6)){match.hack+=dt;if(Math.random()<dt*0.25)spawnWave(1,true);}

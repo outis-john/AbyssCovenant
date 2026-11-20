@@ -1,6 +1,7 @@
 #!/bin/sh
 # 用法：在 web/test 目录下运行 sh run-tests.sh
 cd "$(dirname "$0")"
+python3 ../../tools/build.py >/dev/null || exit 1
 python3 - <<'PY'
 import re
 s=open('../index.html',encoding='utf-8').read()

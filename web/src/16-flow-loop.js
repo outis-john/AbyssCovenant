@@ -1,0 +1,112 @@
+// ============================================================ 开始 / 死亡 / 结算
+function prepareMatch(seedArg){
+  seed=seedArg??Math.floor(Math.random()*1e9);rng=mulberry32(seed);enemySeq=0;net.missing=new Map();distCache=new Map();
+  for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
+  enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
+  buildLevel();
+  Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
+  if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}
+  else{player.maxHp=player.hp=150;player.gunMul=1.3;player.dmgTaken=0.8;}
+  player.pos.set(0,0,0);
+  spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
+  applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
+  setupMatch();updatePodLook();
+  waveTimer=60;gameTime=0;setProgress(-1);
+  camera.position.set(0,1.6,0);camera.rotation.set(0,player.yaw,0,'YXZ');
+}
+$('readyBtn').onclick=()=>{
+  $('ready').classList.remove('show');document.body.classList.remove('inhub');
+  announce('空降完成。撤离方式未知——寻找线索。',3.5);
+  state='playing';canvas.requestPointerLock?.();
+};
+let deathT=0;
+function beginDeath(){
+  if(state!=='playing')return;state='dying';deathT=2.2;mouseDown=false;swordOut=0;swing=0;MS.phase='none';ex.active=false;player.blocking=false;sawEngine(false,'idle');humEngine(false,false);
+  play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('你倒下了……',2);
+}
+function updateDeath(dt){
+  deathT-=dt;const k=1-clamp(deathT/2.2,0,1);
+  camera.position.y=lerp(player.pos.y+1.6,0.35,Math.min(1,k*1.6));
+  camera.rotation.set(lerp(player.pitch,-0.2,k),player.yaw,lerp(0,1.25,Math.min(1,k*1.4)),'YXZ');
+  view.visible=false;canvas.style.filter=`grayscale(${k}) brightness(${1-k*0.5})`;
+  if(deathT<=0){if(isClient())sendNet({t:'dead'});
+    if(isNet()&&[...net.remotes.values()].some(r=>r.inMatch&&!r.dead)){state='spectate';$('hurt').style.opacity=0;canvas.style.filter='';announce('你已阵亡，正在观战。队伍撤离或全灭时一起结算。',5);checkWipe();}
+    else endMatch(false);}
+}
+function endMatch(win){
+  if(state==='result')return;if(isHost()&&net.inMatch)bcast({t:'end',win});net.inMatch=false;for(const r of net.remotes.values()){if(r.model)scene.remove(r.model);r.model=null;r.inMatch=false;r.dead=false;}
+  const diedButWon=win&&player.hp<=0;state='result';document.exitPointerLock?.();setProgress(-1);view.visible=true;
+  const v=loadVault();v.runs++;
+  const kept=win?match.safeLoot+match.loot:match.safeLoot, lost=win?0:match.loot;
+  v.loot+=kept;if(win){v.extracted++;if(match.rare)v.rare++;}saveVault(v);
+  const t=Math.floor(gameTime),mm=String(Math.floor(t/60)).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
+  const done=match.conds.filter(c=>c.prog>=c.target).length,found=match.conds.filter(c=>c.revealed).length;
+  const parts=Object.keys(PART_NEED).reduce((a,k)=>a+match.parts[k],0),need=Object.values(PART_NEED).reduce((a,b)=>a+b,0);
+  $('resTitle').textContent=win?'撤离成功':'阵亡';
+  $('resTitle').style.color=win?'#8fd08f':'#e05a4a';
+  $('resText').textContent=diedButWon?'你在行动中阵亡，但队伍成功撤离，带回了全队的物资。':win?'逃生舱冲出大气层，「永夜誓约号」接住了你。':'全队倒在了巢都深处。身上的一切都留给了深渊。';
+  const row=(a,b,c='')=>`<tr><td>${a}</td><td class="${c}">${b}</td></tr>`;
+  $('resTable').innerHTML=
+    row('存活时间',mm+':'+ss)+row('击杀恶魔',match.kills+(match.elites?`（精英 ${match.elites}）`:''))+
+    row('撤离条件',`完成 ${done} / ${match.conds.length}　发现 ${found} / ${match.conds.length}`)+row('逃生舱零件',`${parts} / ${need}`)+
+    row(win?'带回物资':'回收装置保住',kept+' 件','gain')+(win?'':row('丢失物资',lost+' 件','lost'))+
+    row('灵能圣物',match.rare?(win?'带回':'丢失'):'未找到',match.rare?(win?'gain':'lost'):'')+
+    row('战舰仓库总计',`${v.loot} 件物资 · ${v.rare} 件圣物`);
+  $('result').classList.add('show');
+}
+function resumeGame(){state='playing';$('pause').classList.remove('show');canvas.requestPointerLock?.();}
+$('backBtn').onclick=enterHub;
+$('resume').onclick=resumeGame;
+$('quit').onclick=()=>{$('pause').classList.remove('show');endMatch(false);};
+document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&state==='playing'){state='paused';$('pause').classList.add('show');}});
+canvas.addEventListener('click',()=>{if(state==='playing'&&!document.pointerLockElement)canvas.requestPointerLock?.();});
+$('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene();});
+
+// ============================================================ 输入
+let mouseDown=false;
+addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;player.yaw-=e.movementX*0.0022;player.pitch=clamp(player.pitch-e.movementY*0.0022,-1.5,1.5);});
+addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&document.pointerLockElement)tryFire(true);}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'右手：爆弹手枪':'右手：剑',0.7);}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='saw'&&cur===2&&!ex.active&&MS.phase==='none'){player.revving=true;player.revCharge=0;}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='power'&&cur===2&&!ex.active)activateField();
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].heat&&!ex.active){player.charging=true;if(!heat.over)play('charge');}});
+addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('wheel',e=>{if(state==='playing')switchWeapon((cur+(e.deltaY>0?1:2))%3);});
+addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.charging=false;
+  if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
+addEventListener('keydown',e=>{
+  if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
+  if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
+  keys[e.code]=true;if(state!=='playing')return;
+  if(e.code==='Space'&&player.onGround){player.vy=7.5;player.onGround=false;}
+  if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
+  if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
+  if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
+  if(e.code==='KeyE'&&!e.repeat&&WEAPONS[cur].block&&!ex.active){player.blocking=true;player.blockStart=gameTime;play('equip');}
+  if(e.code==='KeyX')execute();if(e.code==='KeyF')interact();if(e.code==='KeyR')startReload();if(e.code==='KeyB')callBeacon();
+});
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyE')player.blocking=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseDown=false;});
+
+// ============================================================ 主循环
+let last=performance.now();
+function simWorld(dt){if(isClient())updateEnemiesClient(dt);else updateEnemies(dt);updateLifts(dt);updateHoles(dt);updateDebris(dt);updateBolts(dt);updateSpits(dt);updatePuffs(dt);updateSparks(dt);updateBleeders(dt);updatePuddles(dt);updateMatch(dt);}
+function frame(now){
+  requestAnimationFrame(frame);
+  let dt=Math.min(0.05,(now-last)/1000);last=now;
+  netTick(dt);
+  if(state==='hub'||state==='matching'){updateHub(dt);renderer.render(hubScene,hubCam);return;}
+  if(state==='playing'){
+    if(hitstop>0){hitstop-=dt;dt*=0.05;}   // 顿帧
+    gameTime+=dt;
+    if(mouseDown&&document.pointerLockElement)tryFire(false);
+    const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt);
+    updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updateSpits(dt*ws);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
+  } else if(state==='dying'){updateDeath(dt);if(isNet())simWorld(dt);else updateDebris(dt*0.4);}
+  else if(state==='spectate'){gameTime+=dt;simWorld(dt);spectateCam(dt);updateHUD(dt);}
+  else if(state==='cutscene')updateCutscene(dt);
+  renderer.render(scene,camera);
+}
+buildHub();enterHub();
+requestAnimationFrame(frame);
+window.__dbg=()=>({state,hp:player.hp,pos:[player.pos.x.toFixed(1),player.pos.z.toFixed(1)],enemies:enemies.filter(e=>e.alive).length,gibs:gibs.length,mana:player.mana|0,ovl:player.ovl|0,conds:match&&match.conds,kills:match&&match.kills,inter:interactables.length});
