@@ -36,6 +36,7 @@ export class Euler{constructor(o){this._x=0;this._y=0;this._z=0;this._order='XYZ
 let ID=0;
 export class Object3D{constructor(){this.id=ID++;this.position=new Vector3();this.quaternion=new Quaternion();this.scale=new Vector3(1,1,1);this.rotation=new Euler(this);this.children=[];this.parent=null;this.userData={};this.visible=true;}
  add(...os){for(const o of os){if(o&&o instanceof Object3D){if(o.parent)o.parent.remove(o);o.parent=this;}this.children.push(o);}return this}
+ traverse(f){f(this);for(const c of this.children)if(c&&c.traverse)c.traverse(f);}
  remove(o){const i=this.children.indexOf(o);if(i>=0){this.children.splice(i,1);if(o instanceof Object3D)o.parent=null;}return this}
  _w(){if(!this.parent)return{p:this.position.clone(),q:this.quaternion.clone(),s:this.scale.clone()};const P=this.parent._w();
   return{p:this.position.clone().multiply(P.s).applyQuaternion(P.q).add(P.p),q:P.q.clone().multiply(this.quaternion),s:P.s.clone().multiply(this.scale)}}

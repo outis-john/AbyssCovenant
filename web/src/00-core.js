@@ -7,7 +7,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 // ============================================================ 渲染
-const PIX = 3;               // 像素放大倍数：复古画面
+let PIX = 3;               // 像素放大倍数：复古画面
 const canvas = $('game');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:false, powerPreference:'high-performance'});
 renderer.setPixelRatio(1);
@@ -53,7 +53,7 @@ const matDark=new THREE.MeshLambertMaterial({color:0x1a1210});
 const matBlood=new THREE.MeshBasicMaterial({color:0x5a0000});
 
 // ---------- 性能：移除网格时释放显存（碎块的几何体是各自独有的）
-function freeMesh(m){scene.remove(m);m.traverse(o=>{if(o.geometry&&o.geometry!==bloodGeo&&!o.geometry.userData.shared)o.geometry.dispose();});}
+function freeMesh(m){scene.remove(m);m.traverse(o=>{const g=o.geometry;if(g&&g!==bloodGeo&&!(g.userData||{}).shared&&g.dispose)g.dispose();});}
 function capGibs(){while(gibs.length>CFG.perf.gibs){const o=gibs.shift();freeMesh(o.m);}}
 function capBloods(){while(bloods.length>CFG.perf.bloods){const o=bloods.shift();scene.remove(o.m);}}
 // ---------- F3：帧率和对象数量

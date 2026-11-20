@@ -61,6 +61,7 @@ function endCutscene(){
   for(const p of cut.parts)scene.remove(p.m);cut.parts=[];
   cut.door.rotation.z=-Math.PI/2;cut.pod.position.y=0;
   scene.remove(cut.char);
+  if(!SET.seenHelp){SET.seenHelp=true;saveSet();toggleHelp(true);setTimeout(()=>toggleHelp(false),10000);}   // 第一次出击自动显示按键
   player.pos.set(3.4,0,0);player.yaw=-Math.PI/2;player.pitch=0;player.shake=0;
   camera.position.set(3.4,1.6,0);camera.rotation.set(0,player.yaw,0,'YXZ');view.visible=true;
   $('letterbox').classList.remove('show');$('fade').style.opacity=0;

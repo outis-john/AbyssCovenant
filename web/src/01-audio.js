@@ -29,7 +29,7 @@ function sawEngine(out,mode,rc=0){if(!saw)return;saw.onT=out?1:0;saw.target=mode
 function initAudio(){
   if(actx) return;
   actx=new (window.AudioContext||window.webkitAudioContext)();
-  master=actx.createGain();master.gain.value=0.75;const comp=actx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.attack.value=0.003;comp.release.value=0.25;masterLP=actx.createBiquadFilter();masterLP.type='lowpass';masterLP.frequency.value=20000;master.connect(masterLP).connect(comp).connect(actx.destination);
+  master=actx.createGain();master.gain.value=0.75*SET.vol/75;const comp=actx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.attack.value=0.003;comp.release.value=0.25;masterLP=actx.createBiquadFilter();masterLP.type='lowpass';masterLP.frequency.value=20000;master.connect(masterLP).connect(comp).connect(actx.destination);
   hum=actx.createOscillator();hum.type='sawtooth';hum.frequency.value=58;const humF=actx.createBiquadFilter();humF.type='lowpass';humF.frequency.value=380;humGain=actx.createGain();humGain.gain.value=0;hum.connect(humF).connect(humGain).connect(master);hum.start();
   noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   // 过载低语层：持续的带通噪声，过载越高越响

@@ -64,7 +64,7 @@ $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene()
 
 // ============================================================ 输入
 let mouseDown=false;
-addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;player.yaw-=e.movementX*0.0022;player.pitch=clamp(player.pitch-e.movementY*0.0022,-1.5,1.5);});
+addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;const k=0.0022*SET.sens;player.yaw-=e.movementX*k;player.pitch=clamp(player.pitch-e.movementY*k,-1.5,1.5);});
 addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&document.pointerLockElement)tryFire(true);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'右手：爆弹手枪':'右手：剑',0.7);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='saw'&&cur===2&&!ex.active&&MS.phase==='none'){player.revving=true;player.revCharge=0;}
@@ -74,7 +74,8 @@ addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state==='playing')switchWeapon((cur+(e.deltaY>0?1:2))%3);});
 addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.charging=false;
   if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
-addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();perfMon.on=!perfMon.on;$('perf').style.display=perfMon.on?'':'none';return;}
+addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET.fps;saveSet();applySet();return;}
+  if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}
   if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
   keys[e.code]=true;if(state!=='playing')return;

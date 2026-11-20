@@ -33,6 +33,9 @@
   #progress{position:fixed;top:64%;left:50%;width:240px;margin-left:-120px;display:none}
   .panel{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,2,2,.86);pointer-events:auto}
   .panel.show{display:flex}
+  #settings{z-index:60}.setrow{display:grid;grid-template-columns:1fr 180px 56px;gap:12px;align-items:center;margin:10px 0;color:#d8c8a8}.setrow b{color:#ffd23a;text-align:right}
+  #help{position:fixed;right:16px;top:16px;display:none;z-index:55;background:rgba(10,5,4,.88);border:1px solid #6b4a2a;padding:12px 16px;pointer-events:none;color:#d8c8a8;font-size:13px;max-width:420px}
+  #help.show{display:block}.hk{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:3px 0}.hk b{color:#ffd23a}
   .box{max-width:720px;padding:28px 36px;border:1px solid #6b4a2a;background:#120a08;box-shadow:0 0 40px #000}
   .box h1{margin:0;font-size:40px;letter-spacing:8px;color:#d8a657}
   .box h2{margin:0 0 12px;color:#d8a657}
@@ -138,7 +141,7 @@
     <div class="info" id="vaultInfo"></div>
     <div class="info small"><b style="color:#a8977c">操作</b><br>WASD 移动 · Shift 冲刺 · 空格 跳<br>1 主武器 · 2 爆弹手枪 · 3 近战 · 滚轮切换<br>左键 攻击（近战可连招）· R 换弹<br>右键：链锯蓄力狂热 / 力场剑分解力场 / 热熔蓄力 / 剑盾切换剑与手枪<br>E 举盾格挡（剑盾，时机准可防反）<br>X 处决（需充满）· F 拾取 / 互动<br>V 锁喉提摔 · G 黑洞 · Q 子弹时间<br>C 符文技能 · Tab 符文拼装 · B 回收装置 · M 地图 · Esc 暂停</div>
   </div>
-  <div class="bottom"><button id="goBtn">单人行动</button><button id="hostBtn" class="nb">创建房间</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入房间</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>
+  <div class="bottom"><button id="goBtn">单人行动</button><button id="hostBtn" class="nb">创建房间</button><button id="setBtn" class="nb">设置</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入房间</button><div class="hint">撤离方式未知 · 死亡会丢失身上的一切</div></div>
 </div>
 <div id="lobby"><div class="lt">联机房间</div><div>房间码 <b id="lobbyCode">—</b></div><div class="slots" id="lobbyList"></div>
   <div id="netMsg" class="hint"></div><button id="lobbyStart">开始行动</button><button id="lobbyLeave">离开房间</button></div>
@@ -150,7 +153,9 @@
 </div>
 <div class="panel" id="ready"><div class="box" style="text-align:center"><h2>空降舱已着陆</h2><p>巢都第七区。撤离方式未知——寻找数据板线索。</p><button id="readyBtn">点击开始行动</button></div></div>
 
-<div class="panel" id="pause"><div class="box"><h2>暂停</h2><button id="resume">继续</button><button id="quit">放弃行动</button></div></div>
+<div class="panel" id="settings"><div class="box" style="width:520px"><h2>设置</h2><div id="setRows"></div><button id="setClose">完成</button></div></div>
+<div id="help"><h3 style="margin:0 0 6px">按键说明 <small>（H 关闭）</small></h3><div id="helpBody"></div></div>
+<div class="panel" id="pause"><div class="box"><h2>暂停</h2><button id="resume">继续</button><button id="pauseSet">设置</button><button id="pauseHelp">按键说明</button><button id="quit">放弃行动</button></div></div>
 
 <div class="panel" id="runes"><div class="box" style="width:640px">
   <h2>符文拼装</h2>
@@ -53241,7 +53246,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 // ============================================================ 渲染
-const PIX = 3;               // 像素放大倍数：复古画面
+let PIX = 3;               // 像素放大倍数：复古画面
 const canvas = $('game');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:false, powerPreference:'high-performance'});
 renderer.setPixelRatio(1);
@@ -53287,7 +53292,7 @@ const matDark=new THREE.MeshLambertMaterial({color:0x1a1210});
 const matBlood=new THREE.MeshBasicMaterial({color:0x5a0000});
 
 // ---------- 性能：移除网格时释放显存（碎块的几何体是各自独有的）
-function freeMesh(m){scene.remove(m);m.traverse(o=>{if(o.geometry&&o.geometry!==bloodGeo&&!o.geometry.userData.shared)o.geometry.dispose();});}
+function freeMesh(m){scene.remove(m);m.traverse(o=>{const g=o.geometry;if(g&&g!==bloodGeo&&!(g.userData||{}).shared&&g.dispose)g.dispose();});}
 function capGibs(){while(gibs.length>CFG.perf.gibs){const o=gibs.shift();freeMesh(o.m);}}
 function capBloods(){while(bloods.length>CFG.perf.bloods){const o=bloods.shift();scene.remove(o.m);}}
 // ---------- F3：帧率和对象数量
@@ -53325,7 +53330,7 @@ function sawEngine(out,mode,rc=0){if(!saw)return;saw.onT=out?1:0;saw.target=mode
 function initAudio(){
   if(actx) return;
   actx=new (window.AudioContext||window.webkitAudioContext)();
-  master=actx.createGain();master.gain.value=0.75;const comp=actx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.attack.value=0.003;comp.release.value=0.25;masterLP=actx.createBiquadFilter();masterLP.type='lowpass';masterLP.frequency.value=20000;master.connect(masterLP).connect(comp).connect(actx.destination);
+  master=actx.createGain();master.gain.value=0.75*SET.vol/75;const comp=actx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.attack.value=0.003;comp.release.value=0.25;masterLP=actx.createBiquadFilter();masterLP.type='lowpass';masterLP.frequency.value=20000;master.connect(masterLP).connect(comp).connect(actx.destination);
   hum=actx.createOscillator();hum.type='sawtooth';hum.frequency.value=58;const humF=actx.createBiquadFilter();humF.type='lowpass';humF.frequency.value=380;humGain=actx.createGain();humGain.gain.value=0;hum.connect(humF).connect(humGain).connect(master);hum.start();
   noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   // 过载低语层：持续的带通噪声，过载越高越响
@@ -54674,6 +54679,27 @@ $('hostBtn').onclick=()=>{initAudio();hostRoom();};
 $('joinBtn').onclick=()=>{initAudio();joinRoom($('joinCode').value);};
 $('lobbyLeave').onclick=leaveRoom;
 
+// ============================================================ 设置（Esc 暂停菜单 / 战舰里的“设置”按钮）+ 按键说明（H）
+function loadSet(){const d={sens:1,vol:75,fov:80,pix:3,fps:false,seenHelp:false};try{return Object.assign(d,JSON.parse(localStorage.getItem('abyss_settings'))||{});}catch(e){return d;}}
+const SET=loadSet();
+function saveSet(){try{localStorage.setItem('abyss_settings',JSON.stringify(SET));}catch(e){}}
+function applySet(){camera.fov=SET.fov;camera.updateProjectionMatrix();PIX=SET.pix;resize();if(master)master.gain.value=0.75*SET.vol/75;
+  perfMon.on=SET.fps;$('perf').style.display=SET.fps?'':'none';}
+const SET_ROWS=[['sens','鼠标灵敏度',0.2,3,0.05,v=>v.toFixed(2)+'×'],['vol','音量',0,100,1,v=>v+'%'],['fov','视野 FOV',60,110,1,v=>v+'°'],['pix','像素大小（越大越复古、越流畅）',1,6,1,v=>v+'']];
+function openSettings(){const b=$('setRows');
+  b.innerHTML=SET_ROWS.map(([k,n,a,z,st])=>`<label class="setrow"><span>${n}</span><input type="range" id="set_${k}" min="${a}" max="${z}" step="${st}" value="${SET[k]}"><b id="setv_${k}"></b></label>`).join('')+
+    `<label class="setrow"><span>显示帧率（F3）</span><input type="checkbox" id="set_fps" ${SET.fps?'checked':''}></label>`;
+  for(const [k,,,,,f] of SET_ROWS){const el=$('set_'+k);const show=()=>{$('setv_'+k).textContent=f(+el.value);};show();el.oninput=()=>{SET[k]=+el.value;show();applySet();saveSet();};}
+  $('set_fps').onchange=e=>{SET.fps=e.target.checked;applySet();saveSet();};
+  $('settings').classList.add('show');}
+$('setClose').onclick=()=>$('settings').classList.remove('show');
+$('setBtn').onclick=openSettings;$('pauseSet').onclick=openSettings;
+const HELP=[['WASD / 空格 / Shift','移动 / 跳 / 冲刺'],['左键 · 右键','攻击 · 武器特殊功能（蓄力、力场、狂热、切手枪）'],['1 2 3 / 滚轮','主武器 · 爆弹手枪 · 近战'],['R','换弹'],['E','举盾格挡（剑盾，时机准可防反 / 弹反火球）'],
+  ['X','处决（充能满时）'],['V · G · Q','灵能：锁喉提摔 · 黑洞 · 子弹时间'],['C · Tab','符文技能 · 拼装符文'],['F','互动 / 拾取'],['B','呼叫回收装置'],['M','放大小地图'],['H','显示 / 隐藏本说明'],['Esc','暂停 / 设置'],['F3','帧率']];
+$('helpBody').innerHTML=HELP.map(([k,v])=>`<div class="hk"><b>${k}</b><span>${v}</span></div>`).join('');
+function toggleHelp(on){const h=$('help');h.classList.toggle('show',on??!h.classList.contains('show'));}
+$('pauseHelp').onclick=()=>toggleHelp(true);
+applySet();
 // ============================================================ 空降过场
 const cut={t:0,pod:null,door:null,char:null,parts:[],done:false,impacted:false,opened:false};
 function makeDropPod(){
@@ -54737,6 +54763,7 @@ function endCutscene(){
   for(const p of cut.parts)scene.remove(p.m);cut.parts=[];
   cut.door.rotation.z=-Math.PI/2;cut.pod.position.y=0;
   scene.remove(cut.char);
+  if(!SET.seenHelp){SET.seenHelp=true;saveSet();toggleHelp(true);setTimeout(()=>toggleHelp(false),10000);}   // 第一次出击自动显示按键
   player.pos.set(3.4,0,0);player.yaw=-Math.PI/2;player.pitch=0;player.shake=0;
   camera.position.set(3.4,1.6,0);camera.rotation.set(0,player.yaw,0,'YXZ');view.visible=true;
   $('letterbox').classList.remove('show');$('fade').style.opacity=0;
@@ -55028,7 +55055,7 @@ $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene()
 
 // ============================================================ 输入
 let mouseDown=false;
-addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;player.yaw-=e.movementX*0.0022;player.pitch=clamp(player.pitch-e.movementY*0.0022,-1.5,1.5);});
+addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;const k=0.0022*SET.sens;player.yaw-=e.movementX*k;player.pitch=clamp(player.pitch-e.movementY*k,-1.5,1.5);});
 addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&document.pointerLockElement)tryFire(true);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'右手：爆弹手枪':'右手：剑',0.7);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='saw'&&cur===2&&!ex.active&&MS.phase==='none'){player.revving=true;player.revCharge=0;}
@@ -55038,7 +55065,8 @@ addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state==='playing')switchWeapon((cur+(e.deltaY>0?1:2))%3);});
 addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2){player.charging=false;
   if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
-addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();perfMon.on=!perfMon.on;$('perf').style.display=perfMon.on?'':'none';return;}
+addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET.fps;saveSet();applySet();return;}
+  if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}
   if(e.code==='Tab'){e.preventDefault();if(state==='playing')openRunes();else if(state==='runes')$('runeDone').onclick();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
   keys[e.code]=true;if(state!=='playing')return;
