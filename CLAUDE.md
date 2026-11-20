@@ -19,13 +19,14 @@
 - 战斗：爆弹火箭弹（钉入后爆炸）、霰弹（轰洞 / 轰飞半身）、热熔（右键蓄力、过热条、烧穿）；近战四段连招 + 输入缓冲；链锯右键蓄力狂热；力场剑右键分解力场（祷言字幕）；剑盾右键切剑/手枪、E 格挡防反。
 - 断肢：按刀路平面切割盒子部位（splitBox / cutApart / severArmsByPlane / holeKill / halfKill / burstKill / headBurst / meltPuddle）。
 - 处决（X，需充能）：7 种动作随手持武器变化，期间无敌，回复等量生命。
+- 敌人：小恶魔 imp、巨魔 brute、瘟火术士 caster（保持距离吐可躲避的瘟火球；砍掉右臂就不能施法；完美格挡把火球弹回去并追踪术士）。快照里类型用 `ETYPES` 下标；火球 `spits` 由房主判定伤害，`spit` 事件让队友端播放画面。
 - 灵能：V 锁喉提摔、G 黑洞、Q 子弹时间（攻击吸血）、C 符文技能（Tab 拼装）；过载反噬。
 - 音效全部 WebAudio 合成；链锯引擎按二冲程点火模拟（ScriptProcessor）。
 - 联机：PeerJS（unpkg）房间码，房主权威；队友本地判定命中，把 dmg / sever / stun / interact / cast / beacon 发给房主；房主 12Hz 快照；kill 事件带死法参数各端重现。
 
 ## 测试（改代码后必须跑）
 - `web/test/`：`three-stub.mjs` 是最小 Three.js 替身（真实向量 / 四元数 / 场景树 / 射线），其余为空对象。
-- 运行：`sh web/test/run-tests.sh`（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、mp_test 两份游戏 + 假网络联机）。
+- 运行：`sh web/test/run-tests.sh`（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、mp_test 两份游戏 + 假网络联机）。
 - 注意：替身里所有材质是同一个空对象，材质比较/透明度读取在测试中不可信。setTimeout 在 test4 中被改为同步执行。
 - 内置浏览器没有登录 claude.ai，无法直接看 artifact 画面；视觉效果需要用户反馈。
 

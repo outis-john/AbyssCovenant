@@ -35,6 +35,11 @@ B.ev('player.pos.set(40,0,40)');A.ev('player.pos.set(0,0,0)');tick(5);
 A.ev(`{const e=enemyById(${id2});e.g.position.set(40.8,0,40);e.cd=0;e.stagger=0;e.stun=0;}`);
 const hp0=B.ev('player.hp');tick(60);
 log('enemy attacks the nearest player: client hp',hp0,'->',Math.round(B.ev('player.hp')),'| host hp',Math.round(A.ev('player.hp')));
+// 4b 瘟火术士朝队友吐火球：队友能看到类型和火球，伤害由房主判定
+A.ev('enemies.forEach(e=>{if(e.alive){e.alive=false;scene.remove(e.g);}})');tick(4);
+A.ev("player.pos.set(0,0,0);{const e=spawnEnemy('caster',40,34);e.cast=0;e.los=true;e.losT=999;}");B.ev('player.hp=100;player.blocking=false');
+let sawSpit=0,ctype=null;const hp1=100;for(let i=0;i<120;i++){tick(1);sawSpit=Math.max(sawSpit,B.ev('spits.length'));ctype=ctype||B.ev("enemies.some(e=>e.alive&&e.type==='caster')");}
+log('client sees caster type',ctype,'| client sees spit',sawSpit>0,'| client hp',hp1,'->',Math.round(B.ev('player.hp')));
 // 5 队友拾取线索、遗物 -> 房主结算 -> 同步回队友
 const ci=B.ev("interactables.find(i=>i.type==='clue'&&!i.used).idx");B.ev(`interact(interactables[${ci}])`);flush();
 B.ev("interact(interactables.find(i=>i.type==='relic'&&!i.used))");flush();tick(8);

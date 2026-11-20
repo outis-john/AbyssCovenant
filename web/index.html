@@ -270,6 +270,9 @@ const sfx={
   spell(f=500){tone('sine',f,f*3,0.2,0.25);noiseHit(4000,0.08,0.2,'highpass');},
   boom(){noiseHit(700,0.7,0.9);tone('sine',70,30,0.5,0.6);},
   pickup(){tone('sine',660,660,0.15,0.12);tone('sine',990,990,0.12,0.18,0.08);},
+  spit(){tone('sawtooth',260,900,0.1,0.25);noiseHit(1500,0.25,0.3,'bandpass');},
+  sizzle(){noiseHit(4000,0.3,0.45,'highpass');tone('sine',420,90,0.15,0.35);},
+  hiss(){tone('sine',180,720,0.07,0.7);noiseHit(2200,0.08,0.7,'bandpass');},
   growl(){tone('sawtooth',70+Math.random()*30,50,0.12,0.4);},
   beacon(){for(let i=0;i<4;i++)tone('square',i%2?880:440,i%2?880:440,0.08,0.12,i*0.15);},
   heart(){tone('sine',55,40,0.5,0.15);tone('sine',55,40,0.35,0.15,0.18);},
@@ -386,7 +389,9 @@ function collide(p,r){
 const ENEMY={
   imp:  {hp:60, speed:5.2,dmg:12,reach:1.7,scale:1.0,color:0x9a2a22},
   brute:{hp:420,speed:3.0,dmg:30,reach:2.6,scale:1.7,color:0x5a1a3a},
+  caster:{hp:90,speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},   // 瘟火术士：保持距离，右手吐出可躲避的瘟火球；砍掉右臂就不能施法
 };
+const ETYPES=['imp','brute','caster'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
@@ -402,10 +407,14 @@ function spawnEnemy(type,x,z,elite=false){
   const armR=makePart(new THREE.BoxGeometry(.25,.95,.25),flesh,.6,1.2,.1,g,'armR');
   const legL=makePart(new THREE.BoxGeometry(.3,.65,.3),flesh,-.25,.33,0,g,'legL');
   const legR=makePart(new THREE.BoxGeometry(.3,.65,.3),flesh,.25,.33,0,g,'legR');
+  let orb=null;
+  if(T.ranged){const hood=new THREE.MeshLambertMaterial({color:0x1c2414});
+    makePart(new THREE.BoxGeometry(.66,.2,.62),hood,0,.3,-.02,head,'hood');makePart(new THREE.BoxGeometry(.66,.55,.12),hood,0,0,-.3,head,'hood');
+    orb=makePart(new THREE.BoxGeometry(.24,.24,.24),new THREE.MeshBasicMaterial({color:0x7dff3a}),0,-.6,0,armR,'orb');}
   scene.add(g);
   const hp=T.hp*(elite?1.6:1);
   const e={id:++enemySeq,remote:false,type,g,mat:flesh,parts:{body,head,armL,armR,legL,legR},hp,maxHp:hp,armHp:{armL:hp*.3,armR:hp*.3},arms:2,kv:new THREE.Vector3(),lean:0,headSnap:0,
-    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1),reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4};
+    s0:s,speed:T.speed,dmg:T.dmg*(elite?1.3:1),reach:T.reach*(elite?1.1:1),r:.45*s,alive:true,elite,cd:0,windup:0,stagger:0,flash:0,burn:0,stun:0,walk:Math.random()*6,growl:2+Math.random()*4,ranged:!!T.ranged,orb,cast:1+Math.random()*2,casting:0,losT:0,los:false};
   for(const p of Object.values(e.parts))p.userData.enemy=e;
   head.children.forEach(c=>c.userData.enemy=e);
   enemies.push(e);return e;
@@ -1113,7 +1122,7 @@ function setupMatch(){
   if(types.includes('ritual')){const c=randomCell(used);used.push(c);spawnPickup('ritual',c[0]*C,c[1]*C);}
   if(types.includes('cores'))for(let k=0;k<3;k++)spawnPickup('core',...cellPos(randomCell([[0,0]])));
   // 初始恶魔（只有房主 / 单人生成，队友从快照里拿）
-  if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2);for(let q=0;q<k;q++)spawnEnemy('imp',...cellPos([i,j],5));}
+  if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2);for(let q=0;q<k;q++)spawnEnemy('imp',...cellPos([i,j],5));if(i+j>=3&&Math.random()<0.4)spawnEnemy('caster',...cellPos([i,j],6));}
   if(!isClient())for(let q=0;q<2;q++)spawnEnemy('brute',...cellPos(randomCell([[0,0],[1,0],[0,1]]),4),true);
 }
 function nearestInteractable(){let best=null,bd=2.6;for(const it of interactables){if(it.used||it.type==='ritual'||it.type==='ammo')continue;const d=Math.hypot(it.x-player.pos.x,it.z-player.pos.z)-((it.type==='pod'||it.type==='terminal')?1.2:0);if(d<bd){bd=d;best=it;}}return best;}
@@ -1164,7 +1173,7 @@ function spawnWave(n,near){
   const [pi,pj]=cellOf(player.pos);const d=bfs(pi,pj);
   const cand=[];for(let i=0;i<G;i++)for(let j=0;j<G;j++)if(d[i][j]>=1&&d[i][j]<=(near?1:2))cand.push([i,j]);
   if(!cand.length)cand.push([pi,pj]);
-  for(let k=0;k<n;k++){const c=cand[Math.floor(Math.random()*cand.length)];spawnEnemy(Math.random()<0.12?'brute':'imp',...cellPos(c,5),false);}
+  for(let k=0;k<n;k++){const c=cand[Math.floor(Math.random()*cand.length)];{const r=Math.random();spawnEnemy(r<0.12?'brute':r<0.3?'caster':'imp',...cellPos(c,5),false);}}
   play('growl');
 }
 
@@ -1276,6 +1285,7 @@ function updateEnemies(dt){
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
       if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);}e.cd=1.1;}continue;}
     e.cd-=dt;
+    if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
     else{const sp=e.speed*(e.legsLost?0.5:1);e.g.position.addScaledVector(dir,sp*dt);e.walk+=dt*sp*2;
       e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;
@@ -1288,6 +1298,60 @@ function updateEnemies(dt){
   for(let a=0;a<enemies.length;a++){const A=enemies[a];if(!A.alive)continue;for(let b=a+1;b<enemies.length;b++){const B=enemies[b];if(!B.alive)continue;
     const dx=B.g.position.x-A.g.position.x,dz=B.g.position.z-A.g.position.z,d=Math.hypot(dx,dz),m=A.r+B.r;if(d<m&&d>0.001){const p=(m-d)/2;A.g.position.x-=dx/d*p;A.g.position.z-=dz/d*p;B.g.position.x+=dx/d*p;B.g.position.z+=dz/d*p;}}}
   if(enemies.length>140)enemies=enemies.filter(e=>e.alive);
+}
+
+// ---------- 瘟火术士：施法 / 后撤 / 瘟火球
+let spits=[];
+const spitGeo=new THREE.BoxGeometry(.32,.32,.32);
+function canCast(e){return e.ranged&&e.orb&&e.parts.armR.parent===e.g;}
+function hasLOS(e,pp){e.losT-=1;if(e.losT>0)return e.los;e.losT=8;
+  const o=e.g.position.clone().setY(1.7*e.s0),t=new THREE.Vector3(pp.x,(pp.y||0)+1.3,pp.z),d=t.clone().sub(o),L=d.length();if(L<0.01)return e.los=true;
+  ray.set(o,d.divideScalar(L));ray.far=L;e.los=ray.intersectObjects(wallMeshes,false).length===0;return e.los;}
+function casterAI(e,T,pp,to,dist,dt){
+  if(!canCast(e))return false;               // 没了右臂：退化成近战
+  const arm=e.parts.armR;e.orb.scale.setScalar(1+Math.sin(gameTime*8)*.15+(e.casting>0?(0.7-e.casting)*1.6:0));
+  if(e.casting>0){e.casting-=dt;arm.rotation.x=-1.5;arm.rotation.z=.2;
+    if(e.casting<=0){arm.rotation.z=0;if(T)fireSpit(e,T);e.cast=2.4+Math.random()*1.6;}return true;}
+  e.cast-=dt;if(dist<=e.reach)return false;
+  const see=hasLOS(e,pp);if(!see)return false;     // 看不到就照常追
+  if(dist<24&&dist>3&&e.cast<=0){e.casting=0.7;play('hiss');return true;}
+  if(dist<16){const away=to.clone().normalize().multiplyScalar(dist<8?-1:0);
+    const side=new THREE.Vector3(-to.z,0,to.x).normalize().multiplyScalar(Math.sin(gameTime*.7+e.id)*.6);
+    const mv=away.add(side);if(mv.lengthSq()>0.01){const sp=e.speed*.7*(e.legsLost?0.5:1);e.g.position.addScaledVector(mv.normalize(),sp*dt);e.walk+=dt*sp*2;
+      e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;collide(e.g.position,e.r);}
+    arm.rotation.x=-.4;return true;}
+  return false;
+}
+function fireSpit(e,T){
+  const o=new THREE.Vector3();e.orb.getWorldPosition(o);
+  const t=new THREE.Vector3(T.pos.x,(T.pos.y||0)+1.2,T.pos.z);const v=t.sub(o).normalize().multiplyScalar(12);
+  addSpit(o,v,e.dmg,e,false);play('spit');
+  if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});
+}
+function addSpit(o,v,dmg,att,visual){const m=new THREE.Mesh(spitGeo,new THREE.MeshBasicMaterial({color:0x8dff40}));m.position.copy(o);scene.add(m);
+  spits.push({m,v:v.clone(),life:3,dmg,att,visual});}
+function spitPop(s){scene.remove(s.m);s.dead=true;puff(s.m.position,6,0x5aa020,.8);embersGreen(s.m.position);if(s.m.position.distanceTo(player.pos)<20)play('sizzle');}
+function embersGreen(p){for(let i=0;i<6;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xb0ff60}));m.position.copy(p);scene.add(m);
+  sparks.push({m,v:new THREE.Vector3((Math.random()-.5)*6,Math.random()*4,(Math.random()-.5)*6),life:.3+Math.random()*.2});}}
+function updateSpits(dt){
+  for(const s of spits){if(s.dead)continue;s.life-=dt;const P=s.m.position;P.addScaledVector(s.v,dt);s.m.rotation.x+=dt*9;s.m.rotation.y+=dt*7;
+    if(Math.random()<dt*25){const q=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x6ad02a}));q.position.copy(P);scene.add(q);sparks.push({m:q,v:new THREE.Vector3(0,.4,0),life:.15});}
+    if(s.life<=0||P.y<0.05||P.y>H){spitPop(s);continue;}
+    let wall=false;for(const b of colliders)if(P.x>b.minX-.1&&P.x<b.maxX+.1&&P.z>b.minZ-.1&&P.z<b.maxZ+.1){wall=true;break;}
+    if(wall){spitPop(s);continue;}
+    // 命中玩家：房主 / 单人负责判定伤害；队友那边只播放效果
+    const tl=[];if(state==='playing'&&player.hp>0)tl.push({pos:player.pos,local:true});for(const r of net.remotes.values())if(r.inMatch&&!r.dead)tl.push({pos:r.pos,remote:r});
+    if(s.reflected){if(s.att&&s.att.alive){const want=s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize().multiplyScalar(20);s.v.lerp(want,Math.min(1,dt*8));}
+      let hitE=null;for(const e of enemies){if(!e.alive)continue;const q=e.g.position;if((P.x-q.x)**2+(P.z-q.z)**2<(e.r+.35)**2&&P.y<2.4*e.s0){hitE=e;break;}}
+      if(hitE){damageEnemy(hitE,s.dmg*4,'body',s.v.clone().normalize(),{knock:.6,stagger:.6,how:{burst:{p:P.clone(),dir:s.v.clone().normalize()}}});showHit(!hitE.alive);spitPop(s);}continue;}
+    for(const t of tl){const dx=P.x-t.pos.x,dz=P.z-t.pos.z,dy=P.y-((t.pos.y||0)+1);if(dx*dx+dz*dz<0.5&&Math.abs(dy)<1.1){
+      if(!s.visual&&t.local&&player.blocking&&gameTime-player.blockStart<0.3){   // 完美格挡：把瘟火球弹回去
+        const back=s.att&&s.att.alive?s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize():s.v.clone().negate().normalize();
+        s.v.copy(back.multiplyScalar(20));s.reflected=true;s.life=2;s.m.material.color.setHex(0xfff080);play('clang');play('parry');hitstop=0.08;announce('弹反！',0.8);
+        $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);break;}
+      if(!s.visual){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:s.dmg,att:s.att&&s.att.id});else hurtPlayer(s.dmg,false,s.att&&s.att.alive?s.att:null);}
+      spitPop(s);break;}}}
+  spits=spits.filter(s=>!s.dead);
 }
 
 // ============================================================ 对局流程
@@ -1689,6 +1753,7 @@ function clientRecv(m){
   else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
   else if(m.t==='ann'){announce(m.text,m.dur);}
+  else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
   else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}
   else if(m.t==='fx'){if(m.k==='hole')spawnHoleVisual(m.p);else if(m.k==='beacon')beaconVisual(m.p);}
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}
@@ -1701,7 +1766,7 @@ function beginNetMatch(s,mid){initAudio();net.inMatch=true;$('lobby').classList.
 // ---------- 快照
 function buildSnapshot(){
   const en=[];for(const e of enemies){if(!e.alive)continue;const p=e.g.position;
-    en.push([e.id,e.type==='brute'?1:0,e.elite?1:0,+p.x.toFixed(2),+p.z.toFixed(2),+e.g.rotation.y.toFixed(2),+p.y.toFixed(2),Math.round(e.hp),Math.round(e.maxHp),(e.parts.armL.parent!==e.g?1:0)|(e.parts.armR.parent!==e.g?2:0),+(e.g.scale.x/e.s0).toFixed(2),+(e.g.scale.y/e.s0).toFixed(2),e.stagger>0||e.stun>0?1:0]);}
+    en.push([e.id,ETYPES.indexOf(e.type),e.elite?1:0,+p.x.toFixed(2),+p.z.toFixed(2),+e.g.rotation.y.toFixed(2),+p.y.toFixed(2),Math.round(e.hp),Math.round(e.maxHp),(e.parts.armL.parent!==e.g?1:0)|(e.parts.armR.parent!==e.g?2:0),+(e.g.scale.x/e.s0).toFixed(2),+(e.g.scale.y/e.s0).toFixed(2),e.stagger>0||e.stun>0?1:0]);}
   const pl=[[net.myId,+player.pos.x.toFixed(2),+player.pos.y.toFixed(2),+player.pos.z.toFixed(2),+player.yaw.toFixed(2),Math.round(player.hp),player.maxHp,(player.hp<=0||state==='spectate'||state==='dying')?1:0,cls]];
   for(const r of net.remotes.values())if(r.inMatch)pl.push([r.id,+r.pos.x.toFixed(2),+r.pos.y.toFixed(2),+r.pos.z.toFixed(2),+r.yaw.toFixed(2),r.hp,r.maxHp,r.dead?1:0,r.cls]);
   const used=[];interactables.forEach((it,i)=>{if(it.used)used.push(i);});
@@ -1711,7 +1776,7 @@ function applySnapshot(s){
   if(!match||state==='hub'||state==='result')return;
   const seen=new Set();
   for(const row of s.en){const [id,ty,el,x,z,ry,y,hp,mhp,arms,sx,sy,stg]=row;seen.add(id);let e=enemyById(id);
-    if(!e){e=spawnEnemy(ty?'brute':'imp',x,z,!!el);e.id=id;e.remote=true;}
+    if(!e){e=spawnEnemy(ETYPES[ty]||'imp',x,z,!!el);e.id=id;e.remote=true;}
     if(!e.alive)continue;e.tx=x;e.tz=z;e.ty=y;e.try=ry;e.hp=hp;e.maxHp=mhp;e.netStag=stg;
     if((arms&1)&&e.parts.armL.parent===e.g){detach(e,'armL',null);e.arms--;e.armHp.armL=Infinity;}
     if((arms&2)&&e.parts.armR.parent===e.g){detach(e,'armR',null);e.arms--;e.armHp.armR=Infinity;}
@@ -1769,7 +1834,7 @@ function beaconVisual(p){const b=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6)
 // ============================================================ 开始 / 死亡 / 结算
 function prepareMatch(seedArg){
   seed=seedArg??Math.floor(Math.random()*1e9);rng=mulberry32(seed);enemySeq=0;net.missing=new Map();distCache=new Map();
-  for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
+  for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
@@ -1858,7 +1923,7 @@ addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseDown=false;}
 
 // ============================================================ 主循环
 let last=performance.now();
-function simWorld(dt){if(isClient())updateEnemiesClient(dt);else updateEnemies(dt);updateLifts(dt);updateHoles(dt);updateDebris(dt);updateBolts(dt);updatePuffs(dt);updateSparks(dt);updateBleeders(dt);updatePuddles(dt);updateMatch(dt);}
+function simWorld(dt){if(isClient())updateEnemiesClient(dt);else updateEnemies(dt);updateLifts(dt);updateHoles(dt);updateDebris(dt);updateBolts(dt);updateSpits(dt);updatePuffs(dt);updateSparks(dt);updateBleeders(dt);updatePuddles(dt);updateMatch(dt);}
 function frame(now){
   requestAnimationFrame(frame);
   let dt=Math.min(0.05,(now-last)/1000);last=now;
@@ -1869,7 +1934,7 @@ function frame(now){
     gameTime+=dt;
     if(mouseDown&&document.pointerLockElement)tryFire(false);
     const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt);
-    updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
+    updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updateSpits(dt*ws);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
   } else if(state==='dying'){updateDeath(dt);if(isNet())simWorld(dt);else updateDebris(dt*0.4);}
   else if(state==='spectate'){gameTime+=dt;simWorld(dt);spectateCam(dt);updateHUD(dt);}
   else if(state==='cutscene')updateCutscene(dt);
