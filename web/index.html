@@ -418,9 +418,12 @@ function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m
 function killEnemy(e,dir,explode,how={}){
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);
-  if(how.melt){meltPuddle(e);}
-  else if(how.cut){cutApart(e,how.cut.p,how.cut.n,how.cut.imp||4,how.cut);}
-  else{if(how.headBurst)headBurst(e,dir||new THREE.Vector3());for(const k of Object.keys(e.parts))if(e.parts[k].parent===e.g)detach(e,k,dir);}
+  try{
+    if(how.melt){meltPuddle(e);}
+    else if(how.cut){cutApart(e,how.cut.p,how.cut.n,how.cut.imp||4,how.cut);}
+    else if(how.headBurst)headBurst(e,dir||new THREE.Vector3());
+  }catch(err){console.error('gore failed',err);}
+  for(const k of Object.keys(e.parts))if(e.parts[k].parent===e.g)detach(e,k,dir);
   scene.remove(e.g);if(!how.melt)spawnBlood(e.g.position.clone().setY(1),dir,24);
   if(!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+6);
   match.kills++;addProgress('kill',1);if(e.elite){addProgress('elite',1);match.elites++;}
@@ -473,10 +476,12 @@ function cutApart(e,P,n,imp=4,extra={}){
   spawnBlood(P,n,30);
 }
 // 非致命：刀刃扫过手臂就按切口断开，肩膀上留一截
-function severArmsByPlane(e,P,n,dmg){
-  for(const k of ['armL','armR']){const arm=e.parts[k];if(arm.parent!==e.g||e.armHp[k]===Infinity)continue;
-    e.g.updateMatrixWorld(true);const tmp=arm.clone();tmp.geometry=arm.geometry;arm.getWorldPosition(tmp.position);arm.getWorldQuaternion(tmp.quaternion);arm.getWorldScale(tmp.scale);
-    if(!planeHits(tmp,P,n))continue;e.armHp[k]-=dmg*2;if(e.armHp[k]>0)continue;
+function severArmsByPlane(e,P,n,dmg){try{severArmsImpl(e,P,n,dmg);}catch(err){console.error('sever failed',err);}}
+function severArmsImpl(e,P,n,dmg){
+  let cutOne=false;
+  for(const k of (Math.random()<.5?['armL','armR']:['armR','armL'])){if(cutOne)break;const arm=e.parts[k];if(arm.parent!==e.g||e.armHp[k]===Infinity)continue;
+    e.g.updateMatrixWorld(true);const tmp={geometry:arm.geometry,position:new THREE.Vector3(),quaternion:new THREE.Quaternion(),scale:new THREE.Vector3()};arm.getWorldPosition(tmp.position);arm.getWorldQuaternion(tmp.quaternion);arm.getWorldScale(tmp.scale);
+    if(!planeHits(tmp,P,n))continue;cutOne=true;e.armHp[k]-=dmg*3;if(e.armHp[k]>0){spawnBlood(tmp.position,n,6);continue;}
     const w=worldize(arm);const pieces=splitBox(w,P,n);
     if(!pieces){throwGib(w,new THREE.Vector3(n.x*3,4,n.z*3));e.armHp[k]=Infinity;e.arms--;continue;}
     const all=[...pieces.pos,...pieces.neg].sort((a,b)=>b.position.y-a.position.y);   // 上半截留在肩上

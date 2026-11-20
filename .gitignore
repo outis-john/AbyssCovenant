@@ -17,3 +17,4 @@ Build/
 # 插件自动生成
 Plugins/*/Binaries/
 Plugins/*/Intermediate/
+web/test/run_*.mjs
