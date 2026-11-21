@@ -38,6 +38,7 @@
   .am{display:block;margin-top:8px;font-size:12px;color:#d8c8a8;pointer-events:auto}
   .card.locked{opacity:.55}.card.locked b::after{content:' 🔒';font-size:11px}.unl{margin-top:8px;color:#e0a060;font-size:12px}.unl button{margin:0 0 0 8px;padding:3px 10px;font-size:12px}
   .paints{display:flex;gap:6px;margin-top:8px}.sw{width:20px;height:20px;border:1px solid #3a2a1e;cursor:pointer}.sw.sel{outline:2px solid #ffd23a}
+  .kb{margin:0;padding:3px 10px;font-size:12px;min-width:90px}
   #settings{z-index:60}.setrow{display:grid;grid-template-columns:1fr 180px 56px;gap:12px;align-items:center;margin:10px 0;color:#d8c8a8}.setrow b{color:#ffd23a;text-align:right}
   #help{position:fixed;right:16px;top:16px;display:none;z-index:55;background:rgba(10,5,4,.88);border:1px solid #6b4a2a;padding:12px 16px;pointer-events:none;color:#d8c8a8;font-size:13px;max-width:420px}
   #help.show{display:block}.hk{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:3px 0}.hk b{color:#ffd23a}
@@ -193,7 +194,7 @@
 </div>
 <div class="panel" id="ready"><div class="box" style="text-align:center"><h2>空降舱已着陆</h2><p>巢都第七区。撤离方式未知——寻找数据板线索。</p><button id="readyBtn">点击开始行动</button></div></div>
 
-<div class="panel" id="settings"><div class="box" style="width:520px"><h2>设置</h2><div id="setRows"></div><button id="setClose">完成</button></div></div>
+<div class="panel" id="settings"><div class="box" style="width:520px"><h2>设置</h2><div id="setRows"></div><h3 style="margin:16px 0 4px;color:#d8a657;font-size:14px">按键（点击后按新键，Esc 取消）· 也支持手柄</h3><div id="keyRows" style="max-height:220px;overflow:auto"></div><button id="setClose">完成</button></div></div>
 <div id="help"><h3 style="margin:0 0 6px">按键说明 <small>（H 关闭）</small></h3><div id="helpBody"></div></div>
 <div class="panel" id="pause"><div class="box"><h2>暂停</h2><button id="resume">继续</button><button id="pauseSet">设置</button><button id="pauseHelp">按键说明</button><button id="quit">放弃行动</button></div></div>
 

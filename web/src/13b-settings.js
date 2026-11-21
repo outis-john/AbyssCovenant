@@ -10,7 +10,7 @@ function openSettings(){const b=$('setRows');
     `<label class="setrow"><span>显示帧率（F3）</span><input type="checkbox" id="set_fps" ${SET.fps?'checked':''}></label>`;
   for(const [k,,,,,f] of SET_ROWS){const el=$('set_'+k);const show=()=>{$('setv_'+k).textContent=f(+el.value);};show();el.oninput=()=>{SET[k]=+el.value;show();applySet();saveSet();};}
   $('set_fps').onchange=e=>{SET.fps=e.target.checked;applySet();saveSet();};
-  $('settings').classList.add('show');}
+  $('settings').classList.add('show');if(typeof renderKeys==='function')renderKeys();}
 $('setClose').onclick=()=>$('settings').classList.remove('show');
 $('setBtn').onclick=openSettings;$('pauseSet').onclick=openSettings;
 const HELP=[['WASD / 空格 / Shift','移动 / 跳 / 冲刺'],['左键 · 右键','攻击 · 武器特殊功能（蓄力、力场、狂热、切手枪）'],['1 2 3 / 滚轮','主武器 · 爆弹手枪 · 近战'],['R','换弹'],['E','举盾格挡（剑盾，时机准可防反 / 弹反火球）'],

@@ -67,7 +67,7 @@ $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene()
 // ============================================================ 输入
 let mouseDown=false;
 addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;const k=0.0022*SET.sens*(camera.fov<40?0.35:1);player.yaw-=e.movementX*k;player.pitch=clamp(player.pitch-e.movementY*k,-1.5,1.5);});
-addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&document.pointerLockElement)tryFire(true);}
+addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&(document.pointerLockElement||pad.active))tryFire(true);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'右手：爆弹手枪':'右手：剑',0.7);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='saw'&&cur===2&&!ex.active&&MS.phase==='none'){player.revving=true;player.revCharge=0;}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='power'&&cur===2&&!ex.active)activateField();
@@ -100,12 +100,12 @@ function simWorld(dt){if(isClient())updateEnemiesClient(dt);else updateEnemies(d
 function frame(now){
   requestAnimationFrame(frame);
   let dt=Math.min(0.05,(now-last)/1000);last=now;
-  netTick(dt);updatePerf(dt);if(actx){musicBiome(state==='hub'||state==='matching'||!match?'hub':curBiome);musicIntensity(dt);}
+  netTick(dt);updatePerf(dt);updatePad(dt);if(actx){musicBiome(state==='hub'||state==='matching'||!match?'hub':curBiome);musicIntensity(dt);}
   if(state==='hub'||state==='matching'){updateHub(dt);renderer.render(hubScene,hubCam);return;}
   if(state==='playing'){
     if(hitstop>0){hitstop-=dt;dt*=0.05;}   // 顿帧
     gameTime+=dt;
-    if(mouseDown&&document.pointerLockElement)tryFire(false);
+    if(mouseDown&&(document.pointerLockElement||pad.active))tryFire(false);
     const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt);
     updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updateSpits(dt*ws);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
   } else if(state==='dying'){updateDeath(dt);if(isNet())simWorld(dt);else updateDebris(dt*0.4);}
