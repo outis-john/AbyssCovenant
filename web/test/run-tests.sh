@@ -12,9 +12,9 @@ globalThis.innerWidth=1280;globalThis.innerHeight=720;globalThis.addEventListene
 globalThis.document={getElementById:()=>U,querySelectorAll:()=>[],createElement:()=>U,addEventListener(){},exitPointerLock(){},body:U,pointerLockElement:U};
 globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.window=globalThis;
 """
-for t in ["test.js","test2.js","test3.js","test4.js","test5.js","test6.js","test7.js","test8.js","test9.js","test10.js","test11.js","test12.js","test13.js","test14.js","test15.js","test16.js","test17.js","test18.js"]:
+for t in ["test.js","test2.js","test3.js","test4.js","test5.js","test6.js","test7.js","test8.js","test9.js","test10.js","test11.js","test12.js","test13.js","test14.js","test15.js","test16.js","test17.js","test18.js","test19.js"]:
     open('run_'+t.replace('.js','.mjs'),'w').write(pre+js+open(t).read())
 for f in ['game_a.mjs','game_b.mjs']:
     open(f,'w').write(pre+js+"\nexport const ev=(code)=>eval(code);\n")
 PY
-node run_test.mjs && node run_test2.mjs && node run_test3.mjs && node run_test4.mjs && node run_test5.mjs && node run_test6.mjs && node run_test7.mjs && node run_test8.mjs && node run_test9.mjs && node run_test10.mjs && node run_test11.mjs && node run_test12.mjs && node run_test13.mjs && node run_test14.mjs && node run_test15.mjs && node run_test16.mjs && node run_test17.mjs && node run_test18.mjs && node mp_test.mjs && node mp_relay_test.mjs
+node run_test.mjs && node run_test2.mjs && node run_test3.mjs && node run_test4.mjs && node run_test5.mjs && node run_test6.mjs && node run_test7.mjs && node run_test8.mjs && node run_test9.mjs && node run_test10.mjs && node run_test11.mjs && node run_test12.mjs && node run_test13.mjs && node run_test14.mjs && node run_test15.mjs && node run_test16.mjs && node run_test17.mjs && node run_test18.mjs && node run_test19.mjs && node mp_test.mjs && node mp_relay_test.mjs

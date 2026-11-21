@@ -89,7 +89,7 @@ async function joinRoom(code){
   netReset();let peer;try{peer=useP2P()?new Peer():new RelayPeer(null,relayOf(code));}catch(e){return netFail(netErrText(e));}
   net.peer=peer;showLobby('正在连接房间 '+code+' …');
   peer.on('open',id=>{net.myId=id;const c=peer.connect(PEER_PREFIX+code,{reliable:true});net.conn=c;
-    c.on('open',()=>{net.mode='client';net.code=code;sendNet({t:'hello',cls,name:myName()});});
+    c.on('open',()=>{net.mode='client';net.code=code;sendNet({t:'hello',cls,name:myName(),paint:(loadout.paint||{})[cls]||0});});
     c.on('data',d=>{try{clientRecv(deser(d));}catch(err){console.error('net',err);}});
     c.on('close',()=>{if(net.mode==='client')hostLost();});});
   peer.on('error',err=>netFail(netErrText(err)));
@@ -113,7 +113,7 @@ function hostRecv(id,m){
   let r=net.remotes.get(id);
   if(m.t==='fx2'){fxPlay(m.k,m.d);bcast(m,id);return;}
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
-  if(m.t==='hello'){r={id,name:m.name,cls:m.cls,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
+  if(m.t==='hello'){r={id,name:m.name,cls:m.cls,paint:m.paint||0,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
     if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat,bi:curBiome});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
     return;}
@@ -139,7 +139,7 @@ function clientRecv(m){
   if(m.t==='lobby'){net.lobby=m.list;renderLobby();}
   else if(m.t==='start'){pendingThreat=m.th||1;pendingBiome=m.bi||null;beginNetMatch(m.seed,m.mid);}
   else if(m.t==='snap'){applySnapshot(m);}
-  else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
+  else if(m.t==='kill'){const e=enemyById(m.id);if(e&&e.alive){const mine=(net.lastDmg.get(m.id)||-9)>gameTime-0.6;if(mine)masteryKill();const ch=player.exCharge;killEnemy(e,m.dir||null,true,m.how||{});if(!mine)player.exCharge=ch;}}
   else if(m.t==='drop'){spawnPickup(m.type,m.x,m.z);}
   else if(m.t==='ann'){announce(m.text,m.dur);}
   else if(m.t==='aura'){auraAt(m.x,m.z);}
@@ -160,8 +160,8 @@ function beginNetMatch(s,mid){initAudio();net.inMatch=true;$('lobby').classList.
 function buildSnapshot(){
   const en=[];for(const e of enemies){if(!e.alive)continue;const p=e.g.position;
     en.push([e.id,ETYPES.indexOf(e.type),e.elite?1:0,+p.x.toFixed(2),+p.z.toFixed(2),+e.g.rotation.y.toFixed(2),+p.y.toFixed(2),Math.round(e.hp),Math.round(e.maxHp),(e.parts.armL.parent!==e.g?1:0)|(e.parts.armR.parent!==e.g?2:0)|(e.shieldM&&!(e.shieldHp>0)?4:0),+(e.g.scale.x/e.s0).toFixed(2),+(e.g.scale.y/e.s0).toFixed(2),e.stagger>0||e.stun>0?1:0]);}
-  const pl=[[net.myId,+player.pos.x.toFixed(2),+player.pos.y.toFixed(2),+player.pos.z.toFixed(2),+player.yaw.toFixed(2),Math.round(player.hp),player.maxHp,(player.hp<=0||state==='spectate'||state==='dying')?1:0,cls]];
-  for(const r of net.remotes.values())if(r.inMatch)pl.push([r.id,+r.pos.x.toFixed(2),+r.pos.y.toFixed(2),+r.pos.z.toFixed(2),+r.yaw.toFixed(2),r.hp,r.maxHp,r.dead?1:0,r.cls]);
+  const pl=[[net.myId,+player.pos.x.toFixed(2),+player.pos.y.toFixed(2),+player.pos.z.toFixed(2),+player.yaw.toFixed(2),Math.round(player.hp),player.maxHp,(player.hp<=0||state==='spectate'||state==='dying')?1:0,cls,(loadout.paint||{})[cls]||0]];
+  for(const r of net.remotes.values())if(r.inMatch)pl.push([r.id,+r.pos.x.toFixed(2),+r.pos.y.toFixed(2),+r.pos.z.toFixed(2),+r.yaw.toFixed(2),r.hp,r.maxHp,r.dead?1:0,r.cls,r.paint||0]);
   const used=[];interactables.forEach((it,i)=>{if(it.used)used.push(i);});
   return{t:'snap',en,pl,used,m:{conds:match.conds,parts:match.parts,carried:match.carried,loot:match.loot,safeLoot:match.safeLoot,rare:match.rare,beacons:match.beacons,launching:match.launching,hack:match.hack,ritual:match.ritual,defend:match.defend,carrier:match.carrier,kills:match.kills,elites:match.elites}};
 }
@@ -176,9 +176,9 @@ function applySnapshot(s){
     if((arms&2)&&e.parts.armR.parent===e.g){detach(e,'armR',null);e.arms--;e.armHp.armR=Infinity;}
     e.g.scale.set(e.s0*sx,e.s0*sy,e.s0*sx);}
   for(const e of enemies){if(!e.alive||seen.has(e.id))continue;const n=(net.missing.get(e.id)||0)+1;net.missing.set(e.id,n);if(n>=3){e.alive=false;scene.remove(e.g);}}
-  for(const row of s.pl){const [id,x,y,z,yaw,hp,mhp,dead,c]=row;if(id===net.myId)continue;let r=net.remotes.get(id);
+  for(const row of s.pl){const [id,x,y,z,yaw,hp,mhp,dead,c,pt]=row;if(id===net.myId)continue;let r=net.remotes.get(id);
     if(!r){r={id,cls:c,pos:new THREE.Vector3(x,y,z),tp:new THREE.Vector3(),yaw,model:null};net.remotes.set(id,r);}
-    r.tp.set(x,y,z);r.yaw=yaw;r.hp=hp;r.maxHp=mhp;r.dead=!!dead;r.cls=c;r.inMatch=true;}
+    r.tp.set(x,y,z);r.yaw=yaw;r.hp=hp;r.maxHp=mhp;r.dead=!!dead;r.cls=c;r.paint=pt||0;r.inMatch=true;}
   for(const id of [...net.remotes.keys()])if(!s.pl.some(p=>p[0]===id)){const r=net.remotes.get(id);if(r.model)scene.remove(r.model);net.remotes.delete(id);}
   const partsBefore=JSON.stringify(match.parts);Object.assign(match,s.m);if(JSON.stringify(match.parts)!==partsBefore)updatePodLook();
   for(const i of s.used){const it=interactables[i];if(it&&!it.used){it.used=true;scene.remove(it.m);}}
@@ -197,7 +197,7 @@ function updateEnemiesClient(dt){
 // ---------- 队友的模型
 function updateRemotes(dt){
   for(const r of net.remotes.values()){if(!r.inMatch||!r.tp)continue;
-    if(!r.model){r.model=buildCharacter(r.cls||'ward');addRemoteGun(r.model,r.cls||'ward');scene.add(r.model);}
+    if(!r.model){r.model=buildCharacter(r.cls||'ward');paintModel(r.model,r.paint||0);addRemoteGun(r.model,r.cls||'ward');scene.add(r.model);}
     r.pos.lerp(r.tp,Math.min(1,dt*12));r.model.position.set(r.pos.x,r.pos.y,r.pos.z);r.model.rotation.set(r.dead?-Math.PI/2:0,r.yaw+Math.PI,0);
     if(r.dead)r.model.position.y=0.3;}
 }

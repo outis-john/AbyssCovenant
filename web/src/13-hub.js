@@ -92,10 +92,10 @@ const CLS_INFO={
     perks:'灵能核心 3 槽 · 枪械伤害 +30% · 受到伤害 -20%'}};
 function selectClass(c){
   cls=c;document.querySelectorAll('.card').forEach(el=>el.classList.toggle('sel',el.dataset.cls===c));
-  if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);if(typeof CLS!=='undefined'&&CLS[c]&&CLS[c].eye)hub.char.scale.multiplyScalar(.55);hubScene.add(hub.char);
+  if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);paintModel(hub.char,(loadout.paint||{})[c]||0);if(typeof CLS!=='undefined'&&CLS[c]&&CLS[c].eye)hub.char.scale.multiplyScalar(.55);hubScene.add(hub.char);
   if(typeof CLS!=='undefined'){fixLoadoutForClass();try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}applyLoadout();renderLoadout();}
   const I=CLS_INFO[c];
-  $('clsInfo').innerHTML=`<h3>${I.name}</h3>${I.desc}<div style="margin:10px 0 4px">`+I.stats.map(([n,v,m])=>`<div class="stat"><span>${n}</span><i><b style="width:${Math.max(4,v/m*100)}%"></b></i></div>`).join('')+`</div><div class="small">${I.perks}</div>`;
+  $('clsInfo').innerHTML=`<h3>${I.name}</h3>${I.desc}<div style="margin:10px 0 4px">`+I.stats.map(([n,v,m])=>`<div class="stat"><span>${n}</span><i><b style="width:${Math.max(4,v/m*100)}%"></b></i></div>`).join('')+`</div><div class="small">${I.perks}</div>`;if(typeof paintRow==='function'){$('clsInfo').innerHTML+=unlockPanel(c)+paintRow(c);bindClassPanel(c);refreshCards();};
   play('pickup');
 }
 function updateHub(dt){
@@ -119,7 +119,7 @@ function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>物资<
 function renderLoadout(){
   const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).filter(w=>{const a=typeof CLS!=='undefined'&&CLS[cls]&&CLS[cls][key==='primary'?'guns':'melee'];return !a||a.includes(w.id);}).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
   mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
-  $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>：${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>：${MELEE[loadout.melee].desc}`;
+  $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>：${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>：${MELEE[loadout.melee].desc}<div class="dim">${masteryText(loadout.primary)} · ${masteryText(loadout.melee)}</div>`;
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});
 }
 function enterHub(){
@@ -145,8 +145,8 @@ function startMatchmaking(){
   ];
 }
 $('mmCancel').onclick=()=>{mmTimers.forEach(clearTimeout);enterHub();};
-$('goBtn').onclick=()=>{if(isNet())leaveRoom();startMatchmaking();};
-$('hostBtn').onclick=()=>{initAudio();hostRoom();};
+$('goBtn').onclick=()=>{if(!classOk())return;if(isNet())leaveRoom();startMatchmaking();};
+$('hostBtn').onclick=()=>{if(!classOk())return;initAudio();hostRoom();};
 $('joinBtn').onclick=()=>{initAudio();joinRoom($('joinCode').value);};
 $('lobbyLeave').onclick=leaveRoom;
 

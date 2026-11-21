@@ -46,7 +46,7 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,head?10:5);
   // 部位破坏：打断手臂
   if((part==='armL'||part==='armR')&&e.parts[part].parent===e.g){e.armHp[part]-=dmg*(opts.limbMul||1);if(e.armHp[part]<=0){detach(e,part,dir);e.arms--;}}
-  if(e.hp<=0){killEnemy(e,dir,opts.explode,opts.how||{});return true;}
+  if(e.hp<=0){if(!opts._remote&&!ex.active)masteryKill();killEnemy(e,dir,opts.explode,opts.how||{});return true;}
   return false;
 }
 function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m.getWorldPosition(wp);const wq=new THREE.Quaternion();m.getWorldQuaternion(wq);const ws=new THREE.Vector3();m.getWorldScale(ws);

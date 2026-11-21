@@ -39,7 +39,7 @@ function endMatch(win){
   const v=loadVault();v.runs++;
   const TM=CFG.threat[match.threat||1].loot,kept=Math.round((win?match.safeLoot+match.loot:match.safeLoot)*TM), lost=win?0:match.loot;
   const amLost=player.amulet&&player.hp<=0&&!win;   // 阵亡：护符留在了深渊
-  v.loot+=kept;if(win){v.extracted++;if(match.rare)v.rare++;}if(amLost)v.rare=Math.max(0,v.rare-1);saveVault(v);
+  saveMastery(v);v.loot+=kept;if(win){v.extracted++;if(match.rare)v.rare++;}if(amLost)v.rare=Math.max(0,v.rare-1);saveVault(v);
   const t=Math.floor(gameTime),mm=String(Math.floor(t/60)).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
   const done=match.conds.filter(c=>c.prog>=c.target).length,found=match.conds.filter(c=>c.revealed).length;
   const parts=Object.keys(PART_NEED).reduce((a,k)=>a+match.parts[k],0),need=Object.values(PART_NEED).reduce((a,b)=>a+b,0);

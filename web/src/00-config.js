@@ -56,6 +56,9 @@ const CFG={
     {id:'psy',   name:'灵能导管',  desc:'灵能上限 +25，过载上限 +20',max:2,cost:[0,0],rare:[1,2]},
     {id:'exec',  name:'嗜血圣印',  desc:'处决充能速度 +30%',        max:1,cost:[0],rare:[1]},
   ],
+  // 职业解锁价格（唤潮者、铸甲卫士免费）；武器熟练度：击杀数达到门槛，伤害每级 +5%
+  unlock:{reforged:{loot:15},bastion:{loot:25},relic:{loot:20,rare:2},walker:{rare:3},redeemer:{loot:30,rare:4}},
+  mastery:[25,75,150],
   amulet:{hp:25,dmg:1.2},   // 圣物护符：带一件圣物出击，属性提升；阵亡就失去它
   wave:{interval:50,size:4,bruteChance:.12,casterChance:.18},   // 刷怪潮
 };

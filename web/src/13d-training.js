@@ -22,4 +22,4 @@ function updateTraining(dt){if(player.hp<40)player.hp=40;   // 训练里不会�
   if(dummies.length<4){const e=spawnEnemy('imp',(Math.random()-.5)*8,-7-Math.random()*3);e.dummy=true;e.speed=0;e.reach=0;e.dmg=0;}
   const S=TSTEPS[training.step];if(S.ok())nextTrainStep();}
 function exitTraining(){training.on=false;$('trainBox').style.display='none';for(const e of enemies){e.alive=false;scene.remove(e.g);}enemies=[];enterHub();}
-$('trainBtn').onclick=startTraining;
+$('trainBtn').onclick=()=>{if(classOk())startTraining();};
