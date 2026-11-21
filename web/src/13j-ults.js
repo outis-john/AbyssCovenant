@@ -20,7 +20,7 @@ function bolt(a,b,c){const pts=[];const n=7;for(let i=0;i<=n;i++){const p=a.clon
 function ultBanner(name,info){const b=$('ultBanner');b.innerHTML=`<div class="un" style="color:${info.color}">${name}</div><div class="us">${info.sub}</div>`;b.classList.remove('go');void b.offsetWidth;b.classList.add('go');
   const f=$('ultFlash');f.style.transition='none';f.style.background=`radial-gradient(ellipse at center,transparent 30%,${info.color} 130%)`;f.style.opacity=.85;requestAnimationFrame(()=>{f.style.transition='opacity .8s';f.style.opacity=0;});}
 // 特效本体：本地施放和队友收到 fx 时都调用
-function ultFx(d){const {k,x,z}=d;const y=1,P=new THREE.Vector3(x,y,z),I=ULT_INFO[k];if(!I)return;
+function ultFx(d){const {k,x,z}=d;const y=1,P=new THREE.Vector3(x||0,y,z||0),I=ULT_INFO[k];if(!I&&!['cloud','decoys','confuse'].includes(k))return;
   if(k==='surge'){ringAt(x,.3,z,0xb060ff,.5,8,.7,.18);ringAt(x,1.4,z,0xe0a0ff,.3,6,.55,.08);embersBlue(P,30);const s=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),tmat(0x8030ff,.5));s.position.copy(P);ufxAdd(s,.5,{grow:5,s0:.5,op:.5});play('choir');play('backlash');}
   else if(k==='stim'){for(let i=0;i<14;i++)hitSparks(P,null,1);ringAt(x,.2,z,0xff3030,.3,2.5,.4);play('frenzy');}
   else if(k==='grenade'){const s=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),tmat(0xffc060,.9));s.position.copy(P);ufxAdd(s,.35,{grow:3.5,s0:.3,op:.9});ringAt(x,.2,z,0xffa040,.5,5,.5,.15);
@@ -33,6 +33,9 @@ function ultFx(d){const {k,x,z}=d;const y=1,P=new THREE.Vector3(x,y,z),I=ULT_INF
     const rune=new THREE.Mesh(new THREE.RingGeometry(6.4,7,6),tmat(0xffd060,.6));rune.rotation.x=-Math.PI/2;rune.position.set(x,.05,z);ufxAdd(rune,6,{spin:.6,op:.6});
     ringAt(x,.2,z,0xffd060,.5,7,.6);play('choir');play('parry');}
   else if(k==='stomp'){ringAt(x,.2,z,0xffb050,.5,4,.45,.2);dust(P.clone().setY(.2),8);play('boom');}
+  else if(k==='cloud')addCloud(x,z);
+  else if(k==='decoys'){if(!isHost())spawnDecoys(d.list);}
+  else if(k==='confuse')confuseFx(x,z);
   else if(k==='pyre'){ringAt(x,.4,z,0xff6020,.5,6.5,.6,.35);ringAt(x,1.2,z,0xffc060,.3,5,.5,.15);const s=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),tmat(0xff8030,.6));s.position.copy(P);ufxAdd(s,.4,{grow:6,s0:.5,op:.6});play('melta');play('boom');}}
 // 本地施放（classAbility 里调用）
 function ultCast(k,extra={}){const Z=ZAB[k],I=ULT_INFO[k];ultBanner(Z.name,I);player.punch=.08;player.shake=Math.max(player.shake,.35);

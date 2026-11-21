@@ -80,7 +80,7 @@ function updateHUD(dt){updateBossBar();
   // 过载：画面和声音
   const r=player.ovl/player.maxOvl;
   $('warp').style.opacity=clamp((r-0.5)*2,0,1)*0.8+(player.warp>0?0.5:0);
-  canvas.style.filter=r>0.5||player.warp>0?`hue-rotate(${Math.sin(gameTime*2)*25*clamp((r-0.5)*2,0,1)+(player.warp>0?40:0)}deg) saturate(${1+r*0.6})`:'';
+  canvas.style.filter=r>0.5||player.warp>0?`hue-rotate(${Math.sin(gameTime*2)*25*clamp((r-0.5)*2,0,1)+(player.warp>0?40:0)}deg) saturate(${1+r*0.6})`+corruptFilter():corruptFilter().trim();
   $('shieldfx').style.opacity=player.shield>0?0.8:0;
   if(actx){whisperGain.gain.value=clamp((r-0.5)*2,0,1)*0.22;whisperFilter.frequency.value=700+Math.sin(gameTime*1.7)*400+Math.sin(gameTime*5.3)*200;
     heartT-=dt;if(r>0.8&&heartT<=0){heartT=0.8;play('heart');}}

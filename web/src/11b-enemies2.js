@@ -23,7 +23,7 @@ const ENEMY_AI={
       if(e.fuse<=0)damageEnemy(e,99999,'body',null,{_remote:true});return true;}
     if(dist<e.reach){e.fuse=0.8;play('hiss');return true;}return false;},
   hound(e,T,pp,to,dist,dt){if(e.leap){const L=e.leap;L.t+=dt;e.g.position.addScaledVector(L.v,dt);e.g.position.y=Math.max(0,Math.sin(Math.min(1,L.t/0.55)*Math.PI)*1.4);collide(e.g.position,e.r);
-      if(!L.hit&&T&&Math.hypot(T.pos.x-e.g.position.x,T.pos.z-e.g.position.z)<1.3){L.hit=true;if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg*1.6,att:e.id});else hurtPlayer(e.dmg*1.6,false,e);}
+      if(!L.hit&&T&&Math.hypot(T.pos.x-e.g.position.x,T.pos.z-e.g.position.z)<1.3){L.hit=true;if(hitTarget(T,e.dmg*1.6,e)){}else if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg*1.6,att:e.id});else hurtPlayer(e.dmg*1.6,false,e);}
       if(L.t>=0.55){e.g.position.y=0;e.leap=null;e.leapCd=2.5+Math.random()*2;e.stagger=.25;}return true;}
     e.leapCd-=dt;if(dist>3&&dist<8&&e.leapCd<=0&&hasLOS(e,pp)){e.leap={t:0,v:to.clone().normalize().multiplyScalar(dist/0.55)};play('growl');return true;}return false;}};
 // ---------- 区域：配色 / 灯光 / 刷怪

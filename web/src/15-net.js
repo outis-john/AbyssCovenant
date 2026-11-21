@@ -112,6 +112,8 @@ function renderLobby(){
 function hostRecv(id,m){
   let r=net.remotes.get(id);
   if(m.t==='daemons'){spawnDaemons(m.type,m.n,m.x,m.z);return;}
+  if(m.t==='decoys'){spawnDecoys(m.list);return;}
+  if(m.t==='confuse'){for(const id of m.ids){const e=enemyById(id);if(e)e.confusedT=7;}return;}
   if(m.t==='fx2'){fxPlay(m.k,m.d);bcast(m,id);return;}
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,paint:m.paint||0,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);

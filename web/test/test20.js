@@ -7,7 +7,7 @@ log('pyre beam: channel done',!PB.on,'| enemies hit',es.filter(e=>e.hp<500||!e.a
 enemies.forEach(e=>{e.alive=false;scene.remove(e.g)});enemies=[];
 for(let i=0;i<20;i++)taintAffinity('blood',5);addTaint(60,'change');player.ignoreChance=0;player.ovl=player.maxOvl+20;backlash();log('taint after psy hit+backlash',Math.round(player.taint));
 addTaint(30);step(2);log('dragged into hell',HELL.on,'| god',HELL.god,GODS[HELL.god].name);
-step(110);const daemons=enemies.filter(e=>e.alive&&e.daemon).length;log('daemons spawned',daemons);
+const hb=player.hp;hurtPlayer(50);log('invulnerable while falling',player.hp===hb);
 const hp0=player.maxHp,gm=player.gunMul;HELL.t=0.01;step(3);log('survived → bless',player.bless,'| gun mul',(player.gunMul/gm).toFixed(2),'| daemons cleared',enemies.filter(e=>e.alive&&e.daemon).length===0,'| taint reset',player.taint===0);
 // 万变：过载不反噬
 grantBless('change');player.ovl=player.maxOvl+30;const h1=player.hp;backlash();log('change bless backlash only burns',Math.round(h1-player.hp));

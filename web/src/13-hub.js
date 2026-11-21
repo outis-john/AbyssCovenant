@@ -123,6 +123,7 @@ function renderLoadout(){
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});
 }
 function enterHub(){
+  if(typeof stopAllLoops==='function')stopAllLoops();
   state='hub';document.body.classList.add('inhub');document.exitPointerLock?.();
   $('hub').classList.add('show');$('matching').classList.remove('show');$('result').classList.remove('show');$('ready').classList.remove('show');$('pause').classList.remove('show');
   $('hurt').style.opacity=0;$('warp').style.opacity=0;canvas.style.filter='';setProgress(-1);$('announce').style.opacity=0;

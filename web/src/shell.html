@@ -62,6 +62,7 @@
   body.inhub #weapons,body.inhub #zab{display:none}
   body.nopsy #hud-br{display:none}
   #exBars{position:fixed;inset:0;pointer-events:none;z-index:6;background:linear-gradient(#000 0 9%,transparent 9% 91%,#000 91%);opacity:0;transition:opacity .15s}#exBars.show{opacity:1}
+  #godab{position:fixed;left:22px;bottom:232px;z-index:20;display:none;font-size:12px;color:#cfd8d0;text-shadow:0 0 4px #000;max-width:300px;letter-spacing:.5px}#godab b{font:600 14px Oswald,sans-serif;letter-spacing:1px;text-transform:uppercase}#godab span{color:#9aa49e;font-size:11px}body.inhub #godab{display:none!important}
   #hellTint{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity 1s;mix-blend-mode:screen}
   #blessTag{margin-top:4px;font-size:12px;font-weight:bold;text-shadow:0 0 6px currentColor}
   #auspex{position:fixed;left:11%;top:23%;width:330px;z-index:15;pointer-events:none;opacity:0;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(.25) translateX(-200px);transform-origin:left center;transition:opacity .2s,transform .45s cubic-bezier(.25,1.25,.4,1)}
@@ -213,7 +214,7 @@
     <div class="plate"><span>AUSPEX MK.IV</span><span class="tag">LIFE-SIGN SCAN</span><span id="ausN"></span></div>
     <div class="scr"><canvas id="ausCv" width="300" height="220"></canvas></div>
     <div class="foot"><i class="grl"></i><i class="led"></i><i class="led g"></i><span>RNG 32M</span></div></div>
-</div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+</div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="godab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> Pod <span style="color:#60ffb0">●</span> Clue / terminal <span style="color:#ff9a40">●</span> Parts · M to enlarge</div></div>
 <div class="layer" id="splat"></div>

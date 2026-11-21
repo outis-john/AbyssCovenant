@@ -1,5 +1,6 @@
 // ============================================================ 玩家
 function hurtPlayer(n,self=false,att=null){
+  if(HELL.on&&!self)return;   // 堕落过程中不会受伤
   if(state!=='playing'||ex.active)return;
   if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;if(!self)taintAffinity('decay',n/10);
   if(!self&&player.blocking){

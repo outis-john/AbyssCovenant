@@ -4,7 +4,7 @@ function updateEnemies(dt){
   const TL=targetsList();
   for(const e of enemies){
     if(!e.alive)continue;
-    let T=null,td=1e9;for(const t of TL){const d=(t.pos.x-e.g.position.x)**2+(t.pos.z-e.g.position.z)**2;if(d<td){td=d;T=t;}}const pp=T?T.pos:player.pos;
+    let T=null,td=1e9;for(const t of (e.confusedT>0?confusedTargets(e):TL.concat(decoyTargets()))){const d=(t.pos.x-e.g.position.x)**2+(t.pos.z-e.g.position.z)**2;if(d<td){td=d;T=t;}}const pp=T?T.pos:player.pos;
     if(e.kv.lengthSq()>0.001){e.g.position.addScaledVector(e.kv,dt);e.kv.multiplyScalar(Math.max(0,1-dt*9));collide(e.g.position,e.r);}
     e.lean=Math.max(0,e.lean-dt*4);e.headSnap=Math.max(0,e.headSnap-dt*5);
     e.parts.body.rotation.x=-e.lean*0.45;e.parts.head.rotation.z=Math.sin(gameTime*40)*0.1*e.headSnap;
@@ -28,13 +28,13 @@ function updateEnemies(dt){
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
-      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);if(e.type==='frostling'||(e.boss&&e.variant==='frost'))slowTarget(T,1.6);}e.cd=1.1;}continue;}
+      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(hitTarget(T,dA,e)){}else if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);if(e.type==='frostling'||(e.boss&&e.variant==='frost'))slowTarget(T,1.6);}e.cd=1.1;}continue;}
     e.cd-=dt;
     if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
     if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
     if(ENEMY_AI[e.type]&&ENEMY_AI[e.type](e,T,pp,to,dist,dt))continue;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
-    else{const sp=e.speed*(e.legsLost?0.5:1);const sd=steer(e,dir,dt);e.g.position.addScaledVector(sd,sp*dt);e.walk+=dt*sp*2;
+    else{const sp=e.speed*(e.legsLost?0.5:1)*(e.slowT>0?.5:1);const sd=steer(e,dir,dt);e.g.position.addScaledVector(sd,sp*dt);e.walk+=dt*sp*2;
       e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;
       if(e.parts.armL.parent===e.g)e.parts.armL.rotation.x=-Math.sin(e.walk)*.5;if(e.parts.armR.parent===e.g)e.parts.armR.rotation.x=Math.sin(e.walk)*.5;}
     collide(e.g.position,e.r);

@@ -13,7 +13,7 @@ Object.assign(ENEMY_BUILD,{
 Object.assign(ENEMY_AI,{
   tanker(e,T,pp,to,dist,dt){e.flameCd-=dt;if(e.flaming>0){e.flaming-=dt;e.flTick=(e.flTick||0)-dt;const f=to.clone().normalize();
       if(e.flTick<=0){e.flTick=.18;const o=e.g.position.clone().setY(1.2*e.g.scale.y).addScaledVector(f,.8);flameBurst(o,f);fxSend('eflame',{x:o.x,y:o.y,z:o.z,dx:f.x,dz:f.z});
-        if(T&&dist<5.5){if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg,att:e.id});else hurtPlayer(e.dmg,false,e);}}return true;}
+        if(T&&dist<5.5){if(hitTarget(T,e.dmg,e)){}else if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg,att:e.id});else hurtPlayer(e.dmg,false,e);}}return true;}
     if(dist<5&&e.flameCd<=0){e.flaming=1;e.flameCd=3.5;play('melta');return true;}return false;},
   priest(e,T,pp,to,dist,dt){e.blessCd-=dt;if(e.blessCd<=0){e.blessCd=5;let n=0;for(const o of enemies){if(!o.alive||o===e||o.static)continue;if(o.g.position.distanceTo(e.g.position)<9){o.hp=Math.min(o.maxHp,o.hp+40);o.blessT=5;n++;}}
       if(n){blessFx(e.g.position.x,e.g.position.z);fxSend('bless',{x:e.g.position.x,z:e.g.position.z});play('choir');}}

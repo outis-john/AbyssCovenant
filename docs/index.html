@@ -62,6 +62,7 @@
   body.inhub #weapons,body.inhub #zab{display:none}
   body.nopsy #hud-br{display:none}
   #exBars{position:fixed;inset:0;pointer-events:none;z-index:6;background:linear-gradient(#000 0 9%,transparent 9% 91%,#000 91%);opacity:0;transition:opacity .15s}#exBars.show{opacity:1}
+  #godab{position:fixed;left:22px;bottom:232px;z-index:20;display:none;font-size:12px;color:#cfd8d0;text-shadow:0 0 4px #000;max-width:300px;letter-spacing:.5px}#godab b{font:600 14px Oswald,sans-serif;letter-spacing:1px;text-transform:uppercase}#godab span{color:#9aa49e;font-size:11px}body.inhub #godab{display:none!important}
   #hellTint{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity 1s;mix-blend-mode:screen}
   #blessTag{margin-top:4px;font-size:12px;font-weight:bold;text-shadow:0 0 6px currentColor}
   #auspex{position:fixed;left:11%;top:23%;width:330px;z-index:15;pointer-events:none;opacity:0;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(.25) translateX(-200px);transform-origin:left center;transition:opacity .2s,transform .45s cubic-bezier(.25,1.25,.4,1)}
@@ -213,7 +214,7 @@
     <div class="plate"><span>AUSPEX MK.IV</span><span class="tag">LIFE-SIGN SCAN</span><span id="ausN"></span></div>
     <div class="scr"><canvas id="ausCv" width="300" height="220"></canvas></div>
     <div class="foot"><i class="grl"></i><i class="led"></i><i class="led g"></i><span>RNG 32M</span></div></div>
-</div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+</div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="godab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> Pod <span style="color:#60ffb0">●</span> Clue / terminal <span style="color:#ff9a40">●</span> Parts · M to enlarge</div></div>
 <div class="layer" id="splat"></div>
@@ -331,7 +332,7 @@ const CFG={
     axe:   {dmg:54,windup:.16,slash:.16},   // 链锯战斧
   },
   // 深渊侵蚀：过载偏高 / 反噬 / 被灵能攻击打中会涨；满了被拖入深渊彼岸 hell 秒，活下来获得邪神赐福
-  taint:{perCast:36,ovlRate:40,backlash:45,psyHit:15,hell:20,wave:5,waveN:3},   // perCast：每放一次灵能 +36，连放 3 个就会被拖进深渊彼岸
+  taint:{perCast:36,ovlRate:40,backlash:45,psyHit:15,hell:6,wave:5,waveN:3},   // perCast：每放一次灵能 +36，连放 3 个就会被拖进深渊彼岸
   heavyHold:0.28,   // 按住左键多少秒算重击
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
@@ -1695,6 +1696,7 @@ function spawnWave(n,near){
 
 // ============================================================ 玩家
 function hurtPlayer(n,self=false,att=null){
+  if(HELL.on&&!self)return;   // 堕落过程中不会受伤
   if(state!=='playing'||ex.active)return;
   if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;if(!self)taintAffinity('decay',n/10);
   if(!self&&player.blocking){
@@ -1779,7 +1781,7 @@ function updateEnemies(dt){
   const TL=targetsList();
   for(const e of enemies){
     if(!e.alive)continue;
-    let T=null,td=1e9;for(const t of TL){const d=(t.pos.x-e.g.position.x)**2+(t.pos.z-e.g.position.z)**2;if(d<td){td=d;T=t;}}const pp=T?T.pos:player.pos;
+    let T=null,td=1e9;for(const t of (e.confusedT>0?confusedTargets(e):TL.concat(decoyTargets()))){const d=(t.pos.x-e.g.position.x)**2+(t.pos.z-e.g.position.z)**2;if(d<td){td=d;T=t;}}const pp=T?T.pos:player.pos;
     if(e.kv.lengthSq()>0.001){e.g.position.addScaledVector(e.kv,dt);e.kv.multiplyScalar(Math.max(0,1-dt*9));collide(e.g.position,e.r);}
     e.lean=Math.max(0,e.lean-dt*4);e.headSnap=Math.max(0,e.headSnap-dt*5);
     e.parts.body.rotation.x=-e.lean*0.45;e.parts.head.rotation.z=Math.sin(gameTime*40)*0.1*e.headSnap;
@@ -1803,13 +1805,13 @@ function updateEnemies(dt){
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
-      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);if(e.type==='frostling'||(e.boss&&e.variant==='frost'))slowTarget(T,1.6);}e.cd=1.1;}continue;}
+      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(hitTarget(T,dA,e)){}else if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);if(e.type==='frostling'||(e.boss&&e.variant==='frost'))slowTarget(T,1.6);}e.cd=1.1;}continue;}
     e.cd-=dt;
     if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
     if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
     if(ENEMY_AI[e.type]&&ENEMY_AI[e.type](e,T,pp,to,dist,dt))continue;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
-    else{const sp=e.speed*(e.legsLost?0.5:1);const sd=steer(e,dir,dt);e.g.position.addScaledVector(sd,sp*dt);e.walk+=dt*sp*2;
+    else{const sp=e.speed*(e.legsLost?0.5:1)*(e.slowT>0?.5:1);const sd=steer(e,dir,dt);e.g.position.addScaledVector(sd,sp*dt);e.walk+=dt*sp*2;
       e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;
       if(e.parts.armL.parent===e.g)e.parts.armL.rotation.x=-Math.sin(e.walk)*.5;if(e.parts.armR.parent===e.g)e.parts.armR.rotation.x=Math.sin(e.walk)*.5;}
     collide(e.g.position,e.r);
@@ -1950,7 +1952,7 @@ const ENEMY_AI={
       if(e.fuse<=0)damageEnemy(e,99999,'body',null,{_remote:true});return true;}
     if(dist<e.reach){e.fuse=0.8;play('hiss');return true;}return false;},
   hound(e,T,pp,to,dist,dt){if(e.leap){const L=e.leap;L.t+=dt;e.g.position.addScaledVector(L.v,dt);e.g.position.y=Math.max(0,Math.sin(Math.min(1,L.t/0.55)*Math.PI)*1.4);collide(e.g.position,e.r);
-      if(!L.hit&&T&&Math.hypot(T.pos.x-e.g.position.x,T.pos.z-e.g.position.z)<1.3){L.hit=true;if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg*1.6,att:e.id});else hurtPlayer(e.dmg*1.6,false,e);}
+      if(!L.hit&&T&&Math.hypot(T.pos.x-e.g.position.x,T.pos.z-e.g.position.z)<1.3){L.hit=true;if(hitTarget(T,e.dmg*1.6,e)){}else if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg*1.6,att:e.id});else hurtPlayer(e.dmg*1.6,false,e);}
       if(L.t>=0.55){e.g.position.y=0;e.leap=null;e.leapCd=2.5+Math.random()*2;e.stagger=.25;}return true;}
     e.leapCd-=dt;if(dist>3&&dist<8&&e.leapCd<=0&&hasLOS(e,pp)){e.leap={t:0,v:to.clone().normalize().multiplyScalar(dist/0.55)};play('growl');return true;}return false;}};
 // ---------- 区域：配色 / 灯光 / 刷怪
@@ -2113,7 +2115,7 @@ Object.assign(ENEMY_BUILD,{
 Object.assign(ENEMY_AI,{
   tanker(e,T,pp,to,dist,dt){e.flameCd-=dt;if(e.flaming>0){e.flaming-=dt;e.flTick=(e.flTick||0)-dt;const f=to.clone().normalize();
       if(e.flTick<=0){e.flTick=.18;const o=e.g.position.clone().setY(1.2*e.g.scale.y).addScaledVector(f,.8);flameBurst(o,f);fxSend('eflame',{x:o.x,y:o.y,z:o.z,dx:f.x,dz:f.z});
-        if(T&&dist<5.5){if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg,att:e.id});else hurtPlayer(e.dmg,false,e);}}return true;}
+        if(T&&dist<5.5){if(hitTarget(T,e.dmg,e)){}else if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg,att:e.id});else hurtPlayer(e.dmg,false,e);}}return true;}
     if(dist<5&&e.flameCd<=0){e.flaming=1;e.flameCd=3.5;play('melta');return true;}return false;},
   priest(e,T,pp,to,dist,dt){e.blessCd-=dt;if(e.blessCd<=0){e.blessCd=5;let n=0;for(const o of enemies){if(!o.alive||o===e||o.static)continue;if(o.g.position.distanceTo(e.g.position)<9){o.hp=Math.min(o.maxHp,o.hp+40);o.blessT=5;n++;}}
       if(n){blessFx(e.g.position.x,e.g.position.z);fxSend('bless',{x:e.g.position.x,z:e.g.position.z});play('choir');}}
@@ -2164,30 +2166,31 @@ function taintAffinity(g,n){HELL.aff[g]=(HELL.aff[g]||0)+n;}
 function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.min(100,(player.taint||0)+n);if(g)taintAffinity(g,n/4);}
 function pickGod(){return Object.entries(HELL.aff).sort((a,b)=>b[1]-a[1])[0][0];}
 function updateAbyss(dt){if(!match)return;
-  // 过载偏高时持续侵蚀；灵能使用记入万变
   const r=player.ovl/player.maxOvl;if(r>0.4&&!HELL.on)addTaint(dt*(r-0.4)*CFG.taint.ovlRate,'change');
+  if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(Object.keys(GODS)[Math.floor(Math.random()*4)]);
   if(!HELL.on&&r<0.2)player.taint=Math.max(0,(player.taint||0)-dt*1.5);   // 不用灵能时侵蚀慢慢消退
   if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
-  if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
-  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'Beyond the Abyss');
-    HELL.waveT-=dt;if(HELL.waveT<=0&&HELL.t>2){HELL.waveT=CFG.taint.wave;spawnDaemons(G.daemon,CFG.taint.waveN);}
-    $('hellTint').style.opacity=.5+Math.sin(gameTime*3)*.15;player.warp=Math.max(player.warp||0,.3);
-    if(Math.random()<dt*.25)announce(G.whisper,1.6);
+  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god],k=1-HELL.t/CFG.taint.hell;setProgress(k,'Falling');
+    $('hellTint').style.opacity=.45+Math.sin(gameTime*4)*.2;player.warp=Math.max(player.warp||0,.6);player.shake=Math.max(player.shake,.08+k*.12);
+    HELL.wT=(HELL.wT||0)-dt;if(HELL.wT<=0){HELL.wT=1.6;announce(G.whisper,1.5);play('backlash');}
     if(HELL.t<=0)exitHell();}
+  else $('hellTint').style.opacity=player.corrupt?.12+Math.sin(gameTime*1.3)*.06:0;
+  updateGodSkill(dt);
   $('taint').firstElementChild.style.width=(player.taint||0)+'%';$('taintTxt').textContent=Math.round(player.taint||0)+'%';
   const B=player.bless&&GODS[player.bless];$('blessTag').innerHTML=B?`<span style="color:${B.css}">◆ ${B.bless}</span>`:'';}
 function realmVisual(G){scene.fog.color.setHex(G.fog);scene.fog.density=.055;scene.background.setHex(G.bg);for(const l of candleLights)l.color.setHex(G.lamp);
-  matBrick.color.setHex(G.color).lerp(new THREE.Color(0xffffff),.45);
-  $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
-function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.waveT=1.2;const G=GODS[god];
+  matBrick.color.setHex(G.color).lerp(new THREE.Color(0xffffff),.45);$('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
+// 侵蚀满了：随机一位邪神开始腐化你（6 秒堕落过程，期间不会受伤），结束后获得赐福 + 专属灵能技能，画面留下扭曲
+function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.wT=0;const G=GODS[god];
   realmVisual(G);play('backlash');play('hole');player.shake=.6;
-  ultBanner(G.realm,{color:G.css,sub:`Dragged beyond the Abyss — ${G.name} is watching you. Survive  ${CFG.taint.hell} s!`});
-  announce(G.whisper,3);}
-function exitHell(){HELL.on=false;player.taint=0;applyBiome();$('hellTint').style.opacity=0;setProgress(-1);
-  const G=GODS[HELL.god];grantBless(HELL.god);for(const k in HELL.aff)HELL.aff[k]=0;
-  // 仆从消散
-  if(!isClient())for(const e of enemies)if(e.alive&&e.daemon){e.alive=false;scene.remove(e.g);puff(e.g.position.clone().setY(1),6,G.color,1.2);}
-  ultBanner(G.bless,{color:G.css,sub:G.desc});play('choir');}
+  ultBanner(G.realm,{color:G.css,sub:`${G.name} claims you. Your soul is being reshaped...`});}
+function exitHell(){HELL.on=false;player.taint=0;applyBiome();setProgress(-1);
+  const G=GODS[HELL.god];grantBless(HELL.god);player.godSkill=HELL.god;player.godCd=0;player.corrupt=(player.corrupt||0)+1;
+  $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 45%,${G.css} 150%)`;
+  ultBanner(G.bless,{color:G.css,sub:`${G.desc} · New power: [Y] ${GOD_SKILL[HELL.god].name}`});play('choir');}
+function corruptFilter(){if(!player.corrupt||state==='hub')return'';const c=Math.min(3,player.corrupt);return ` hue-rotate(${Math.sin(gameTime*.9)*8*c}deg) blur(${(.25+Math.sin(gameTime*2.3)*.2)*c}px) contrast(${1+.05*c})`;}
+function stopAllLoops(){if(typeof loops!=='undefined')for(const k of Object.keys(loops))loopSound(k,false);if(typeof whisperGain!=='undefined'&&whisperGain)whisperGain.gain.value=0;
+  if(HELL.on){HELL.on=false;applyBiome();}$('hellTint').style.opacity=0;}
 function grantBless(god){const old=player.bless;if(old===god)return;
   if(old)revertBless(old);player.bless=god;
   if(god==='blood'){player.gunMul*=.8;WEAPONS[2].dmg*=1.4;}
@@ -2201,7 +2204,7 @@ function revertBless(god){if(god==='blood'){player.gunMul/=.8;WEAPONS[2].dmg/=1.
 // 仆从由房主生成（队友发请求）
 function spawnDaemons(type,n,x=player.pos.x,z=player.pos.z){if(isClient()){sendNet({t:'daemons',type,n,x,z});return;}
   for(let k=0;k<n;k++){const a=Math.random()*6.28;const e=spawnEnemy(type,x+Math.cos(a)*7,z+Math.sin(a)*7);e.daemon=true;embersBlue(e.g.position.clone().setY(1),8);}play('growl');}
-function resetAbyss(){HELL.on=false;HELL.god=null;for(const k in HELL.aff)HELL.aff[k]=0;player.taint=0;player.bless=null;player.atkSpd=1;$('hellTint').style.opacity=0;}
+function resetAbyss(){player.godSkill=null;player.corrupt=0;decoys.forEach(d=>scene.remove(d.m));decoys=[];HELL.on=false;HELL.god=null;for(const k in HELL.aff)HELL.aff[k]=0;player.taint=0;player.bless=null;player.atkSpd=1;$('hellTint').style.opacity=0;}
 // 仆从外观：在基础恶魔上换形
 Object.assign(ENEMY_BUILD,{
   dblood:e=>{ENEMY_BUILD.hound(e);for(const s of [-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.1,.6,4),new THREE.MeshLambertMaterial({color:0x2a0a0a}));h.position.set(s*.25,.45,.1);h.rotation.z=-s*.5;e.parts.head.add(h);}e.daemon=true;},
@@ -2238,6 +2241,52 @@ function castRayWalls(o,d,far){ray.set(o,d);ray.far=far;const h=ray.intersectObj
 function pbeamFx(d){const a=new THREE.Vector3(d.ax,d.ay,d.az),b=new THREE.Vector3(d.bx,d.by,d.bz);const L=a.distanceTo(b);
   const m=new THREE.Mesh(new THREE.CylinderGeometry(.35,.25,L,8,1,true),new THREE.MeshBasicMaterial({color:0xff7020,transparent:true,opacity:.6,depthWrite:false,side:2}));
   m.position.copy(a).lerp(b,.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());ufxAdd(m,.12,{op:.6});}
+// ============================================================ 邪神专属灵能（被腐化后获得，按 Y）：瘟疫之风 / 幻欲魅影 / 血祭收割 / 万变诡计
+const GOD_SKILL={
+  decay: {name:'Plague Wind',cd:14,desc:'Three lingering plague clouds: enemies inside rot (DoT) and slow down'},
+  excess:{name:'Phantasm',cd:16,desc:'Three phantom copies lure demons; when struck they burst and stun'},
+  blood: {name:'Blood Reaper',cd:16,desc:'Blink-slash through up to 5 nearby enemies, healing on each kill'},
+  change:{name:'Trickster’s Gambit',cd:18,desc:'Enemies within 10m turn on each other for 7s'}};
+let clouds=[],decoys=[],reap=null;
+function castGodSkill(){const g=player.godSkill;if(!g){announce('No dark gift yet — fill your corruption',1.2);return;}
+  if(player.godCd>0){announce(GOD_SKILL[g].name+' cooling down '+Math.ceil(player.godCd)+'s',.8);return;}
+  const S=GOD_SKILL[g],G=GODS[g];player.godCd=S.cd;ultBanner(S.name,{color:G.css,sub:G.name+'’s gift'});addTaint(10,g);
+  const f=fwdFlat(),p=player.pos;
+  if(g==='decay'){for(let i=1;i<=3;i++){const x=p.x+f.x*i*3.2,z=p.z+f.z*i*3.2;addCloud(x,z);fxSend('ult',{k:'cloud',x,z});}play('hole');}
+  else if(g==='excess'){const list=[];for(let i=0;i<3;i++){const a=(i-1)*1.1+Math.atan2(f.x,f.z);const x=p.x+Math.sin(a)*3,z=p.z+Math.cos(a)*3;list.push([x,z]);}
+    spawnDecoys(list);if(isClient())sendNet({t:'decoys',list});fxSend('ult',{k:'decoys',list});play('choir');}
+  else if(g==='blood'){const tg=enemies.filter(e=>e.alive&&!e.static&&e.g.position.distanceTo(p)<12).sort((a,b)=>a.g.position.distanceTo(p)-b.g.position.distanceTo(p)).slice(0,5);
+    if(!tg.length){announce('No prey nearby',.8);player.godCd=1;return;}reap={list:tg,i:0,t:0};play('frenzy');}
+  else if(g==='change'){const ids=[];for(const e of enemies)if(e.alive&&!e.static&&!e.boss&&e.g.position.distanceTo(p)<10){e.confusedT=7;ids.push(e.id);}
+    if(isClient())sendNet({t:'confuse',ids});fxSend('ult',{k:'confuse',x:p.x,z:p.z});confuseFx(p.x,p.z);play('zap');play('choir');}}
+// 瘟疫云
+function addCloud(x,z){const m=new THREE.Mesh(new THREE.SphereGeometry(2.5,12,8),new THREE.MeshBasicMaterial({color:0x7a9a20,transparent:true,opacity:.28,depthWrite:false}));m.position.set(x,1,z);m.scale.y=.6;scene.add(m);clouds.push({m,x,z,t:6,tick:0});}
+// 幻影（房主用来吸引恶魔）
+function spawnDecoys(list){for(const [x,z] of list){const m=new THREE.Group();const mat=new THREE.MeshBasicMaterial({color:0xff70d0,transparent:true,opacity:.45,depthWrite:false});
+  for(const [w,h,d,y] of [[.9,1.1,.5,1.3],[.45,.45,.45,2.1],[.3,.9,.3,.45]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);b.position.y=y;m.add(b);}m.position.set(x,0,z);scene.add(m);
+  const d={m,pos:m.position,t:7};decoys.push(d);}}
+function decoyTargets(){return decoys.map(d=>({pos:d.pos,decoy:d}));}
+function popDecoy(d){if(d.dead)return;d.dead=true;scene.remove(d.m);puff(d.pos.clone().setY(1),10,0xff70d0,1.3);play('zap');
+  for(const e of enemies)if(e.alive&&e.g.position.distanceTo(d.pos)<3.5){e.stun=Math.max(e.stun,1.5);}}
+// 错乱：去打离自己最近的其他恶魔
+function confusedTargets(e){let best=null,bd=1e9;for(const o of enemies){if(o===e||!o.alive||o.static)continue;const d=o.g.position.distanceTo(e.g.position);if(d<bd){bd=d;best=o;}}return best?[{pos:best.g.position,foe:best}]:[];}
+function confuseFx(x,z){ringAt(x,.3,z,0x60a0ff,.5,10,.6,.15);for(const e of enemies)if(e.alive&&e.g.position.distanceTo(new THREE.Vector3(x,0,z))<10)embersBlue(e.g.position.clone().setY(2.2),6);}
+// 敌人攻击命中：幻影 / 被诱骗去打的同类；返回 true 表示已处理（不伤玩家）
+function hitTarget(T,n,e){if(!T)return false;if(T.decoy){popDecoy(T.decoy);return true;}
+  if(T.foe){if(T.foe.alive)damageEnemy(T.foe,n*2.5,'body',T.foe.g.position.clone().sub(e.g.position).setY(0).normalize(),{_remote:true,knock:.8,stagger:.4});return true;}return false;}
+function updateGodSkill(dt){player.godCd=Math.max(0,(player.godCd||0)-dt);
+  for(const c of clouds){c.t-=dt;c.m.material.opacity=.28*Math.min(1,c.t);c.m.rotation.y+=dt*.3;if(Math.random()<dt*6)puff(new THREE.Vector3(c.x+(Math.random()-.5)*4,.5,c.z+(Math.random()-.5)*4),1,0x6a8a20,1.4);
+    c.tick-=dt;if(c.tick<=0){c.tick=.5;for(const e of enemies)if(e.alive&&Math.hypot(e.g.position.x-c.x,e.g.position.z-c.z)<2.6+e.r){damageEnemy(e,9,'body',null,{stagger:0,_noShield:true});e.slowT=1;}}
+    if(c.t<=0)scene.remove(c.m);}clouds=clouds.filter(c=>c.t>0);
+  for(const d of decoys){d.t-=dt;d.m.rotation.y+=dt*2;d.m.children.forEach(b=>b.material.opacity=.3+Math.sin(gameTime*12)*.15);if(d.t<=0)popDecoy(d);}decoys=decoys.filter(d=>!d.dead);
+  for(const e of enemies){if(e.confusedT>0){e.confusedT-=dt;if(Math.random()<dt*3)embersBlue(e.g.position.clone().setY(2.3*e.g.scale.y),1);}if(e.slowT>0){e.slowT-=dt;}}
+  if(reap){reap.t-=dt;if(reap.t<=0){const e=reap.list[reap.i++];if(e&&e.alive){const dir=e.g.position.clone().sub(player.pos).setY(0).normalize();const from=player.pos.clone();
+        player.pos.copy(e.g.position).addScaledVector(dir,-1.4).setY(0);collide(player.pos,player.r||.45);player.yaw=Math.atan2(-dir.x,-dir.z);
+        bolt(from.clone().setY(1.2),player.pos.clone().setY(1.2),0xff2020);const p=contactPoint(e);
+        const k=damageEnemy(e,120*(player.meleeMul||1),'body',dir,{stagger:.8,knock:1,point:p,how:{cut:{p,n:new THREE.Vector3(Math.cos(player.yaw),.4,-Math.sin(player.yaw)).normalize(),imp:5}}});
+        if(k)player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.08);spawnBlood(p,dir,25);play('rip');play('kill');hitstop=.05;player.shake=.3;splat();}
+      reap.t=.14;if(reap.i>=reap.list.length)reap=null;}}
+  const G=player.godSkill&&GOD_SKILL[player.godSkill];const el=$('godab');if(el){el.style.display=G?'':'none';if(G)el.innerHTML=`<b style="color:${GODS[player.godSkill].css}">[Y] ${G.name}</b> ${player.godCd>0?Math.ceil(player.godCd)+'s':'READY'}<br><span>${G.desc}</span>`;}}
 // ============================================================ 对局流程
 function updateMatch(dt){
   if(training.on){updateTraining(dt);return;}
@@ -2320,7 +2369,7 @@ function updateHUD(dt){updateBossBar();
   // 过载：画面和声音
   const r=player.ovl/player.maxOvl;
   $('warp').style.opacity=clamp((r-0.5)*2,0,1)*0.8+(player.warp>0?0.5:0);
-  canvas.style.filter=r>0.5||player.warp>0?`hue-rotate(${Math.sin(gameTime*2)*25*clamp((r-0.5)*2,0,1)+(player.warp>0?40:0)}deg) saturate(${1+r*0.6})`:'';
+  canvas.style.filter=r>0.5||player.warp>0?`hue-rotate(${Math.sin(gameTime*2)*25*clamp((r-0.5)*2,0,1)+(player.warp>0?40:0)}deg) saturate(${1+r*0.6})`+corruptFilter():corruptFilter().trim();
   $('shieldfx').style.opacity=player.shield>0?0.8:0;
   if(actx){whisperGain.gain.value=clamp((r-0.5)*2,0,1)*0.22;whisperFilter.frequency.value=700+Math.sin(gameTime*1.7)*400+Math.sin(gameTime*5.3)*200;
     heartT-=dt;if(r>0.8&&heartT<=0){heartT=0.8;play('heart');}}
@@ -2468,6 +2517,7 @@ function renderLoadout(){
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});
 }
 function enterHub(){
+  if(typeof stopAllLoops==='function')stopAllLoops();
   state='hub';document.body.classList.add('inhub');document.exitPointerLock?.();
   $('hub').classList.add('show');$('matching').classList.remove('show');$('result').classList.remove('show');$('ready').classList.remove('show');$('pause').classList.remove('show');
   $('hurt').style.opacity=0;$('warp').style.opacity=0;canvas.style.filter='';setProgress(-1);$('announce').style.opacity=0;
@@ -2782,7 +2832,7 @@ const mKick=t=>mOsc('sine',120,40,t,.35,.55),mSnare=t=>{mNoise(t,.18,.25,1800,'b
 const mBass=(t,f,d)=>mOsc('sawtooth',f,f,t,d*.9,.09),mChoir=(t,f)=>{for(const m of [1,1.26,1.5])mOsc('triangle',f*m,f*m,t,1.6,.03);};
 // ============================================================ 按键自定义 + 手柄
 // 改键：把玩家按的键翻译成默认键再交给原来的处理函数（捕获阶段拦截，重新派发）
-const ACTIONS=[['KeyW','Forward'],['KeyS','Back'],['KeyA','Left'],['KeyD','Right'],['Space','Jump'],['ShiftLeft','Sprint'],['KeyR','Reload'],['KeyF','Interact'],['KeyX','Execute'],['KeyZ','Class ability'],['KeyT','Auspex'],
+const ACTIONS=[['KeyW','Forward'],['KeyS','Back'],['KeyA','Left'],['KeyD','Right'],['Space','Jump'],['ShiftLeft','Sprint'],['KeyR','Reload'],['KeyF','Interact'],['KeyX','Execute'],['KeyZ','Class ability'],['KeyT','Auspex'],['KeyY','Dark gift'],
   ['KeyE','Block'],['KeyB','Beacon'],['KeyM','Map'],['KeyV','Choke'],['KeyG','Void Rift'],['KeyQ','Slow Time'],['KeyC','Rune skill'],['KeyH','Help']];
 let REMAP={},BLOCK=new Set();
 function rebuildRemap(){REMAP={};BLOCK=new Set();const b=SET.keys||{};const used=new Set(Object.values(b));
@@ -2838,7 +2888,7 @@ function bolt(a,b,c){const pts=[];const n=7;for(let i=0;i<=n;i++){const p=a.clon
 function ultBanner(name,info){const b=$('ultBanner');b.innerHTML=`<div class="un" style="color:${info.color}">${name}</div><div class="us">${info.sub}</div>`;b.classList.remove('go');void b.offsetWidth;b.classList.add('go');
   const f=$('ultFlash');f.style.transition='none';f.style.background=`radial-gradient(ellipse at center,transparent 30%,${info.color} 130%)`;f.style.opacity=.85;requestAnimationFrame(()=>{f.style.transition='opacity .8s';f.style.opacity=0;});}
 // 特效本体：本地施放和队友收到 fx 时都调用
-function ultFx(d){const {k,x,z}=d;const y=1,P=new THREE.Vector3(x,y,z),I=ULT_INFO[k];if(!I)return;
+function ultFx(d){const {k,x,z}=d;const y=1,P=new THREE.Vector3(x||0,y,z||0),I=ULT_INFO[k];if(!I&&!['cloud','decoys','confuse'].includes(k))return;
   if(k==='surge'){ringAt(x,.3,z,0xb060ff,.5,8,.7,.18);ringAt(x,1.4,z,0xe0a0ff,.3,6,.55,.08);embersBlue(P,30);const s=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),tmat(0x8030ff,.5));s.position.copy(P);ufxAdd(s,.5,{grow:5,s0:.5,op:.5});play('choir');play('backlash');}
   else if(k==='stim'){for(let i=0;i<14;i++)hitSparks(P,null,1);ringAt(x,.2,z,0xff3030,.3,2.5,.4);play('frenzy');}
   else if(k==='grenade'){const s=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),tmat(0xffc060,.9));s.position.copy(P);ufxAdd(s,.35,{grow:3.5,s0:.3,op:.9});ringAt(x,.2,z,0xffa040,.5,5,.5,.15);
@@ -2851,6 +2901,9 @@ function ultFx(d){const {k,x,z}=d;const y=1,P=new THREE.Vector3(x,y,z),I=ULT_INF
     const rune=new THREE.Mesh(new THREE.RingGeometry(6.4,7,6),tmat(0xffd060,.6));rune.rotation.x=-Math.PI/2;rune.position.set(x,.05,z);ufxAdd(rune,6,{spin:.6,op:.6});
     ringAt(x,.2,z,0xffd060,.5,7,.6);play('choir');play('parry');}
   else if(k==='stomp'){ringAt(x,.2,z,0xffb050,.5,4,.45,.2);dust(P.clone().setY(.2),8);play('boom');}
+  else if(k==='cloud')addCloud(x,z);
+  else if(k==='decoys'){if(!isHost())spawnDecoys(d.list);}
+  else if(k==='confuse')confuseFx(x,z);
   else if(k==='pyre'){ringAt(x,.4,z,0xff6020,.5,6.5,.6,.35);ringAt(x,1.2,z,0xffc060,.3,5,.5,.15);const s=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),tmat(0xff8030,.6));s.position.copy(P);ufxAdd(s,.4,{grow:6,s0:.5,op:.6});play('melta');play('boom');}}
 // 本地施放（classAbility 里调用）
 function ultCast(k,extra={}){const Z=ZAB[k],I=ULT_INFO[k];ultBanner(Z.name,I);player.punch=.08;player.shake=Math.max(player.shake,.35);
@@ -3091,6 +3144,8 @@ function renderLobby(){
 function hostRecv(id,m){
   let r=net.remotes.get(id);
   if(m.t==='daemons'){spawnDaemons(m.type,m.n,m.x,m.z);return;}
+  if(m.t==='decoys'){spawnDecoys(m.list);return;}
+  if(m.t==='confuse'){for(const id of m.ids){const e=enemyById(id);if(e)e.confusedT=7;}return;}
   if(m.t==='fx2'){fxPlay(m.k,m.d);bcast(m,id);return;}
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,paint:m.paint||0,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
@@ -3227,7 +3282,7 @@ function addRemoteGun(model,cls){if(CLS[cls]&&CLS[cls].eye)return;const g=new TH
 function prepareMatch(seedArg){
   if(!isClient())pendingThreat=loadout.threat||1;
   seed=seedArg??Math.floor(Math.random()*1e9);rng=mulberry32(seed);enemySeq=0;net.missing=new Map();distCache=new Map();
-  for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const b of plasmaBalls)scene.remove(b.m);plasmaBalls=[];for(const p of firePatches)scene.remove(p.m);firePatches=[];hazards=[];for(const f of hazFx)scene.remove(f.m);hazFx=[];for(const f of ufx)scene.remove(f.m);ufx=[];player.spin=0;player.aiming=false;for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
+  for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const b of plasmaBalls)scene.remove(b.m);plasmaBalls=[];for(const p of firePatches)scene.remove(p.m);firePatches=[];hazards=[];for(const f of hazFx)scene.remove(f.m);hazFx=[];for(const c of clouds)scene.remove(c.m);clouds=[];reap=null;for(const f of ufx)scene.remove(f.m);ufx=[];player.spin=0;player.aiming=false;for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   if(!isNet())pendingBiome=null;curBiome=pickBiome();buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
@@ -3246,6 +3301,7 @@ $('readyBtn').onclick=()=>{
 };
 let deathT=0;
 function beginDeath(){
+  stopAllLoops();
   if(state!=='playing')return;state='dying';deathT=2.2;mouseDown=false;swordOut=0;swing=0;MS.phase='none';ex.active=false;player.blocking=false;sawEngine(false,'idle');humEngine(false,false);
   play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('You have fallen...',2);
 }
@@ -3309,7 +3365,7 @@ addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET
   keys[e.code]=true;if(state!=='playing')return;
   if(e.code==='Space'&&player.onGround&&!CLS[cls].noJump){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
-  if(e.code==='KeyZ')classAbility();if(e.code==='KeyT'){toggleAuspex();return;}
+  if(e.code==='KeyZ')classAbility();if(e.code==='KeyT'){toggleAuspex();return;}if(e.code==='KeyY'){castGodSkill();return;}
   if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('Only Tidecallers can use psychic powers · press Z for your class ability',1.2);return;}
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');

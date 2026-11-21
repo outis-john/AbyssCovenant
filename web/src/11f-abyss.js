@@ -13,30 +13,31 @@ function taintAffinity(g,n){HELL.aff[g]=(HELL.aff[g]||0)+n;}
 function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.min(100,(player.taint||0)+n);if(g)taintAffinity(g,n/4);}
 function pickGod(){return Object.entries(HELL.aff).sort((a,b)=>b[1]-a[1])[0][0];}
 function updateAbyss(dt){if(!match)return;
-  // 过载偏高时持续侵蚀；灵能使用记入万变
   const r=player.ovl/player.maxOvl;if(r>0.4&&!HELL.on)addTaint(dt*(r-0.4)*CFG.taint.ovlRate,'change');
+  if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(Object.keys(GODS)[Math.floor(Math.random()*4)]);
   if(!HELL.on&&r<0.2)player.taint=Math.max(0,(player.taint||0)-dt*1.5);   // 不用灵能时侵蚀慢慢消退
   if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
-  if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
-  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'Beyond the Abyss');
-    HELL.waveT-=dt;if(HELL.waveT<=0&&HELL.t>2){HELL.waveT=CFG.taint.wave;spawnDaemons(G.daemon,CFG.taint.waveN);}
-    $('hellTint').style.opacity=.5+Math.sin(gameTime*3)*.15;player.warp=Math.max(player.warp||0,.3);
-    if(Math.random()<dt*.25)announce(G.whisper,1.6);
+  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god],k=1-HELL.t/CFG.taint.hell;setProgress(k,'Falling');
+    $('hellTint').style.opacity=.45+Math.sin(gameTime*4)*.2;player.warp=Math.max(player.warp||0,.6);player.shake=Math.max(player.shake,.08+k*.12);
+    HELL.wT=(HELL.wT||0)-dt;if(HELL.wT<=0){HELL.wT=1.6;announce(G.whisper,1.5);play('backlash');}
     if(HELL.t<=0)exitHell();}
+  else $('hellTint').style.opacity=player.corrupt?.12+Math.sin(gameTime*1.3)*.06:0;
+  updateGodSkill(dt);
   $('taint').firstElementChild.style.width=(player.taint||0)+'%';$('taintTxt').textContent=Math.round(player.taint||0)+'%';
   const B=player.bless&&GODS[player.bless];$('blessTag').innerHTML=B?`<span style="color:${B.css}">◆ ${B.bless}</span>`:'';}
 function realmVisual(G){scene.fog.color.setHex(G.fog);scene.fog.density=.055;scene.background.setHex(G.bg);for(const l of candleLights)l.color.setHex(G.lamp);
-  matBrick.color.setHex(G.color).lerp(new THREE.Color(0xffffff),.45);
-  $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
-function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.waveT=1.2;const G=GODS[god];
+  matBrick.color.setHex(G.color).lerp(new THREE.Color(0xffffff),.45);$('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
+// 侵蚀满了：随机一位邪神开始腐化你（6 秒堕落过程，期间不会受伤），结束后获得赐福 + 专属灵能技能，画面留下扭曲
+function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.wT=0;const G=GODS[god];
   realmVisual(G);play('backlash');play('hole');player.shake=.6;
-  ultBanner(G.realm,{color:G.css,sub:`Dragged beyond the Abyss — ${G.name} is watching you. Survive  ${CFG.taint.hell} s!`});
-  announce(G.whisper,3);}
-function exitHell(){HELL.on=false;player.taint=0;applyBiome();$('hellTint').style.opacity=0;setProgress(-1);
-  const G=GODS[HELL.god];grantBless(HELL.god);for(const k in HELL.aff)HELL.aff[k]=0;
-  // 仆从消散
-  if(!isClient())for(const e of enemies)if(e.alive&&e.daemon){e.alive=false;scene.remove(e.g);puff(e.g.position.clone().setY(1),6,G.color,1.2);}
-  ultBanner(G.bless,{color:G.css,sub:G.desc});play('choir');}
+  ultBanner(G.realm,{color:G.css,sub:`${G.name} claims you. Your soul is being reshaped...`});}
+function exitHell(){HELL.on=false;player.taint=0;applyBiome();setProgress(-1);
+  const G=GODS[HELL.god];grantBless(HELL.god);player.godSkill=HELL.god;player.godCd=0;player.corrupt=(player.corrupt||0)+1;
+  $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 45%,${G.css} 150%)`;
+  ultBanner(G.bless,{color:G.css,sub:`${G.desc} · New power: [Y] ${GOD_SKILL[HELL.god].name}`});play('choir');}
+function corruptFilter(){if(!player.corrupt||state==='hub')return'';const c=Math.min(3,player.corrupt);return ` hue-rotate(${Math.sin(gameTime*.9)*8*c}deg) blur(${(.25+Math.sin(gameTime*2.3)*.2)*c}px) contrast(${1+.05*c})`;}
+function stopAllLoops(){if(typeof loops!=='undefined')for(const k of Object.keys(loops))loopSound(k,false);if(typeof whisperGain!=='undefined'&&whisperGain)whisperGain.gain.value=0;
+  if(HELL.on){HELL.on=false;applyBiome();}$('hellTint').style.opacity=0;}
 function grantBless(god){const old=player.bless;if(old===god)return;
   if(old)revertBless(old);player.bless=god;
   if(god==='blood'){player.gunMul*=.8;WEAPONS[2].dmg*=1.4;}
@@ -50,7 +51,7 @@ function revertBless(god){if(god==='blood'){player.gunMul/=.8;WEAPONS[2].dmg/=1.
 // 仆从由房主生成（队友发请求）
 function spawnDaemons(type,n,x=player.pos.x,z=player.pos.z){if(isClient()){sendNet({t:'daemons',type,n,x,z});return;}
   for(let k=0;k<n;k++){const a=Math.random()*6.28;const e=spawnEnemy(type,x+Math.cos(a)*7,z+Math.sin(a)*7);e.daemon=true;embersBlue(e.g.position.clone().setY(1),8);}play('growl');}
-function resetAbyss(){HELL.on=false;HELL.god=null;for(const k in HELL.aff)HELL.aff[k]=0;player.taint=0;player.bless=null;player.atkSpd=1;$('hellTint').style.opacity=0;}
+function resetAbyss(){player.godSkill=null;player.corrupt=0;decoys.forEach(d=>scene.remove(d.m));decoys=[];HELL.on=false;HELL.god=null;for(const k in HELL.aff)HELL.aff[k]=0;player.taint=0;player.bless=null;player.atkSpd=1;$('hellTint').style.opacity=0;}
 // 仆从外观：在基础恶魔上换形
 Object.assign(ENEMY_BUILD,{
   dblood:e=>{ENEMY_BUILD.hound(e);for(const s of [-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.1,.6,4),new THREE.MeshLambertMaterial({color:0x2a0a0a}));h.position.set(s*.25,.45,.1);h.rotation.z=-s*.5;e.parts.head.add(h);}e.daemon=true;},

@@ -40,7 +40,7 @@ const CFG={
     axe:   {dmg:54,windup:.16,slash:.16},   // 链锯战斧
   },
   // 深渊侵蚀：过载偏高 / 反噬 / 被灵能攻击打中会涨；满了被拖入深渊彼岸 hell 秒，活下来获得邪神赐福
-  taint:{perCast:36,ovlRate:40,backlash:45,psyHit:15,hell:20,wave:5,waveN:3},   // perCast：每放一次灵能 +36，连放 3 个就会被拖进深渊彼岸
+  taint:{perCast:36,ovlRate:40,backlash:45,psyHit:15,hell:6,wave:5,waveN:3},   // perCast：每放一次灵能 +36，连放 3 个就会被拖进深渊彼岸
   heavyHold:0.28,   // 按住左键多少秒算重击
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
