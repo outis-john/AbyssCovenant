@@ -27,9 +27,10 @@ function flankWarn(e){if(gameTime-TAC.flankBark<14)return;const v=e.g.position.c
   const fw=(-Math.sin(y)*v.x-Math.cos(y)*v.z)/L,rt=(Math.cos(y)*v.x-Math.sin(y)*v.z)/L;const side=fw<-.35?'behind us':rt>0?'right':'left';
   const sp=allies.filter(a=>a.alive&&!a.def.generic&&!a.vehicle&&!a.big);if(!sp.length)return;TAC.flankBark=gameTime;
   vox(pickOne(sp).id,pickOne([`Flankers — ${side}!`,`They’re working round us — ${side}!`,`Contact ${side}! Watch the flank!`]),true);if(actx){tone('square',520,390,.05,.16);tone('square',520,390,.05,.16,.2);}}
+const TAC_COVER=new Set(['soh','militia']);
 const _shooter=shooterAI;
 shooterAI=function(e,T,pp,to,dist,dt,W,band,burst,cool,interval){const a=arguments;
-  if(!(e.type==='soh'||e.type==='militia')||e.static||e.named||!NAV.ok||e.legsLost||dist<e.reach+.4||dist>band[1]+30)return _shooter.apply(null,a);
+  if(!TAC_COVER.has(e.type)||e.static||e.named||!NAV.ok||e.legsLost||dist<e.reach+.4||dist>band[1]+30)return _shooter.apply(null,a);
   const C=e.cov||(e.cov={ph:'none',re:Math.random()*1.5,t:0,chk:0});if(e.role===undefined)e.role=e.id%4===1?'flank':'cover';
   C.re-=dt;C.t-=dt;
   // 包抄：绕到玩家侧面再开打
@@ -62,18 +63,18 @@ function aimEnemy(maxD){const [o,d]=tacAim();let best=null,bs=1e9;for(const e of
     const perp=v.addScaledVector(d,-t).length(),tol=(e.vehicle||e.heavy?3:1.3)*e.g.scale.x+t*.02;if(perp>tol)continue;const sc=perp/tol+t*.003;if(sc>=bs)continue;const h=castRayWalls(o,d,t);if(h&&h.distance<t-2)continue;bs=sc;best=e;}return best;}
 // ---------------- 小队指令（Y）：对准敌人 = 集火；对准地面 = 坚守该处；对准天空 / 脚下 = 跟我来
 function squadOrder(){const live=allies.filter(a=>a.alive&&!a.parked);if(!live.length){announce('No squad to command',1);return;}
-  const E=aimEnemy(90);if(E){SQUAD.focus=E;SQUAD.focusT=15;SQUAD.ringT=0;announce('ORDER: FOCUS FIRE',1);vox('kaedric',pickOne(['Focus fire — that one!','All guns on my target!','Bring that one down!']));if(actx)tone('square',880,660,.05,.1);return;}
+  const E=aimEnemy(90);if(E){SQUAD.focus=E;SQUAD.focusT=15;SQUAD.ringT=0;announce('ORDER: FOCUS FIRE',1);vox(meV(),pickOne(['Focus fire — that one!','All guns on my target!','Bring that one down!']));if(actx)tone('square',880,660,.05,.1);return;}
   const P=aimGround(45);
   if(P&&P.distanceTo(player.pos)>5){SQUAD.order='hold';let i=0;for(const a of live){const ang=i*2.4,r=a.vehicle?7:(i?1.8+Math.sqrt(i)*1.3:0);a.hold=navCell(P.clone().add(V3(Math.sin(ang)*r,0,Math.cos(ang)*r)),a.vehicle?2:1);a.cmdHold=true;i++;}
-    ringAt(P.x,.15,P.z,0x60ff80,.5,4.5,1.1,.1);announce('ORDER: HOLD POSITION',1);vox('kaedric',pickOne(['Take that ground and hold it!','Dig in there, brothers!','Hold that position!']));}
-  else{SQUAD.order='follow';for(const a of live){if(a.cmdHold||SQUAD.order)a.hold=null;a.cmdHold=false;}announce('ORDER: FALL IN',1);vox('kaedric',pickOne(['On me, brothers!','Fall in — with me!','Form on me!']));}
+    ringAt(P.x,.15,P.z,0x60ff80,.5,4.5,1.1,.1);announce('ORDER: HOLD POSITION',1);vox(meV(),pickOne(['Take that ground and hold it!','Dig in there, brothers!','Hold that position!']));}
+  else{SQUAD.order='follow';for(const a of live){if(a.cmdHold||SQUAD.order)a.hold=null;a.cmdHold=false;}announce('ORDER: FALL IN',1);vox(meV(),pickOne(['On me, brothers!','Fall in — with me!','Form on me!']));}
   if(actx)tone('square',660,880,.05,.1);}
 function squadFocus(a){const F=SQUAD.focus;return F&&F.alive&&F.g.position.distanceTo(a.pos)<75?F:null;}
 // ---------------- 火力支援（战役里按 B）：泰坦在场就是火山炮，否则是舰队光矛
 function fireSupport(){if((CAMP.fs|0)<=0){announce('No fire support — regroup to rearm',1.3);return;}
   const P=aimGround(120);if(!P){announce('No target — aim at the ground',1);return;}if(P.distanceTo(player.pos)<10){announce('Danger close — strike refused',1);return;}
   CAMP.fs--;const tit=(OPEN.titans||[]).find(t=>t.side==='loyal'&&!t.dead);
-  vox(tit?'loken':'fleet',tit?'Legio Solaria acknowledges. Volcano cannon — on your mark, Sergeant!':'Lance strike authorised. Impact in four seconds — clear the zone!',true);
+  const a4=act4();vox(tit?(a4?'haldrek':'loken'):(a4?'ironfleet':'fleet'),tit?(a4?'Titan fire requested — volcano cannon on your mark!':'Legio Solaria acknowledges. Volcano cannon — on your mark, Sergeant!'):'Lance strike authorised. Impact in four seconds — clear the zone!',true);
   TAC.strikes.push({P,t:0,dur:4,tit,smoke:0,hit:false});if(actx){tone('sine',440,440,.06,.15);tone('sine',660,660,.06,.2,.18);}}
 function strikeBeam(S){const top=S.tit?S.tit.g.position.clone().add(V3(0,40,0)):S.P.clone().add(V3(18,190,-12));const d=S.P.clone().sub(top),L=d.length();
   const m=new THREE.Mesh(new THREE.CylinderGeometry(S.tit?.9:2.6,S.tit?.9:2.6,L,10,1,true),new THREE.MeshBasicMaterial({color:S.tit?0xffc070:0xbfe8ff,transparent:true,opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending}));
@@ -108,9 +109,9 @@ const LULLS={
 function buildCrate(P){const g=new THREE.Group();g.position.copy(P);const base=new THREE.Mesh(B3(1.3,.7,.9),lmat(0x3a3e2c));base.position.y=.35;g.add(base);const lid=new THREE.Mesh(B3(1.36,.12,.96),lmat(0x2c3022));lid.position.y=.76;g.add(lid);
   const band=new THREE.Mesh(B3(1.34,.12,.2),lmat(0xb89040));band.position.y=.5;g.add(band);const glow=new THREE.Mesh(B3(.3,.05,.3),lmat(0x80ff90,true));glow.position.y=.84;g.add(glow);g.userData.lid=lid;scene.add(g);return g;}
 function resupply(){const A=ammo[0],G=WEAPONS[0];if(A&&G&&isFinite(G.reserveMax)){A.res=G.reserveMax;A.mag=G.magSize;}player.hp=player.maxHp;CAMP.fs=Math.min(3,(CAMP.fs|0)+1);play('pickup');announce('Resupplied — fire support +1',1.4);}
-function startLull(lines){const live=lines.filter(([w])=>['kaedric','loken','fleet'].includes(w)||allies.some(a=>a.id===w&&a.alive));
+function startLull(lines){const live=lines.filter(([w])=>['kaedric','loken','fleet','corvan','ferrus','ironfleet'].includes(w)||allies.some(a=>a.id===w&&a.alive));
   const y=player.yaw,P=navCell(player.pos.clone().add(V3(-Math.sin(y)*5,0,-Math.cos(y)*5)));TAC.crate=buildCrate(P);
-  live.forEach(([w,t],i)=>later(1.5+i*5.5,()=>{if(w==='kaedric'||w==='loken'||w==='fleet'||allies.some(a=>a.id===w&&a.alive))vox(w,t,true);}));
+  live.forEach(([w,t],i)=>later(1.5+i*5.5,()=>{if(['kaedric','loken','fleet','corvan','ferrus','ironfleet'].includes(w)||allies.some(a=>a.id===w&&a.alive))vox(w,t,true);}));
   for(const a of allies)if(a.alive&&!a.cmdHold&&!a.vehicle)a.hold=null;const dur=3+live.length*5.5;CAMP.wp=P.clone();CAMP.wpName='RESUPPLY';objBanner('Regroup — resupply at the cache');
   CAMP.S={lull:true,t:0,got:false,update(dt){this.t+=dt;if(!this.got&&(player.pos.distanceTo(P)<2.6||this.t>dur+20)){this.got=true;resupply();if(TAC.crate)TAC.crate.userData.lid.rotation.x=-1.2;CAMP.wp=null;}
       if(this.got&&this.t>dur){if(TAC.crate)scene.remove(TAC.crate);TAC.crate=null;return true;}return false;}};}

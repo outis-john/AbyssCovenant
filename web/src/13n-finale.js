@@ -24,8 +24,8 @@ function victoryScene(done){const P=player.pos.clone(),yaw=player.yaw;const body
   const wave=k=>{const p=cloth.geometry.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i)+.75;p.setZ(i,Math.sin(x*3-gameTime*4)*.12*x);}p.needsUpdate=true;};
   const orbit=(a,r,h)=>shotAt(P.clone().add(V3(Math.sin(a)*r,h,Math.cos(a)*r)),P.clone().add(V3(0,1.6,0)));
   runScene([
-    {d:3.2,from:()=>orbit(yaw+Math.PI+.9,6.5,2.2),to:()=>orbit(yaw+Math.PI+.2,5.5,2),act(){play('choir');if(actx){chantDrone();}vox('kaedric','It is done. Brothers — to me.',true);},tick(dt){gameTime+=dt;wave();}},
-    {d:3.4,from:()=>orbit(yaw+Math.PI+.25,4.6,1.5),to:()=>orbit(yaw+Math.PI-.45,4.4,1.35),act(){vox(live[0]?live[0].id:'ardan','For the Emperor. For the Legion that was.',true);},tick(dt,k){gameTime+=dt;flag.position.y=P.y-4.5+Math.min(1,k*1.8)*4.5;wave();if(k<.5&&Math.random()<.3)dust(flag.position.clone().setY(0),2);}},
+    {d:3.2,from:()=>orbit(yaw+Math.PI+.9,6.5,2.2),to:()=>orbit(yaw+Math.PI+.2,5.5,2),act(){play('choir');if(actx){chantDrone();}vox(meV(),'It is done. Brothers — to me.',true);},tick(dt){gameTime+=dt;wave();}},
+    {d:3.4,from:()=>orbit(yaw+Math.PI+.25,4.6,1.5),to:()=>orbit(yaw+Math.PI-.45,4.4,1.35),act(){vox(live[0]?live[0].id:'ardan',act4()?'For the Gorgon! For Medusa!':'For the Emperor. For the Legion that was.',true);},tick(dt,k){gameTime+=dt;flag.position.y=P.y-4.5+Math.min(1,k*1.8)*4.5;wave();if(k<.5&&Math.random()<.3)dust(flag.position.clone().setY(0),2);}},
     {d:5.2,from:()=>orbit(yaw+Math.PI-.5,7,3),to:()=>shotAt(P.clone().add(V3(Math.sin(yaw+Math.PI-1.2)*26,22,Math.cos(yaw+Math.PI-1.2)*26)),P.clone().add(V3(0,1,0))),
       act(){titleCard('MISSION COMPLETE',(CAMP.L&&CAMP.L.title)||'',4.6);if(actx){tone('sine',220,220,.05,3.5);tone('sine',277,277,.04,3.5,.3);tone('sine',330,330,.04,3.5,.6);}},tick(dt){gameTime+=dt;wave();}}],
     ()=>{scene.remove(body);scene.remove(flag);for(const a of live)a.hold=null;if(done)done();});}

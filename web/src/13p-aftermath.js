@@ -3,7 +3,7 @@ const BOSS_FALL={
   mistress:{sub:'The hymn is broken',line:['tavik','The song… it is over. Silence — at last, silence.'],rout:'collapse'},
   malk:{sub:'Fallen',line:null,rout:'flee'}};
 function isCampBoss(e){return CAMP.on&&e&&e.named&&(e===CAMP.boss||e===CAMP.malk||e.type==='malk');}
-function bossFallScene(e){const P=e.g.position.clone().setY(0),kind=e.type==='malk'?'malk':'mistress',B=BOSS_FALL[kind];CAMP.bossFell=true;
+function bossFallScene(e){const P=e.g.position.clone().setY(0),kind=BOSS_FALL[e.type]?e.type:'mistress',B=BOSS_FALL[kind];CAMP.bossFell=true;
   const yaw=Math.atan2(player.pos.x-P.x,player.pos.z-P.z);
   // 镜头不穿墙：从 Boss 胸口往镜头位置打射线，被挡就缩到墙前；房间地图限制在天花板以下
   const at=(a,r,h)=>{if(!OPEN.on){h=Math.min(h,H-1.4);r=Math.min(r,7);}const c=P.clone().add(V3(Math.sin(yaw+a)*r,h,Math.cos(yaw+a)*r)),o=P.clone().setY(1.2),d=c.clone().sub(o),L=d.length();d.divideScalar(L);

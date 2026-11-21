@@ -136,7 +136,7 @@ function updateAllies(dt){
       if(!a.swHit&&k>.5){a.swHit=true;if(E&&E.g.position.distanceTo(a.pos)<E.r+2.3)allyStrike(a,E);}}
     else if(near&&a.swingCd<=0&&E){a.swing=.5;a.swHit=false;a.swingCd=a.role==='blade'?.6:.8;if(a.pos.distanceTo(player.pos)<16)play('whoosh');}
     if(a.role==='psyker'&&E&&CAMP.flags&&CAMP.flags.tavikPsy){a.psyCd-=dt;if(a.psyCd<=0){a.psyCd=6+Math.random()*2;tavikLightning(a,E);}}
-    if(J.chev){J.chev.position.y=(a.big?5.4:2.95)+Math.sin(gameTime*3+idx)*.05;J.chev.material.color.setHex(a.hp<a.maxHp*.35?0xffc040:0x60ff90);}
+    if(J.chev){J.chev.position.y=(a.big?5.4:2.95)+Math.sin(gameTime*3+idx)*.05;J.chev.material.color.setHex(a.turned?0xff3020:a.hp<a.maxHp*.35?0xffc040:0x60ff90);}
   }
   separateBodies();updateAllyTags();}
 function wrapA(x){while(x>Math.PI)x-=Math.PI*2;while(x<-Math.PI)x+=Math.PI*2;return x;}

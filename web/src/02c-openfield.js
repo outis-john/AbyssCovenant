@@ -70,7 +70,7 @@ function buildOpenField(theme){if(levelGroup)scene.remove(levelGroup);levelGroup
   colliders=[];wallMeshes=[];candles=[];roomTypes={};conn=new Set();OPEN.fires=[];OPEN.titans=[];OPEN.on=true;OPEN.theme=theme;const R=OPEN.R;
   for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i<G-1)conn.add(key(i,j,i+1,j));if(j<G-1)conn.add(key(i,j,i,j+1));}
   // 地形：可玩区几乎平整，外圈抬升成山丘
-  const S=560,N=140,geo=new THREE.PlaneGeometry(S,S,N,N);geo.rotateX(-Math.PI/2);const p=geo.attributes.position,col=[];const ash=theme==='ash';const c0=new THREE.Color(ash?0x5a5852:0x8a7c6c),c1=new THREE.Color(ash?0x2e2c2a:0x544a42),c2=new THREE.Color(ash?0x6a6660:0x9a8266);
+  const S=560,N=140,geo=new THREE.PlaneGeometry(S,S,N,N);geo.rotateX(-Math.PI/2);const p=geo.attributes.position,col=[];const ash=theme==='ash',ur=theme==='urgall';const c0=new THREE.Color(ur?0x5a4e46:ash?0x5a5852:0x8a7c6c),c1=new THREE.Color(ur?0x2c2622:ash?0x2e2c2a:0x544a42),c2=new THREE.Color(ur?0x4a3228:ash?0x6a6660:0x9a8266);
   for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);const n=Math.sin(x*.07)*Math.cos(z*.06)+Math.sin(x*.023+z*.031)*1.6;
     const y=groundH(x,z);p.setY(i,y);const c=c0.clone().lerp(c1,Math.min(1,Math.max(0,(n+1.5)/3))).lerp(c2,Math.min(1,Math.max(0,(y-8)/30)));col.push(c.r,c.g,c.b);}
   geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.attributes.uv.array.forEach((v,i,a)=>a[i]=v*S/4);geo.computeVertexNormals();
@@ -79,20 +79,22 @@ function buildOpenField(theme){if(levelGroup)scene.remove(levelGroup);levelGroup
   for(const [x,z,w,d] of [[0,-R-1,2*R+4,2],[0,R+1,2*R+4,2],[-R-1,0,2,2*R+4],[R+1,0,2,2*R+4]])colliders.push({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2});
   for(let i=0;i<40;i++){const a=rng()*Math.PI*2;const r=R+oRand(1,6);rubble(Math.cos(a)*r,Math.sin(a)*r,oRand(1.2,2.6));}
   // 天空、光照、远景
-  skyDome(ash?0x0e0e10:0x1a1012,ash?0x5a4a3a:0x9a5a2c);const sun=new THREE.DirectionalLight(0xffc890,2.1);sun.position.set(-60,80,-40);levelGroup.add(sun);levelGroup.add(new THREE.AmbientLight(0x8a6a58,.9));
-  skyline(150,260,38,new THREE.MeshLambertMaterial({color:0x1a1614}),true);
+  skyDome(ur?0x1a0c0a:ash?0x0e0e10:0x1a1012,ur?0xc0501e:ash?0x5a4a3a:0x9a5a2c);const sun=new THREE.DirectionalLight(0xffc890,2.1);sun.position.set(-60,80,-40);levelGroup.add(sun);levelGroup.add(new THREE.AmbientLight(0x8a6a58,.9));if(ur)levelGroup.add(new THREE.HemisphereLight(0xffa070,0x3a2418,1.1));
+  if(ur){const rm=new THREE.MeshLambertMaterial({color:0x14100e});for(let i=0;i<80;i++){const a=i/80*Math.PI*2+rng()*.05,r=oRand(165,250),h=oRand(18,70);const m=new THREE.Mesh(new THREE.ConeGeometry(oRand(10,26),h,5),rm);m.position.set(Math.cos(a)*r,groundH(Math.cos(a)*r,Math.sin(a)*r)+h/2-4,Math.sin(a)*r);m.rotation.y=rng()*3;levelGroup.add(m);}}
+  else skyline(150,260,38,new THREE.MeshLambertMaterial({color:0x1a1614}),true);
   // 战场布景
   OPEN.keep=[];const free=(x,z,r)=>OPEN.keep.every(k=>Math.hypot(k[0]-x,k[1]-z)>k[2]+r);
-  OPEN.keep.push([0,58,12],[0,-50,18],[0,0,10]);
-  for(let i=0;i<16;i++){const x=oRand(-R+12,R-12),z=oRand(-R+12,R-12),w=oRand(9,20),d=oRand(8,15);if(!free(x,z,Math.max(w,d)/2+2))continue;OPEN.keep.push([x,z,Math.max(w,d)/2]);ruinBuilding(x,z,w,d,oRand(5,10));}
+  OPEN.keep.push([0,58,12],[0,-50,18],[0,0,10]);OPEN.keep.push(...(OPEN.extraKeep||[]));
+  for(let i=0;i<(ur?7:16);i++){const x=oRand(-R+12,R-12),z=oRand(-R+12,R-12),w=oRand(9,20),d=oRand(8,15);if(!free(x,z,Math.max(w,d)/2+2))continue;OPEN.keep.push([x,z,Math.max(w,d)/2]);ruinBuilding(x,z,w,d,oRand(5,10));}
   for(let i=0;i<18;i++){const x=oRand(-R+5,R-5),z=oRand(-R+5,R-5),r=oRand(2.5,6);if(free(x,z,r))crater(x,z,r);}
   for(let i=0;i<3;i++){const x=oRand(-R+15,R-15),z=oRand(-R+15,R-15);if(free(x,z,10)){OPEN.keep.push([x,z,9]);fallenSpire(x,z,oRand(12,18),rng()*Math.PI);}}
-  for(let i=0;i<5;i++){const x=oRand(-R+8,R-8),z=oRand(-R+8,R-8);if(free(x,z,3)){OPEN.keep.push([x,z,3]);statue(x,z);}}
+  for(let i=0;i<(ur?0:5);i++){const x=oRand(-R+8,R-8),z=oRand(-R+8,R-8);if(free(x,z,3)){OPEN.keep.push([x,z,3]);statue(x,z);}}
+  if(ur)for(let i=0;i<26;i++){const x=oRand(-R+5,R-5),z=oRand(-R+5,R-5);if(free(x,z,3))rubble(x,z,oRand(1.6,3.2));}
   for(let i=0;i<5;i++){const x=oRand(-R+8,R-8),z=oRand(-R+8,R-8);if(free(x,z,4)){OPEN.keep.push([x,z,4]);wreck(x,z,rng()*Math.PI);}}
   for(let i=0;i<9;i++){const x=oRand(-R+6,R-6),z=oRand(-R+6,R-6);if(free(x,z,3))sandbags(x,z,oRand(3,6),rng()*Math.PI);}
   for(let i=0;i<10;i++){const x=oRand(-R+4,R-4),z=oRand(-R+4,R-4);if(free(x,z,1))addFire(x,.1,z,oRand(.8,1.6));}
   OPEN.war=warLayer();podCell=[G-1,G-1];navBuild();
-  applyBiome();scene.fog.density=ash?.012:.0075;scene.fog.color.setHex(ash?0x3a3632:0x6a4228);scene.background.setHex(ash?0x2a2622:0x5a3420);
+  applyBiome();scene.fog.density=ur?.0085:ash?.012:.0075;scene.fog.color.setHex(ur?0x5a2a18:ash?0x3a3632:0x6a4228);scene.background.setHex(ur?0x4a2014:ash?0x2a2622:0x5a3420);
   if(ash){for(let i=0;i<60;i++){const x=oRand(-R+3,R-3),z=oRand(-R+3,R-3);const b=new THREE.Mesh(B3(.5,.3,1.6),new THREE.MeshLambertMaterial({color:0x2a2622}));b.position.set(x,.15,z);b.rotation.y=rng()*3;levelGroup.add(b);}}}
 // 地标：唱诗之城的 Sirenhold 大教堂（关卡脚本按需调用）
 function sirenhold(cx,cz,w=26,d=20,h=13){ruinWall(cx-w/2,cz+d/2,cx-3,cz+d/2,h);ruinWall(cx+3,cz+d/2,cx+w/2,cz+d/2,h);ruinWall(cx-w/2,cz-d/2,cx+w/2,cz-d/2,h);ruinWall(cx-w/2,cz-d/2,cx-w/2,cz+d/2,h,[.5]);ruinWall(cx+w/2,cz-d/2,cx+w/2,cz+d/2,h,[.5]);
