@@ -385,7 +385,7 @@ const CFG={
     tpred: {hp:1800,speed:2.6,dmg:40,reach:3,scale:1,color:0x2f5a52},                     // 叛军掠食者坦克
     rtank: {hp:900, speed:2.4,dmg:30,reach:3,scale:1,color:0x5a5444},                     // 伊斯塔万叛军坦克
     tdread:{hp:2200,speed:2.4,dmg:48,reach:3.2,scale:1.75,color:0x3a6e62},                // 叛军无畏（康坦普托）
-    malk:  {hp:2400,speed:4.6,dmg:30,reach:2.3,scale:1.25,color:0x2f5a52},                // 马尔克中士（第三幕 Boss）
+    malk:  {hp:7200,speed:4.8,dmg:36,reach:2.3,scale:1.25,color:0x2f5a52},                // 马尔克中士（第三幕 Boss）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
@@ -878,7 +878,7 @@ function killEnemy(e,dir,explode,how={}){
   scene.remove(e.g);if(!how.melt)spawnBlood(e.g.position.clone().setY(1),dir,24);
   if(!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+6);
   match.kills++;addProgress('kill',1);if(e.elite){addProgress('elite',1);match.elites++;}
-  if(!isClient()){const x=e.g.position.x,z=e.g.position.z;if(rng()<0.25)netDrop('relic',x,z);else if(Math.random()<0.35)netDrop('ammo',x+.5,z);}
+  if(!isClient()){const x=e.g.position.x,z=e.g.position.z;if(CAMP.on){if(!e.static&&Math.random()<(e.marine?.35:.22))netDrop('ammo',x+.5,z);}else if(rng()<0.25)netDrop('relic',x,z);else if(Math.random()<0.35)netDrop('ammo',x+.5,z);}
 }
 
 // ============================================================ 切割断肢：按刀刃扫过的平面把部位切成两半
@@ -1512,7 +1512,7 @@ Object.assign(sfx,{
 // ============================================================ 处决：需要充能，动作由手持武器决定，期间无敌，回复等量生命
 const ex={active:false,t:0,dur:1.1,type:'',target:null,fired:{}};
 const exChain={until:0,left:0};
-const canExecute=e=>player.exCharge>=100&&e.alive&&!e.boss&&!e.static&&!e.vehicle&&!e.heavy&&(!e.elite||e.hp<=e.maxHp*0.5);
+const canExecute=e=>player.exCharge>=100&&e.alive&&!e.boss&&!e.static&&!e.vehicle&&!e.heavy&&(!e.named||e.hp<=e.maxHp*.12)&&(!e.elite||e.hp<=e.maxHp*0.5);
 function executeTarget(){if(player.exCharge<100)return null;const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));let best=null,bd=3.6;
   for(const e of enemies){if(!canExecute(e))continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<bd&&to.normalize().dot(fwd)>0.2){bd=d;best=e;}}return best;}
 function execute(mode='full'){
@@ -3268,12 +3268,12 @@ $('joinBtn').onclick=()=>{initAudio();joinRoom($('joinCode').value);};
 $('lobbyLeave').onclick=leaveRoom;
 
 // ============================================================ 设置（Esc 暂停菜单 / 战舰里的“设置”按钮）+ 按键说明（H）
-function loadSet(){const d={sens:1,vol:75,music:60,fov:80,pix:3,fps:false,seenHelp:false};try{return Object.assign(d,JSON.parse(localStorage.getItem('abyss_settings'))||{});}catch(e){return d;}}
+function loadSet(){const d={sens:1,vol:75,music:60,fov:80,pix:3,fps:false,seenHelp:false,voice:85};try{return Object.assign(d,JSON.parse(localStorage.getItem('abyss_settings'))||{});}catch(e){return d;}}
 const SET=loadSet();
 function saveSet(){try{localStorage.setItem('abyss_settings',JSON.stringify(SET));}catch(e){}}
 function applySet(){camera.fov=SET.fov;camera.updateProjectionMatrix();PIX=SET.pix;resize();if(master)master.gain.value=0.75*SET.vol/75;
   perfMon.on=SET.fps;$('perf').style.display=SET.fps?'':'none';}
-const SET_ROWS=[['sens','Mouse sensitivity',0.2,3,0.05,v=>v.toFixed(2)+'×'],['vol','Volume',0,100,1,v=>v+'%'],['music','Music volume',0,100,1,v=>v+'%'],['fov','Field of view',60,110,1,v=>v+'°'],['pix','Pixel size (bigger = more retro, smoother)',1,6,1,v=>v+'']];
+const SET_ROWS=[['sens','Mouse sensitivity',0.2,3,0.05,v=>v.toFixed(2)+'×'],['vol','Volume',0,100,1,v=>v+'%'],['music','Music volume',0,100,1,v=>v+'%'],['fov','Field of view',60,110,1,v=>v+'°'],['pix','Pixel size (bigger = more retro, smoother)',1,6,1,v=>v+''],['voice','Voice acting (0 = off)',0,100,1,v=>v?v+'%':'Off']];
 function openSettings(){const b=$('setRows');
   b.innerHTML=SET_ROWS.map(([k,n,a,z,st])=>`<label class="setrow"><span>${n}</span><input type="range" id="set_${k}" min="${a}" max="${z}" step="${st}" value="${SET[k]}"><b id="setv_${k}"></b></label>`).join('')+
     `<label class="setrow"><span>Show FPS (F3)</span><input type="checkbox" id="set_fps" ${SET.fps?'checked':''}></label>`;
@@ -3755,13 +3755,14 @@ const SPEAKER={kaedric:'Sgt. Kaedric Vorne',ardan:'Brother Ardan',vell:'Brother 
   loken:'Captain Loken',malk:'Brother Malk',tarvitz:'Captain Tarvitz',fleet:'Vengeful Spirit · Bridge',angron:'Angron'};
 // ---------------- 无线电字幕
 const VX={q:[],cur:null,t:0,lastBark:-9};
-function vox(who,text,force){if(!force&&(VX.q.length>0||gameTime-VX.lastBark<3.5))return;if(!force)VX.lastBark=gameTime;VX.q.push({who,text});}
-function voxClear(){VX.q=[];VX.cur=null;const v=$('vox');if(v&&v.classList)v.classList.remove('show');}
+function vox(who,text,force){if(!force&&(VX.q.length>0||gameTime-VX.lastBark<3.5))return;if(!force)VX.lastBark=gameTime;VX.q.push({who,text,force:!!force});}
+function voxClear(){VX.q=[];VX.cur=null;try{if(typeof speechSynthesis!=='undefined')speechSynthesis.cancel();}catch(e){}const v=$('vox');if(v&&v.classList)v.classList.remove('show');}
 function updateVox(dt){const v=$('vox');if(!v||!v.classList)return;
   if(VX.cur){VX.t-=dt;if(VX.t<=0){VX.cur=null;v.classList.remove('show');}}
   if(!VX.cur&&VX.q.length){VX.cur=VX.q.shift();VX.t=2.2+VX.cur.text.length*.045;const c=VOX_COL[VX.cur.who]||'#d8d0c0';
     v.innerHTML=`<b style="color:${c}">${SPEAKER[VX.cur.who]||((allies.find(x=>x.id===VX.cur.who)||{}).name)||VX.cur.who}</b><span>${VX.cur.text}</span>`;v.classList.add('show');
-    if(actx){tone('square',1150,900,.04,.05);tone('square',820,820,.03,.04,.07);noiseHit(2400,.05,.12,'bandpass');}}}
+    if(actx){tone('square',1150,900,.04,.05);tone('square',820,820,.03,.04,.07);noiseHit(2400,.05,.12,'bandpass');}
+    if(typeof speakLine==='function'){const u=speakLine(VX.cur);if(u){VX.t=Math.max(VX.t,3)+6;u.onend=()=>{if(VX.cur&&VX.cur.u===u)VX.t=Math.min(VX.t,.45);};VX.cur.u=u;}}}}
 // ---------------- 标题卡
 function titleCard(big,small,dur=3.2){const t=$('titleCard');if(!t||!t.classList)return;t.innerHTML=`<div class="tb">${big}</div><div class="ts">${small||''}</div>`;t.classList.remove('go');void t.offsetWidth;t.style.setProperty('--d',dur+'s');t.classList.add('go');if(actx){tone('sine',55,40,.25,2.6);noiseHit(180,.12,2.2);}}
 // ---------------- 导演系统：一串镜头（起止机位可以跟随演员）、每个镜头开头执行动作
@@ -4227,6 +4228,69 @@ CSTEPS['3-3']=[
 const _updCamp=updateCampaign;updateCampaign=function(dt){if(updateTransition(dt)){updateVox(dt);return;}updateInter(dt);updateGuns(dt);updateArtillery(dt);_updCamp(dt);};
 // F 键：先尝试机枪阵地
 addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&CAMP.on&&state==='playing')toggleMount();},true);
+// ============================================================ 战役收尾：配音（浏览器语音合成，低沉缓慢、像诵经）· 胜利动画 · Boss 强化 · 战场弹药/灯光
+// ---------------- 配音：每个角色一套音高/语速；剧情台词下面垫一层低沉的管风琴和弦
+const VOICE={kaedric:{p:.62,r:.86},ardan:{p:.8,r:.92},vell:{p:.85,r:.95},krosk:{p:.5,r:.84},lucan:{p:.9,r:.9},tavik:{p:.42,r:.74},hesk:{p:.1,r:.66},loken:{p:.66,r:.84},
+  malk:{p:.48,r:.82},tarvitz:{p:.75,r:.86},fleet:{p:.95,r:.98},angron:{p:.05,r:.8},vox:{p:.7,r:.9}};
+let ttsVoice=null,ttsTried=0;
+function pickVoice(){if(ttsVoice||typeof speechSynthesis==='undefined')return ttsVoice;const vs=speechSynthesis.getVoices();if(!vs.length){return null;}
+  const pref=['Google UK English Male','Microsoft Guy','Microsoft Ryan','Microsoft David','Daniel','Arthur','Alex','Fred','Microsoft Mark','Google US English'];
+  for(const n of pref){const v=vs.find(v=>v.name.includes(n));if(v){ttsVoice=v;return v;}}ttsVoice=vs.find(v=>/^en/i.test(v.lang))||vs[0];return ttsVoice;}
+function chantDrone(){if(!actx)return;for(const [f,v] of [[49,.05],[73.5,.04],[98,.035],[147,.018]])tone('sine',f,f*.995,v*(SET.voice/100),3.4);noiseHit(160,.02*(SET.voice/100),2.4);}
+function speakLine(L){if(!SET.voice||typeof speechSynthesis==='undefined'||typeof SpeechSynthesisUtterance==='undefined')return null;
+  try{const txt=L.text.replace(/—/g,', ').replace(/…/g,'... ').replace(/’/g,"'");const u=new SpeechSynthesisUtterance(txt);const V=VOICE[L.who]||(allies.find(a=>a.id===L.who)?{p:.75,r:.92}:VOICE.vox);
+    u.pitch=V.p;u.rate=V.r;u.volume=Math.min(1,SET.voice/100);const v=pickVoice();if(v)u.voice=v;u.lang='en-GB';speechSynthesis.speak(u);if(L.force)chantDrone();return u;}catch(e){return null;}}
+if(typeof speechSynthesis!=='undefined'&&speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',()=>{ttsVoice=null;pickVoice();});
+// ---------------- 胜利动画：队友围拢、竖起军旗、镜头环绕后升上战场全景，“MISSION COMPLETE”
+function victoryScene(done){const P=player.pos.clone(),yaw=player.yaw;const body=buildCharacter(cls);body.position.copy(P);body.rotation.y=yaw+Math.PI;scene.add(body);
+  const live=allies.filter(a=>a.alive&&!a.vehicle&&!a.parked);live.forEach((a,i)=>{const ang=yaw+(i-(live.length-1)/2)*.34;const r=4.2+(i%2)*1.8;a.hold=P.clone().add(V3(Math.sin(ang)*r,0,Math.cos(ang)*r));a.pos.lerp(a.hold,.6);a.target=null;});
+  for(const e of enemies)if(e.alive&&e.g.position.distanceTo(P)>8)e.stun=99;
+  // 军旗：旗杆从地里升起，忠诚派的象牙白旗面 + 海绿镶边
+  const flag=new THREE.Group();flag.position.copy(P).add(V3(-Math.sin(yaw)*1.6,-4.5,-Math.cos(yaw)*1.6));scene.add(flag);
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,4.6,6),lmat(0x3a2a1a));pole.position.y=2.3;flag.add(pole);const top=new THREE.Mesh(new THREE.OctahedronGeometry(.22),lmat(0xc8a040));top.position.y=4.7;flag.add(top);
+  const cloth=new THREE.Mesh(new THREE.PlaneGeometry(1.5,2.2,6,6),new THREE.MeshLambertMaterial({color:0xe8e0c8,side:THREE.DoubleSide}));cloth.position.set(.78,3.3,0);flag.add(cloth);
+  const trim=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.2),new THREE.MeshLambertMaterial({color:0x3c6e62,side:THREE.DoubleSide}));trim.position.set(.78,2.25,.01);flag.add(trim);
+  const eye=new THREE.Mesh(new THREE.CircleGeometry(.32,16),new THREE.MeshLambertMaterial({color:0x1a1d1e,side:THREE.DoubleSide}));eye.position.set(.78,3.4,.01);flag.add(eye);
+  const wave=k=>{const p=cloth.geometry.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i)+.75;p.setZ(i,Math.sin(x*3-gameTime*4)*.12*x);}p.needsUpdate=true;};
+  const orbit=(a,r,h)=>shotAt(P.clone().add(V3(Math.sin(a)*r,h,Math.cos(a)*r)),P.clone().add(V3(0,1.6,0)));
+  runScene([
+    {d:3.2,from:()=>orbit(yaw+Math.PI+.9,6.5,2.2),to:()=>orbit(yaw+Math.PI+.2,5.5,2),act(){play('choir');if(actx){chantDrone();}vox('kaedric','It is done. Brothers — to me.',true);},tick(dt){gameTime+=dt;wave();}},
+    {d:3.4,from:()=>orbit(yaw+Math.PI+.25,4.6,1.5),to:()=>orbit(yaw+Math.PI-.45,4.4,1.35),act(){vox(live[0]?live[0].id:'ardan','For the Emperor. For the Legion that was.',true);},tick(dt,k){gameTime+=dt;flag.position.y=P.y-4.5+Math.min(1,k*1.8)*4.5;wave();if(k<.5&&Math.random()<.3)dust(flag.position.clone().setY(0),2);}},
+    {d:5.2,from:()=>orbit(yaw+Math.PI-.5,7,3),to:()=>shotAt(P.clone().add(V3(Math.sin(yaw+Math.PI-1.2)*26,22,Math.cos(yaw+Math.PI-1.2)*26)),P.clone().add(V3(0,1,0))),
+      act(){titleCard('MISSION COMPLETE',(CAMP.L&&CAMP.L.title)||'',4.6);if(actx){tone('sine',220,220,.05,3.5);tone('sine',277,277,.04,3.5,.3);tone('sine',330,330,.04,3.5,.6);}},tick(dt){gameTime+=dt;wave();}}],
+    ()=>{scene.remove(body);scene.remove(flag);for(const a of live)a.hold=null;if(done)done();});}
+const _campaignWin=campaignWin;campaignWin=function(){CAMP.wp=null;const id=CAMP.id;
+  if(id==='3-3')victoryScene(()=>CAMP.outro[id](()=>campEnd(true)));else CAMP.outro[id](()=>victoryScene(()=>campEnd(true)));};
+// ---------------- Boss 强化
+// 马尔克：7200 血；新招——砸地冲击波（红圈预警 1 秒）、扔三颗破甲手雷（落点预警）；二阶段带两名 Justaerin 风格精英，三阶段狂暴
+const _malkAI=malkAI;malkAI=function(e,T,pp,to,dist,dt){e.slamCd=(e.slamCd??5)-dt;e.nadeCd=(e.nadeCd??8)-dt;
+  if(e.slam>0){e.slam-=dt;e.parts.armR.rotation.x=-2.8;e.parts.armL.rotation.x=-2.8;if(e.slam<=0){const P=e.g.position.clone();ringAt(P.x,.2,P.z,0xff8030,.5,6,.45,.25);dust(P,24);play('boom');player.shake=Math.max(player.shake,.6);
+      if(P.distanceTo(player.pos)<6&&state==='playing'){hurtPlayer(e.dmg*1.4,false,e);}for(const a of allies)if(a.alive&&a.pos.distanceTo(P)<6)allyHurt(a,e.dmg*1.2,e);}return true;}
+  if(e.slamCd<=0&&dist<5){e.slamCd=e.phase===3?4:6;e.slam=1;ringAt(e.g.position.x,.1,e.g.position.z,0xff2010,6,6,1,.08);if(typeof vox==='function'&&Math.random()<.5)vox('malk','Kneel!');return true;}
+  if(e.nadeCd<=0&&dist>6&&dist<22&&T){e.nadeCd=e.phase===3?6:9;for(let i=0;i<3;i++){const Q=T.pos.clone().add(V3((Math.random()-.5)*6,0,(Math.random()-.5)*6));ringAt(Q.x,.1,Q.z,0xff2010,2.6,2.6,1.4,.06);
+      const g=new THREE.Mesh(new THREE.SphereGeometry(.14,6,4),lmat(0x2a2a2a));g.position.copy(e.g.position).setY(2.2);scene.add(g);(CAMP.fires=CAMP.fires||[]).push({m:g,a:g.position.clone(),b:Q,t:0,dur:1.2+i*.12,shell:true});}play('whoosh');}
+  return _malkAI(e,T,pp,to,dist,dt);};
+ENEMY_AI.malk=(e,T,pp,to,dist,dt)=>malkAI(e,T,pp,to,dist,dt);
+// 马尔克带精英护卫：进入二阶段时额外空降一队
+const _malkPhase=ENEMY_AI.malk;ENEMY_AI.malk=(e,T,pp,to,dist,dt)=>{if(e.phase===2&&!e.guards){e.guards=true;if(typeof traitorPods==='function'&&OPEN.on)traitorPods('soh',1,4,e.g.position);}return _malkPhase(e,T,pp,to,dist,dt);};
+// 合唱团女主：血量 ×25，挨打会闪烁传送，三分之二和三分之一血时召唤民兵，尖啸更频繁更痛
+const _singer=ENEMY_AI.warsinger;ENEMY_AI.warsinger=(e,T,pp,to,dist,dt)=>{if(e.mistress){const r=e.hp/e.maxHp;
+    if(r<.66&&!e.s1){e.s1=true;mistressCall(e);}if(r<.33&&!e.s2){e.s2=true;mistressCall(e);}
+    if((e.blinkDmg||0)>e.maxHp*.08&&!(e.scream>0)){e.blinkDmg=0;const a=Math.random()*6.28,Q=e.g.position.clone().add(V3(Math.cos(a)*9,0,Math.sin(a)*9));collide(Q,e.r);ringAt(e.g.position.x,1.5,e.g.position.z,0xb060ff,.3,3,.4,.2);puff(e.g.position.clone().setY(1.5),12,0xb060ff,1.4);e.g.position.copy(Q);ringAt(Q.x,1.5,Q.z,0xb060ff,3,.3,.4,.2);play('zap');}
+    if(!(e.scream>0)&&e.singT>2.8)e.singT=2.8;}
+  return _singer(e,T,pp,to,dist,dt);};
+function mistressCall(e){if(typeof campSpawn==='function'){const [i,j]=cellOf(e.g.position);campSpawn('militia',i,j,5,{rmin:5,rmax:8});}if(typeof vox==='function')vox('tavik','She calls her faithful — cut them down!',true);play('choir');}
+const _dmgEnemy=damageEnemy;damageEnemy=function(e,dmg,part,dir,opts={}){if(e&&e.mistress&&e.alive)e.blinkDmg=(e.blinkDmg||0)+dmg;return _dmgEnemy(e,dmg,part,dir,opts);};
+// 女主在 13m 的第 7 步里生成：这里把她标成 mistress、加血
+const _s31=CSTEPS['3-1'][6];CSTEPS['3-1'][6]={..._s31,update(dt){const r=_s31.update.call(this,dt);if(CAMP.boss&&!CAMP.boss.mistress){const b=CAMP.boss;b.mistress=true;b.maxHp=b.hp=b.maxHp/7*25;b.dmg*=1.25;}return r;}};
+// ---------------- 战场环境：灯光跟着火堆、弹药自动拾取（战役以前跳过了这段）
+function campAmbient(dt){if(Math.floor(gameTime*2)!==Math.floor((gameTime-dt)*2)&&candles.length){const near=candles.slice().sort((a,b)=>a.distanceToSquared(player.pos)-b.distanceToSquared(player.pos));candleLights.forEach((l,i)=>{if(near[i])l.position.copy(near[i]);});}
+  candleLights.forEach((l,i)=>l.intensity=18+Math.sin(gameTime*9+i*3)*4+Math.random()*3);
+  for(const it of interactables){if(it.used||it.type!=='ammo')continue;it.m.rotation.y+=dt*1.5;it.m.position.y=.8+Math.sin(gameTime*2+it.x)*.1;
+    if(Math.hypot(it.x-player.pos.x,it.z-player.pos.z)<1.8&&state==='playing'){it.used=true;scene.remove(it.m);const W=WEAPONS[0];
+      if(W&&!W.heat&&ammo[0]&&!(CLS[cls]&&CLS[cls].noPrimary)){const add=Math.ceil(W.magSize*1.2);ammo[0].res=Math.min(W.reserveMax,ammo[0].res+add);announce((W.en||W.name)+' ammo +'+add,1);}
+      else if(ammo[1]){announce('Ammunition recovered',1);}play('pickup');}}}
+const _updCamp2=updateCampaign;updateCampaign=function(dt){campAmbient(dt);_updCamp2(dt);};
 // ============================================================ 空降过场
 const cut={t:0,pod:null,door:null,char:null,parts:[],objs:[],done:false,impacted:false,opened:false,mode:'pod',S:1,ex:3.4};
 function makeDropPod(){

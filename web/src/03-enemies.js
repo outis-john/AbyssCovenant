@@ -78,6 +78,6 @@ function killEnemy(e,dir,explode,how={}){
   scene.remove(e.g);if(!how.melt)spawnBlood(e.g.position.clone().setY(1),dir,24);
   if(!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+6);
   match.kills++;addProgress('kill',1);if(e.elite){addProgress('elite',1);match.elites++;}
-  if(!isClient()){const x=e.g.position.x,z=e.g.position.z;if(rng()<0.25)netDrop('relic',x,z);else if(Math.random()<0.35)netDrop('ammo',x+.5,z);}
+  if(!isClient()){const x=e.g.position.x,z=e.g.position.z;if(CAMP.on){if(!e.static&&Math.random()<(e.marine?.35:.22))netDrop('ammo',x+.5,z);}else if(rng()<0.25)netDrop('relic',x,z);else if(Math.random()<0.35)netDrop('ammo',x+.5,z);}
 }
 

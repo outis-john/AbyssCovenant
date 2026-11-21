@@ -5,13 +5,14 @@ const SPEAKER={kaedric:'Sgt. Kaedric Vorne',ardan:'Brother Ardan',vell:'Brother 
   loken:'Captain Loken',malk:'Brother Malk',tarvitz:'Captain Tarvitz',fleet:'Vengeful Spirit · Bridge',angron:'Angron'};
 // ---------------- 无线电字幕
 const VX={q:[],cur:null,t:0,lastBark:-9};
-function vox(who,text,force){if(!force&&(VX.q.length>0||gameTime-VX.lastBark<3.5))return;if(!force)VX.lastBark=gameTime;VX.q.push({who,text});}
-function voxClear(){VX.q=[];VX.cur=null;const v=$('vox');if(v&&v.classList)v.classList.remove('show');}
+function vox(who,text,force){if(!force&&(VX.q.length>0||gameTime-VX.lastBark<3.5))return;if(!force)VX.lastBark=gameTime;VX.q.push({who,text,force:!!force});}
+function voxClear(){VX.q=[];VX.cur=null;try{if(typeof speechSynthesis!=='undefined')speechSynthesis.cancel();}catch(e){}const v=$('vox');if(v&&v.classList)v.classList.remove('show');}
 function updateVox(dt){const v=$('vox');if(!v||!v.classList)return;
   if(VX.cur){VX.t-=dt;if(VX.t<=0){VX.cur=null;v.classList.remove('show');}}
   if(!VX.cur&&VX.q.length){VX.cur=VX.q.shift();VX.t=2.2+VX.cur.text.length*.045;const c=VOX_COL[VX.cur.who]||'#d8d0c0';
     v.innerHTML=`<b style="color:${c}">${SPEAKER[VX.cur.who]||((allies.find(x=>x.id===VX.cur.who)||{}).name)||VX.cur.who}</b><span>${VX.cur.text}</span>`;v.classList.add('show');
-    if(actx){tone('square',1150,900,.04,.05);tone('square',820,820,.03,.04,.07);noiseHit(2400,.05,.12,'bandpass');}}}
+    if(actx){tone('square',1150,900,.04,.05);tone('square',820,820,.03,.04,.07);noiseHit(2400,.05,.12,'bandpass');}
+    if(typeof speakLine==='function'){const u=speakLine(VX.cur);if(u){VX.t=Math.max(VX.t,3)+6;u.onend=()=>{if(VX.cur&&VX.cur.u===u)VX.t=Math.min(VX.t,.45);};VX.cur.u=u;}}}}
 // ---------------- 标题卡
 function titleCard(big,small,dur=3.2){const t=$('titleCard');if(!t||!t.classList)return;t.innerHTML=`<div class="tb">${big}</div><div class="ts">${small||''}</div>`;t.classList.remove('go');void t.offsetWidth;t.style.setProperty('--d',dur+'s');t.classList.add('go');if(actx){tone('sine',55,40,.25,2.6);noiseHit(180,.12,2.2);}}
 // ---------------- 导演系统：一串镜头（起止机位可以跟随演员）、每个镜头开头执行动作

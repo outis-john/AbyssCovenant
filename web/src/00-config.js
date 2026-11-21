@@ -26,7 +26,7 @@ const CFG={
     tpred: {hp:1800,speed:2.6,dmg:40,reach:3,scale:1,color:0x2f5a52},                     // 叛军掠食者坦克
     rtank: {hp:900, speed:2.4,dmg:30,reach:3,scale:1,color:0x5a5444},                     // 伊斯塔万叛军坦克
     tdread:{hp:2200,speed:2.4,dmg:48,reach:3.2,scale:1.75,color:0x3a6e62},                // 叛军无畏（康坦普托）
-    malk:  {hp:2400,speed:4.6,dmg:30,reach:2.3,scale:1.25,color:0x2f5a52},                // 马尔克中士（第三幕 Boss）
+    malk:  {hp:7200,speed:4.8,dmg:36,reach:2.3,scale:1.25,color:0x2f5a52},                // 马尔克中士（第三幕 Boss）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
