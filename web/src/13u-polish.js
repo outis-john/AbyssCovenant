@@ -1,7 +1,7 @@
 // ============================================================ 战役打磨：主角身份、剧情配乐、存档继续、难度
 // ---------------- 主角身份：战役里你就是 Kaedric Vorne / Corvan Thale（名字、徽记、军团涂装）；机甲职业不出战役
 const HERO={3:{name:'Sgt. Kaedric Vorne',tag:'KV',col:0x4a8474},4:{name:'Brother Corvan Thale',tag:'CT',col:0x1e1f22}};
-const heroNow=()=>CAMP.on&&CAMP.id?HERO[CAMP.id[0]]:null;
+const heroNow=()=>CAMP.on&&CAMP.id?(HERO[CAMP.id]||HERO[CAMP.id[0]]):null;
 function hudHeroName(def){const h=heroNow();return h?h.name:def;}
 function heroPaint(g){const h=heroNow();if(!h||!g||!g.traverse)return;g.traverse(o=>{if(o.isMesh&&o.material&&o.material.map===texMetal){o.material=o.material.clone();o.material.color.setHex(h.col);}});}
 const MECH=['walker','redeemer'];

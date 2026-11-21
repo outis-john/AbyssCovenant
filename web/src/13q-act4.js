@@ -42,8 +42,8 @@ Object.assign(ENEMY_AI,{
 TAC_COVER.add('wb');TAC_COVER.add('al');TAC_COVER.add('iw');
 // 艾多隆：雷锤砸地 → 二阶段声波尖啸（击退 + 扭曲画面）→ 三阶段狂暴；远距离跳劈；正面格挡玩家轻近战
 function eidolonAI(e,T,pp,to,dist,dt){const k=e.hp/e.maxHp,P=e.g.position;
-  if(!e.ph2&&k<.66){e.ph2=true;vox('eidolon','You fight like your father — all iron and no grace!',true);openSpawn('ec',3,P,4,8,{minP:6});}
-  if(!e.ph3&&k<.33){e.ph3=true;e.speed*=1.25;e.dmg*=1.15;vox('eidolon','ENOUGH! Hear the true song of Chemos!',true);openSpawn('ec',2,P,4,8,{minP:6});}
+  if(!e.ph2&&k<.66){e.ph2=true;vox(e.spk||'eidolon',e.l2||'You fight like your father — all iron and no grace!',true);openSpawn(e.adds||'ec',3,P,4,8,{minP:6,pure:true});}
+  if(!e.ph3&&k<.33){e.ph3=true;e.speed*=1.25;e.dmg*=1.15;vox(e.spk||'eidolon',e.l3||'ENOUGH! Hear the true song of Chemos!',true);openSpawn(e.adds||'ec',2,P,4,8,{minP:6,pure:true});}
   e.slamCd-=dt;e.scrCd-=dt;e.leapCd2-=dt;
   if(e.leap){leapUpdate(e,T,dt);if(!e.leap){ringAt(P.x,.2,P.z,0x80c0ff,.5,7,.5,.25);if(P.distanceTo(player.pos)<5&&state==='playing')hurtPlayer(e.dmg*.8,false,e);}return true;}
   if(e.scream>0){e.scream-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2;e.parts.head.rotation.x=-.4;
@@ -285,7 +285,7 @@ Object.assign(CAMP.outro,{
           $('fade').style.opacity=Math.max(0,(k-.7)*3);}},
       {d:3.6,from:shotAt(V3(0,40,0),V3(0,0,-1)),act(){$('fade').style.opacity=1;titleCard('ISSTVAN V','The Gorgon is fallen. The Iron Tenth endures.',3.4);if(h)h.invuln=false;}}],done);}});
 // 4-1 用胜利动画；4-2 / 4-3 是溃败中的幸存，不升旗
-const _cwA=campaignWin;campaignWin=function(){if(CAMP.id==='4-2'||CAMP.id==='4-3'){CAMP.wp=null;CAMP.outro[CAMP.id](()=>campEnd(true));return;}_cwA();};
+const _cwA=campaignWin;campaignWin=function(){if(CAMP.id==='4-2'||CAMP.id==='4-3'||CAMP.id==='4-T'){CAMP.wp=null;CAMP.outro[CAMP.id](()=>campEnd(true));return;}_cwA();};
 // 关卡专属的每帧更新
 const _ucA=updateCampaign;updateCampaign=function(dt){_ucA(dt);if(!act4())return;updateDuel(dt);if(state!=='playing')return;podRain(dt);updateShip(dt);};
 const _udS=updateScene;updateScene=function(dt){_udS(dt);if(CAMP.on&&act4()){updateDuel(dt);if(CAMP.ship&&CAMP.ship.phase!=='gone')updateShip(dt);}};
