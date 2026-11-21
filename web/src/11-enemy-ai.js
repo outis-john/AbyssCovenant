@@ -20,7 +20,7 @@ function updateEnemies(dt){
     // 寻路：同一房间直接冲，否则走向更靠近玩家的相邻房间的门
     let target=new THREE.Vector3(pp.x,0,pp.z);
     const [ei,ej]=cellOf(e.g.position),[pi,pj]=cellOf(pp);
-    const cellDist=distFor(pi,pj);if(ei!==pi||ej!==pj){let best=null,bd=cellDist[ei][ej];
+    const cellDist=distFor(pi,pj);if(!OPEN.on&&(ei!==pi||ej!==pj)){let best=null,bd=cellDist[ei][ej];
       for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=ei+a,nj=ej+b;if(ni<0||nj<0||ni>=G||nj>=G||!connected(ei,ej,ni,nj))continue;if(cellDist[ni][nj]<bd){bd=cellDist[ni][nj];best=[ni,nj];}}
       if(best){const door=new THREE.Vector3((ei+best[0])/2*C,0,(ej+best[1])/2*C);
         const dd=door.distanceTo(e.g.position);target=dd<1.5?new THREE.Vector3(best[0]*C,0,best[1]*C):door;}}
