@@ -57,6 +57,7 @@ const CFG={
     {id:'exec',  name:'嗜血圣印',  desc:'处决充能速度 +30%',        max:1,cost:[0],rare:[1]},
   ],
   // 职业解锁价格（唤潮者、铸甲卫士免费）；武器熟练度：击杀数达到门槛，伤害每级 +5%
+  unlockAll:true,   // 测试阶段：所有职业直接可用（改成 false 就恢复解锁价格）
   unlock:{reforged:{loot:15},bastion:{loot:25},relic:{loot:20,rare:2},walker:{rare:3},redeemer:{loot:30,rare:4}},
   mastery:[25,75,150],
   amulet:{hp:25,dmg:1.2},   // 圣物护符：带一件圣物出击，属性提升；阵亡就失去它

@@ -1,5 +1,5 @@
 // ============================================================ 成长：职业解锁、武器熟练度、涂装
-function isUnlocked(c){const v=loadVault();return !CFG.unlock[c]||(v.unlocked||[]).includes(c);}
+function isUnlocked(c){if(CFG.unlockAll)return true;const v=loadVault();return !CFG.unlock[c]||(v.unlocked||[]).includes(c);}
 function classOk(){if(isUnlocked(cls))return true;announce('先在职业面板里解锁「'+CLS_INFO[cls].name+'」',1.5);play('dry');return false;}
 function unlockClass(c){const v=loadVault(),u=CFG.unlock[c];if(!u||isUnlocked(c))return;if(v.loot<(u.loot||0)||v.rare<(u.rare||0)){play('dry');return;}
   v.loot-=u.loot||0;v.rare-=u.rare||0;v.unlocked=(v.unlocked||[]).concat(c);saveVault(v);play('beacon');showVault();renderShop();selectClass(c);refreshCards();}
