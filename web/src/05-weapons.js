@@ -103,7 +103,7 @@ function tryFire(pressed){if(ex.active)return;const G=activeGun();
 function fire(w,slot=cur){
   player.fireCd=1/(w.rate*(w.spin?0.23+0.77*(player.spin||0):1));if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
   play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
-  player.recoil+=0.06*w.kick;gunKick=w.kick;gunRoll=(Math.random()-.5)*0.25*w.kick;player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
+  player.recoil+=0.06*w.kick*(w.spin?0.35:1);gunKick=w.kick*(w.spin?0.55+Math.random()*0.6:1);gunRoll=(Math.random()-.5)*0.25*w.kick*(w.spin?1.6:1);if(w.spin){player.shake=Math.max(player.shake,0.06+player.spin*0.07);player.yaw+=(Math.random()-.5)*0.004;}player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
   if(w.kick>=2){player.shake=Math.max(player.shake,0.22);player.punch=Math.max(player.punch||0,0.035);}
   let anyHit=false,anyKill=false,head=false;
   if(fireSpecial(w,mScale)){}
@@ -116,7 +116,7 @@ function fire(w,slot=cur){
       e.burn=2;embers(h.point,6);puff(h.point,2,0x333333,.8);anyHit=true;anyKill=anyKill||k;}
     heatBeam(o.clone().add(new THREE.Vector3(0,-.18,0)),end,0.5+mScale);
     heat.v+=20+heat.charge*45;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');announce('热熔枪过热！散热中…',1.5);}
-  } else if(w.id==='bolter'||w.spin){const {o,d}=aimRay(w.spread*(w.spin?1.6-player.spin:1));spawnBolt(o,d,w);}
+  } else if(w.id==='bolter'||w.spin){const r=fromMuzzle(w,w.spread*(w.spin?1.6-player.spin:1));spawnBolt(r.o,r.d,w,r.muzzle);}
   else if(w.id==='shotgun'){const r=shotgunBlast(w);anyHit=r.anyHit;anyKill=r.anyKill;head=r.head;}
   else for(let k=0;k<w.pellets;k++){const {o,d}=aimRay(w.spread);const h=castRay(o,d);if(!h)continue;const e=h.object.userData.enemy;
     if(e){const part=h.object.userData.part==='eye'?'head':h.object.userData.part;const killed=damageEnemy(e,w.dmg*player.gunMul,part,d,{point:h.point,knock:w.knock,how:part==='head'?{headBurst:true}:{}});hitSparks(h.point,d,4);anyHit=true;anyKill=anyKill||killed;head=head||part==='head';}

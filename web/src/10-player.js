@@ -44,6 +44,7 @@ function updatePlayer(dt){
   for(const m of RANGED_MODELS){const k=W.kick||1;
     m.position.set(.32+Math.sin(gameTime*4.5)*.004,-.28+bob*.3-gunKick*.015-rl*.22-sw*.5,-.55+player.recoil*0.4+gunKick*0.08);
     m.rotation.set(player.recoil*1.0+gunKick*0.14-rl*0.7,rl*0.3,gunRoll*gunKick+rl*0.5);}
+  if(mouseDown&&cur===0&&WEAPONS[0].spin&&player.spin>0.2){const k=player.spin;hbM.position.x+=(Math.random()-.5)*.018*k;hbM.position.y+=(Math.random()-.5)*.018*k+gunKick*.01;hbM.rotation.x+=(Math.random()-.3)*.04*k;hbM.rotation.z+=(Math.random()-.5)*.05*k;}   // 转管机枪开火时整把枪抖动
   for(const g of Object.values(MELEE_GROUP))if(g!==sword)g.visible=false;
   if(player.revving){player.revCharge=Math.min(1,(player.revCharge||0)+dt/1.2);player.shake=Math.max(player.shake,0.04+player.revCharge*0.08);}
   if(player.frenzy>0)player.frenzy-=dt;

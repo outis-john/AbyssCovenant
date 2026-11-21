@@ -71,14 +71,15 @@ function loopSound(name,on,param){if(!actx)return;let L=loops[name];
 // ---------- 开火（在 fire() 里调用；返回 true 表示已处理）
 let plasmaBalls=[];
 function fireSpecial(w,mScale){
-  if(w.id==='plasma'){const {o,d}=aimRay(w.spread);const big=mScale>0.9;const m=new THREE.Mesh(new THREE.BoxGeometry(big?.3:.18,big?.3:.18,big?.3:.18),new THREE.MeshBasicMaterial({color:big?0xe0f4ff:0x60c0ff}));
-    m.position.copy(o).add(new THREE.Vector3(0,-.12,0)).addScaledVector(d,.6);scene.add(m);plasmaBalls.push({m,d:d.clone(),life:2,dmg:w.dmg*(big?3:1)*player.gunMul,r:w.splash*(big?1.6:1)});
+  if(w.id==='plasma'){const {o,d,muzzle}=fromMuzzle(w,w.spread);const big=mScale>0.9;const m=new THREE.Mesh(new THREE.BoxGeometry(big?.3:.18,big?.3:.18,big?.3:.18),new THREE.MeshBasicMaterial({color:big?0xe0f4ff:0x60c0ff}));
+    if(muzzle)m.position.copy(o);else m.position.copy(o).add(new THREE.Vector3(0,-.12,0)).addScaledVector(d,.6);scene.add(m);plasmaBalls.push({m,d:d.clone(),life:2,dmg:w.dmg*(big?3:1)*player.gunMul,r:w.splash*(big?1.6:1)});
     play(big?'plasmaBig':'plasma');heat.v+=big?55:16;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');if(big){hurtPlayer(12,true);announce('等离子过热！你被烫伤了',1.5);}else announce('等离子枪过热！',1.2);}return true;}
-  if(w.flame){const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);const o=player.pos.clone().setY(1.4);let any=false,kill=false;
-    for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().setY(1.2).sub(o);const L=to.length();if(L>w.range+e.r)continue;if(to.normalize().dot(fwd)<Math.cos(0.42))continue;
+  if(w.flame){const R=fromMuzzle(w,0);const fwd=R.d,o=R.o;let any=false,kill=false;
+    const oc=o.clone().addScaledVector(fwd,-1);   // 判定从枪口后 1 米算，锥形更宽一点
+    for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().setY(Math.max(.6,o.y-.4)).sub(oc);const L=to.length();if(L>w.range+1+e.r)continue;if(to.normalize().dot(fwd)<Math.cos(0.5))continue;
       kill=damageEnemy(e,w.dmg*player.gunMul,'body',fwd,{stagger:.05,knock:.05,how:{melt:L<3}})||kill;if(!isClient())e.burn=Math.max(e.burn,3);any=true;}
     player.flameT=0.15;
-    for(let i=0;i<12;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:[0xff5010,0xff8030,0xffd060,0xfff0a0][i%4],transparent:true,opacity:.9,depthWrite:false}));m.position.copy(o).addScaledVector(fwd,.9);m.scale.setScalar(2+Math.random()*2);scene.add(m);
+    for(let i=0;i<12;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:[0xff5010,0xff8030,0xffd060,0xfff0a0][i%4],transparent:true,opacity:.9,depthWrite:false}));m.position.copy(o).addScaledVector(fwd,.15);m.scale.setScalar(1.2+Math.random()*1.5);scene.add(m);
       puffs.push({m,v:fwd.clone().multiplyScalar(8+Math.random()*5).add(new THREE.Vector3((Math.random()-.5)*4,(Math.random()-.2)*2.5,(Math.random()-.5)*4)),life:.45+Math.random()*.3,max:.75});}
     if(Math.random()<0.6){const dd=2+Math.random()*(w.range-2);const ff=fwdFlat();const hit=castRay(o,ff,dd);const L=hit&&!hit.object.userData.enemy?Math.max(1,hit.distance-.6):dd;
       addFirePatch(player.pos.x+ff.x*L+(Math.random()-.5),player.pos.z+ff.z*L+(Math.random()-.5));}
@@ -115,3 +116,8 @@ function updateFirePatches(dt){for(const p of firePatches){p.life-=dt;p.m.materi
     if(Math.random()<dt*10){const q=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0xff8030:0xffd060}));q.position.set(p.x+(Math.random()-.5),.1,p.z+(Math.random()-.5));q.scale.setScalar(1.6);scene.add(q);sparks.push({m:q,v:new THREE.Vector3(0,2+Math.random()*2,0),life:.35});}
     p.tick-=dt;if(p.tick<=0){p.tick=0.3;for(const e of enemies)if(e.alive&&!e.boss&&Math.hypot(e.g.position.x-p.x,e.g.position.z-p.z)<0.9+e.r)damageEnemy(e,7,'body',null,{stagger:0,_noShield:true});}
     if(p.life<=0)scene.remove(p.m);}firePatches=firePatches.filter(p=>p.life>0);}
+
+// ---------- 枪口：子弹 / 火焰 / 等离子都从当前枪模型的枪口发出，飞向准星指着的点（机甲视线高，也对得上）
+function muzzleOf(w){const f=w&&w.flash;if(!f)return null;camera.updateMatrixWorld(true);const p=new THREE.Vector3();f.getWorldPosition(p);return p;}
+function aimPoint(o,d,far=80){const h=castRay(o,d,far);return h?h.point:o.clone().addScaledVector(d,far);}
+function fromMuzzle(w,spread=0){const {o,d}=aimRay(spread);const m=muzzleOf(w);if(!m)return {o,d};const t=aimPoint(o,d);const dd=t.clone().sub(m);if(dd.length()<1.5)return {o,d};return {o:m,d:dd.normalize(),muzzle:true};}

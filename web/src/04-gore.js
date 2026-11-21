@@ -128,9 +128,9 @@ function holeKill(e,P,dir,mode='chunks'){
 }
 function vaporizeLimb(e,k){const arm=e.parts[k];if(arm.parent!==e.g)return;const w=worldize(arm);const p=w.position.clone();scene.remove(w);embers(p,12);puff(p,3,0x332222,1);e.armHp[k]=Infinity;e.arms--;netSever(e,k);}
 // 爆弹：真正飞行的火箭弹，命中后钉进去再爆炸
-function spawnBolt(o,d,w){const m=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.22),new THREE.MeshBasicMaterial({color:0xd8a657}));m.add(b);
+function spawnBolt(o,d,w,fromMuzzle=false){const m=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.22),new THREE.MeshBasicMaterial({color:0xd8a657}));m.add(b);
   const f=new THREE.Mesh(new THREE.BoxGeometry(.09,.09,.08),new THREE.MeshBasicMaterial({color:0xffb050}));f.position.z=.14;m.add(f);
-  m.position.copy(o).add(new THREE.Vector3(0,-.12,0)).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,-1),d);scene.add(m);
+  if(fromMuzzle)m.position.copy(o);else m.position.copy(o).add(new THREE.Vector3(0,-.12,0)).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,-1),d);scene.add(m);
   bolts.push({m,d:d.clone(),speed:75,life:1.6,w});}
 function updateBolts(dt){
   for(const b of bolts){b.life-=dt;const len=b.speed*dt;const h=castRay(b.m.position,b.d,len+0.15);
