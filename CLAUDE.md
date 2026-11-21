@@ -21,7 +21,7 @@
 - 地图：种子生成 5x5 房间网格、小地图（M）；房间类型 `02b-rooms`（std / cover 半高掩体 / maze L 形墙 / hall / arena(Boss 房)）；静态网格按材质合并（mergeProps，墙合并后仍在 wallMeshes 里做射线）。撤离：隐藏条件（kill/elite/hack/ritual/cores + `11d-missions` 的 defend 坚守信标 45 秒 / nest 3 个巢穴（敌人类型 nest，static）/ carry 圣物棺（match.carrier，扛着变慢禁主武器，阵亡掉落））+ 数据板线索、逃生舱零件、终端 / 仪式 / 能源核心、回收装置（B）。物资全队共享（match.*）。
 - 战斗：爆弹火箭弹（钉入后爆炸）、霰弹（轰洞 / 轰飞半身）、热熔（右键蓄力、过热条、烧穿）；近战四段连招 + 输入缓冲；链锯右键蓄力狂热；力场剑右键分解力场（祷言字幕）；剑盾右键切剑/手枪、E 格挡防反。
 - 断肢：按刀路平面切割盒子部位（splitBox / cutApart / severArmsByPlane / holeKill / halfKill / burstKill / headBurst / meltPuddle）。
-- 处决（X，需充能）：点按 = 快速处决（0.45 秒，回复一半），按住 0.3 秒 = 完整处决（按武器播动画，回复全部，震慑 7 米内敌人）；处决后 3 秒内可免充能连环处决 2 次（exChain）。14 种武器都有专属动作（新 7 种在 `07b-execution2`，机甲用驾驶舱巨拳/机炮）；镜头按体型拉开、看胸口、FOV +12、电影黑边 #exBars。
+- 处决（X，需充能）：点按 = 快速处决（0.45 秒，回复一半），按住 0.3 秒 = 完整处决（按武器播动画，回复全部，震慑 7 米内敌人）；处决后 3 秒内可免充能连环处决 2 次（exChain）。致命一击带 _exec：无视骨盾/庇护减伤、必定击杀（联机时房主也强制击杀）。14 种武器都有专属动作（新 7 种在 `07b-execution2`，机甲用驾驶舱巨拳/机炮）；镜头按体型拉开、看胸口、FOV +12、电影黑边 #exBars。
 - 敌人：小恶魔 imp、巨魔 brute、瘟火术士 caster（保持距离吐可躲避的瘟火球；砍掉右臂就不能施法；完美格挡把火球弹回去并追踪术士）。Boss 深渊领主 lord（`bossAI`：砸地冲击波 → 二阶段扇形火球 → 三阶段狂暴召唤；免疫锁喉/黑洞/处决；守在 (4,4) 房间，死亡掉圣物+物资；CFG.boss；砸地特效用 `fx` 事件）。敌人 AI：steer 绕障碍、tacticTarget（猎犬包抄 / 小恶魔围圈 / 骨盾掩护术士）。新敌人（`11b-enemies2`：腐爆者 bloater 靠近/死亡爆炸连锁、裂隙猎犬 hound 扑跳、骨盾恶魔 bulwark 正面盾只吃 10% 伤害，重击/爆炸 ×3 破盾，快照 arms 位 4 = 盾已碎；ENEMY_BUILD / ENEMY_AI 钩子）。地图区域 CFG.biomes（巢都炼油厂 hive / 地下圣堂 sanctum（哥特教堂）/ 蓝冰洞窟 frost：`11c-biomes` 每区一套贴图 BTEX + 结构道具 refinery()/cathedral()/iceCave()，沿墙用 wallSides/along 放置并避开门洞；炼油厂蒸汽 biomeTick；刷怪权重 pickEnemy；随机时按 seed 选，联机随 start 发 bi）。区域专属（`11e-biome-enemies`）：炼油厂 tanker 油罐恶魔（喷火、背后 ×3、死后火海）、教堂 priest 堕落祭司（回血+blessT 减伤）、冰洞 frostling（减速 slowT，房主发 slow 消息）；Boss 按区域变体 e.variant（熔炉巨像火球留火海 / 大主教瞬移到背后+召唤术士 / 冰霜巨兽冰锥预警+减速）；伤害玩家的地面危险 hazards（房主判定）。快照里类型用 `ETYPES` 下标；火球 `spits` 由房主判定伤害，`spit` 事件让队友端播放画面。
 - 灵能：V 锁喉提摔、G 黑洞、Q 子弹时间（攻击吸血）、C 符文技能（Tab 拼装；火+射线 = 焚灭火柱 `11g-pyrebeam`，引导 1.6 秒穿透点燃，终点爆炸）；过载反噬。
 - 深渊侵蚀（`11f-abyss`，四位**原创**邪神：血怒之王 blood / 腐朽之母 decay / 欲焰之主 excess / 万变之眼 change，不用战锤名字）：player.taint 由过载偏高、反噬、被灵能攻击（spit，hurt 消息 psy:1）增加；满 100 被拖入「深渊彼岸」对应领域 20 秒（画面变色、低语、仆从 dblood/ddecay/dexcess/dchange 由房主生成，队友发 daemons 请求）；活下来获得赐福 player.bless（按打法倾向 HELL.aff 选神，有代价，本局有效）。
@@ -32,7 +32,7 @@
 
 ## 测试（改代码后必须跑）
 - `web/test/`：`three-stub.mjs` 是最小 Three.js 替身（真实向量 / 四元数 / 场景树 / 射线），其余为空对象。
-- 运行：`sh web/test/run-tests.sh`（会先自动 build）（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、test7 升级/威胁/护符、test8 Boss、test9 训练场、test10 轻重攻击、test11 新枪、test12 职业、test13 新敌人/区域、test14 绕障碍、test15 处决、test16 敌人配合、test17 新任务、test18 区域敌人/Boss 变体、test19 成长、test20 焚灭火柱/深渊侵蚀、mp_test 两份游戏 + 假 PeerJS、mp_relay_test 同流程 + 假 MQTT 服务器）。
+- 运行：`sh web/test/run-tests.sh`（会先自动 build）（test.js 近战/处决/灵能、test2 断臂、test3 连招/切换/剑盾、test4 三把枪、test5 力场剑、test6 瘟火术士、test7 升级/威胁/护符、test8 Boss、test9 训练场、test10 轻重攻击、test11 新枪、test12 职业、test13 新敌人/区域、test14 绕障碍、test15 处决、test16 敌人配合、test17 新任务、test18 区域敌人/Boss 变体、test19 成长、test20 焚灭火柱/深渊侵蚀、test21 处决必杀、mp_test 两份游戏 + 假 PeerJS、mp_relay_test 同流程 + 假 MQTT 服务器）。
 - 注意：替身里所有材质是同一个空对象，材质比较/透明度读取在测试中不可信。setTimeout 在 test4 中被改为同步执行。
 - 内置浏览器没有登录 claude.ai，无法直接看 artifact 画面。**沙盒里可以截图自查**：`python3 tools/build.py --offline=/tmp/game.html`，在 `</script>` 前注入 `window.__ev=c=>eval(c);`，用 playwright + /usr/bin/google-chrome（--use-gl=swiftshader）打开并调用游戏函数（如 startTraining()）后截图。
 

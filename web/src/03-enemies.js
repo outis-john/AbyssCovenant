@@ -33,13 +33,13 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   if(!e.alive)return false;
   if(isClient()&&e.remote){const hd=part==='head'?2:1,est=Math.min(dmg*hd,Math.max(0,e.hp));
     if(state==='playing'&&!ex.active)player.exCharge=Math.min(100,(player.exCharge||0)+est*0.12*(player.exRate||1));if(bt.t>0)player.hp=Math.min(player.maxHp,player.hp+est*0.3);
-    sendNet({t:'dmg',id:e.id,dmg,part,dir,o:{stagger:opts.stagger,knock:opts.knock,limbMul:opts.limbMul,explode:opts.explode,how:opts.how}});net.lastDmg.set(e.id,gameTime);
+    sendNet({t:'dmg',id:e.id,dmg,part,dir,o:{stagger:opts.stagger,knock:opts.knock,limbMul:opts.limbMul,explode:opts.explode,how:opts.how,_exec:opts._exec,_noShield:opts._noShield}});net.lastDmg.set(e.id,gameTime);
     e.flash=0.08;e.lean=Math.min(1.2,e.lean+0.6);spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,part==='head'?10:5);return false;}
   const head=part==='head';if(head)dmg*=2;
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
   if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
   if(e.shieldHp>0&&dir&&!opts._noShield)dmg=shieldBlock(e,dmg,dir,opts);
-  if(e.blessT>0)dmg*=0.5;
+  if(e.blessT>0&&!opts._exec)dmg*=0.5;
   if(player.bless==='blood'&&!opts._remote&&state==='playing'&&WEAPONS[cur]&&WEAPONS[cur].melee)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,e.hp)*0.1);   // 血怒：近战吸血if(e.type==='tanker'&&dir&&dir.clone().setY(0).normalize().dot(new THREE.Vector3(Math.sin(e.g.rotation.y),0,Math.cos(e.g.rotation.y)))>0.3){dmg*=3;hitSparks(e.g.position.clone().setY(1.6*e.g.scale.y),dir,6);}   // 打中背后的油罐
   e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9*res);}

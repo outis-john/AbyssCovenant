@@ -120,7 +120,7 @@ function hostRecv(id,m){
     return;}
   if(!r)return;
   if(m.t==='state'){r.tp.set(m.x,m.y,m.z);r.yaw=m.yaw;r.pitch=m.pitch;r.hp=m.hp;r.maxHp=m.maxHp;r.dead=m.dead;r.inMatch=true;if(!r.pos.lengthSq())r.pos.copy(r.tp);}
-  else if(m.t==='dmg'){const e=enemyById(m.id);if(e&&e.alive)damageEnemy(e,m.dmg,m.part,m.dir||null,{...m.o,_remote:true});}
+  else if(m.t==='dmg'){const e=enemyById(m.id);if(e&&e.alive){damageEnemy(e,m.dmg,m.part,m.dir||null,{...m.o,_remote:true});if(m.o&&m.o._exec&&e.alive){e.hp=0;killEnemy(e,m.dir||null,true,m.o.how||{});}}}
   else if(m.t==='sever'){const e=enemyById(m.id);if(e&&e.alive&&e.parts[m.part].parent===e.g){detach(e,m.part,null);e.armHp[m.part]=Infinity;e.arms--;}}
   else if(m.t==='stun'){const e=enemyById(m.id);if(e&&e.alive){e.stagger=Math.max(e.stagger,m.dur);e.kv.set(0,0,0);}}
   else if(m.t==='interact'){const it=interactables[m.idx];if(it&&!it.used)interact(it,r);}

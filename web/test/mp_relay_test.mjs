@@ -52,6 +52,11 @@ log('client sees boss',B.ev("enemies.some(e=>e.alive&&e.boss)"),'| client hp aft
 // 4d 队友的特效同步到房主：地面火、冲击波
 const fp0=A.ev('firePatches.length');B.ev('addFirePatch(10,10)');tick(3);
 log('fx sync: host sees client fire patch',A.ev('firePatches.length')>fp0,'| visual only',A.ev('firePatches[firePatches.length-1].visual'));
+// 4e 队友处决被庇护的骨盾恶魔：房主那边也必须死
+A.ev('enemies.forEach(e=>{if(e.alive){e.alive=false;scene.remove(e.g);}})');tick(4);
+A.ev("{const e=spawnEnemy('bulwark',40,37.5);e.cd=99;e.blessT=30;e.speed=0;window.__bw=e.id;}");tick(6);
+B.ev('player.pos.set(40,0,40);player.yaw=0;player.exCharge=100;');B.ev("execute('quick')");for(let i=0;i<80;i++)tick(1);
+log('client execution kills shielded+blessed on host',!A.ev('enemyById(__bw)&&enemyById(__bw).alive'));
 // 5 队友拾取线索、遗物 -> 房主结算 -> 同步回队友
 const ci=B.ev("interactables.find(i=>i.type==='clue'&&!i.used).idx");B.ev(`interact(interactables[${ci}])`);flush();
 B.ev("interact(interactables.find(i=>i.type==='relic'&&!i.used))");flush();tick(8);
