@@ -15,9 +15,9 @@ setup();const at=spawnAllyTank('pt','Test Predator',0,4);const et=spawnEnemy('tp
 setup();const dr=spawnEnemy('tdread',0,-10);step(200);log('dreadnought fights',player.hp<9999,'| not executable',!canExecute(Object.assign({},dr,{alive:true})));
 // 6 三关从头打到尾（跳过过场、清掉敌人、走到航点）
 const runLevel=id=>{cls='ward';startCampaignLevel(id);if(state==='scene')endScene(true);let guard=0;
-  while(state!=='result'&&guard++<4000){player.hp=player.maxHp=9999;
+  while(state!=='result'&&guard++<12000){player.hp=player.maxHp=9999;
     for(const e of enemies)if(e.alive&&e.campaign&&Math.random()<.02)damageEnemy(e,9999,'body',null,{_remote:true});
-    if(CAMP.wp&&state==='playing')player.pos.copy(CAMP.wp);
+    keys.KeyF=true;const it=(CAMP.inter||[]).find(i=>!i.done);if(it&&state==='playing')player.pos.copy(it.pos);else if(CAMP.wp&&state==='playing')player.pos.copy(CAMP.wp);
     if(state==='scene')endScene(true);step(1);}
   return state;};
 for(const id of ['3-1','3-2','3-3']){const st=runLevel(id);log('level',id,'→',st,'| title',$('resTitle').textContent!==undefined,'| steps',CAMP.step,'| allies alive',allies.filter(a=>a.alive).length);}

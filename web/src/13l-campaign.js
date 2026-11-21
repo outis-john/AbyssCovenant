@@ -20,7 +20,7 @@ function runScene(shots,done,opt={}){SC.on=true;SC.shots=shots;SC.i=-1;SC.t=0;SC
   $('letterbox').classList.add('show');$('cutCap').textContent='';document.exitPointerLock?.();if(AUS.rig)AUS.rig.visible=false;nextShot();}
 function nextShot(){SC.i++;const S=SC.shots[SC.i];if(!S){endScene();return;}SC.t=0;if(S.cap!==undefined)$('cutCap').textContent=S.cap;if(S.act)S.act();}
 function camKey(f){const r=typeof f==='function'?f():f;return r;}
-function updateScene(dt){const S=SC.shots[SC.i];if(!S)return;SC.t+=dt;const k=S.d?Math.min(1,SC.t/S.d):1,e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+function updateScene(dt){if(CAMP.trans){updateTransition(dt);updateVox(dt);return;}const S=SC.shots[SC.i];if(!S)return;SC.t+=dt;const k=S.d?Math.min(1,SC.t/S.d):1,e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
   if(S.tick)S.tick(dt,k);
   if(S.from){const A=camKey(S.from),Bk=camKey(S.to||S.from);const p=A.p.clone().lerp(Bk.p,e),l=A.l.clone().lerp(Bk.l,e);const sh=player.shake*player.shake;player.shake=Math.max(0,player.shake-dt*1.2);
     if(!OPEN.on){p.x=clamp(p.x,-HALF+.6,(G-1)*C+HALF-.6);p.z=clamp(p.z,-HALF+.6,(G-1)*C+HALF-.6);p.y=Math.min(p.y,H-.4);}
@@ -52,7 +52,7 @@ function campFx(dt){if(!CAMP.on)return;
   const singers=enemies.filter(e=>e.alive&&e.type==='warsinger'&&e.g.position.distanceTo(player.pos)<22).length;if(singers){player.warp=Math.max(player.warp||0,Math.min(.15,.06*singers));}
   if(CAMP.flags.fireSky){CAMP.skyT=(CAMP.skyT||0)-dt;if(CAMP.skyT<=0){CAMP.skyT=.5+Math.random()*.9;fireStreak();}
     scene.background.setHex(Math.random()<.02?0x6a2008:0x2a0804);}
-  for(const f of CAMP.fires||[]){f.t+=dt;const k=Math.min(1,f.t/f.dur);f.m.position.copy(f.a).lerp(f.b,k);if(k>=1&&!f.hit){f.hit=true;scene.remove(f.m);fireImpact(f.b);}}
+  for(const f of CAMP.fires||[]){f.t+=dt;const k=Math.min(1,f.t/f.dur);f.m.position.copy(f.a).lerp(f.b,k);if(k>=1&&!f.hit){f.hit=true;scene.remove(f.m);if(f.shell)shellBlast(f.b.clone().setY(.3),{W:{splash:4},team:'chaos',dmg:45,src:null});else fireImpact(f.b);}}
   if(CAMP.fires)CAMP.fires=CAMP.fires.filter(f=>!f.hit);
   if(CAMP.wave)updateVirusWave(dt);if(CAMP.wall)updateVirusWall(dt);}
 function updateVirusWall(dt){const W=CAMP.wall;W.delay-=dt;if(W.delay<0)W.z+=W.speed*dt;W.m.position.z=W.z;W.m.material.opacity=.45+Math.sin(gameTime*2)*.08;
@@ -157,7 +157,7 @@ function startCampaignLevel(id){const L=CLEVELS[id];if(!L)return;try{initAudio()
   const ob=loadout.biome;loadout.biome=L.biome;OPEN.next=L.open||null;prepareMatch(L.seed);loadout.biome=ob;training.on=false;if(L.build){L.build();}try{mergeProps();}catch(err){}
   if(L.start){player.pos.copy(L.start);player.yaw=0;}
   for(const e of enemies){e.alive=false;scene.remove(e.g);}enemies=[];for(const it of interactables)scene.remove(it.m);interactables=[];match.conds=[];waveTimer=1e9;
-  Object.assign(CAMP,{on:true,id,L,step:-1,S:null,t:0,flags:{tavikPsy:id!=='3-1'},timers:[],wp:null,wpName:'',stats:{kills:0,lost:0},fires:[],wave:null,malk:null,hold:false,target:[0,0]});
+  player.mounted=null;Object.assign(CAMP,{trans:null,arts:[],inter:[],guns:[],wentDown:false,met:false,artWave:0,kt:undefined,pylLeft:undefined,boss:null,on:true,id,L,step:-1,S:null,t:0,flags:{tavikPsy:id!=='3-1'},timers:[],wp:null,wpName:'',stats:{kills:0,lost:0},fires:[],wave:null,malk:null,hold:false,target:[0,0]});
   clearAllies();clearEbolts();voxClear();
   const n=L.allies.length,S0=L.start||V3(0,0,0);L.allies.forEach((a,i)=>{const ang=(i-(n-1)/2)*.5;spawnAlly(a,S0.x+Math.sin(ang)*4,S0.z+3+Math.cos(ang)*2,0);});CAMP.pods=[];if(L.tanks)for(const t of L.tanks){const a=spawnAllyTank(t.id,t.name,t.x,t.z,t.yaw||0);a.side=t.side;if(t.hold)a.hold=t.hold.clone();}if(L.titan)spawnTitan(TITANCOL[L.titan.col],L.titan.path,{side:L.titan.side});
   $('hub').classList.remove('show');$('brief').classList.remove('show');$('campaign').classList.remove('show');document.body.classList.remove('inhub');document.body.classList.add('incamp');view.visible=true;
@@ -188,7 +188,7 @@ function campEnd(win){if(state==='result')return;state='result';document.exitPoi
   if(nb&&nb.style){nb.style.display=win&&nx?'':'none';nb.onclick=()=>{$('result').classList.remove('show');openBrief(nx);};}
   if(rb&&rb.style){rb.style.display='';rb.textContent=win?'Replay Mission':'Retry Mission';rb.onclick=()=>{$('result').classList.remove('show');startCampaignLevel(id);};}
   $('result').classList.add('show');}
-function exitCampaign(){if(GUIDE.beam)GUIDE.beam.visible=false;GUIDE.lastObj='';GUIDE.marks=[];const em=$('emarks');if(em&&em.innerHTML!==undefined)em.innerHTML='';CAMP.wall=null;CAMP.pods=[];CAMP.on=false;SC.on=false;document.body.classList.remove('inscene');CAMP.flags={};clearAllies();clearEbolts();voxClear();document.body.classList.remove('incamp');const n=$('campNext'),r=$('campRetry');if(n&&n.style)n.style.display='none';if(r&&r.style)r.style.display='none';
+function exitCampaign(){CAMP.trans=null;CAMP.arts=[];CAMP.inter=[];CAMP.guns=[];player.mounted=null;CAMP.wentDown=false;CAMP.met=false;CAMP.artWave=0;if(GUIDE.beam)GUIDE.beam.visible=false;GUIDE.lastObj='';GUIDE.marks=[];const em=$('emarks');if(em&&em.innerHTML!==undefined)em.innerHTML='';CAMP.wall=null;CAMP.pods=[];CAMP.on=false;SC.on=false;document.body.classList.remove('inscene');CAMP.flags={};clearAllies();clearEbolts();voxClear();document.body.classList.remove('incamp');const n=$('campNext'),r=$('campRetry');if(n&&n.style)n.style.display='none';if(r&&r.style)r.style.display='none';
   if(CAMP.wave){for(const f of CAMP.wave.fogs)scene.remove(f);CAMP.wave=null;}$('wp')&&$('wp').style&&($('wp').style.display='none');}
 // ---------------- 大厅：战役面板与简报
 function campDone(){return(loadVault().camp)||[];}

@@ -93,7 +93,7 @@ function switchWeapon(i){if(i===0&&CLS[cls]&&CLS[cls].noPrimary){announce('A psy
 function startReload(){const G=activeGun();if(!G)return;const w=G.w;if(player.channelT>0){announce('Can’t reload while casting',0.8);return;}if(w.heat)return;if(reloadT>0||switchT>0||ex.active)return;const a=ammo[G.slot];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('Out of reserve ammo',1);return;}
   reloadT=w.reload;reloadFor=G.slot;play('magOut');setTimeout(()=>{if(reloadT>0)play('magIn');},w.reload*550);}
 function finishReload(){const w=reloadFor===1?PISTOL:WEAPONS[reloadFor],a=ammo[reloadFor];const n=Math.min(w.magSize-a.mag,a.res);a.mag+=n;if(a.res!==Infinity)a.res-=n;play('chamber');reloadFor=-1;}
-function tryFire(pressed){if(ex.active)return;const G=activeGun();
+function tryFire(pressed){if(ex.active||player.mounted)return;const G=activeGun();
   if(!G){if(pressed&&!player.blocking)meleePress();return;}const w=G.w,slot=G.slot;
   if(!w.auto&&!pressed)return;
   if(reloadT>0||switchT>0||player.fireCd>0)return;

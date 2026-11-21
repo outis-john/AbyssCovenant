@@ -1,6 +1,6 @@
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
-const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling','dblood','ddecay','dexcess','dchange','soh','we','ec','militia','warsinger','malk','tpred','rtank','tdread'];
+const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling','dblood','ddecay','dexcess','dchange','soh','we','ec','militia','warsinger','malk','tpred','rtank','tdread','pylon'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
