@@ -27,7 +27,7 @@ const BM={steel:new THREE.MeshLambertMaterial({map:texMetal,color:0xb0aca0}),rus
   glow:new THREE.MeshBasicMaterial({color:0x60e0ff}),snow:new THREE.MeshLambertMaterial({color:0xe8f4ff})};
 const G_={box:new THREE.BoxGeometry(1,1,1),cyl:new THREE.CylinderGeometry(1,1,1,10),cone:new THREE.ConeGeometry(1,1,6),tor:new THREE.TorusGeometry(1,.18,5,12)};
 for(const k in G_){G_[k].userData=G_[k].userData||{};G_[k].userData.shared=true;}
-function P(geo,mat,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,rz);levelGroup.add(m);return m;}
+function P(geo,mat,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,rz);m.userData.prop=true;levelGroup.add(m);return m;}
 function solid(x,z,hx,hz){colliders.push({minX:x-hx,maxX:x+hx,minZ:z-hz,maxZ:z+hz});}
 // 每个房间的四面墙：面的位置、朝向、中间有没有门
 function wallSides(i,j){const cx=i*C,cz=j*C,F=HALF-.5;return [
@@ -43,7 +43,22 @@ function biomeProps(){const B=curBiome;steamVents=[];const tx=BTEX[B];
   levelGroup.traverse(o=>{if(!o.isMesh||!o.material)return;if(o.material.map===texFloor||Object.values(BTEX).some(t=>t.floor===o.material.map)){o.material.map=tx.floor;o.material.needsUpdate=true;}
     else if(o.material.map===texCeil||Object.values(BTEX).some(t=>t.ceil===o.material.map)){o.material.map=tx.ceil;o.material.needsUpdate=true;}});
   for(let i=0;i<G;i++)for(let j=0;j<G;j++){const cx=i*C,cz=j*C;const sides=wallSides(i,j);
-    if(B==='hive')refinery(i,j,cx,cz,sides);else if(B==='sanctum')cathedral(i,j,cx,cz,sides);else iceCave(i,j,cx,cz,sides);}}
+    if(B==='hive')refinery(i,j,cx,cz,sides);else if(B==='sanctum')cathedral(i,j,cx,cz,sides);else iceCave(i,j,cx,cz,sides);}
+  mergeProps();}
+// ---------- 性能：同一种材质的静态道具合并成一个网格（几百次绘制 → 十几次）
+function mergeProps(){try{
+  levelGroup.updateMatrixWorld(true);const walls=new Set(wallMeshes);
+  const mergeSet=(list)=>{const by=new Map();for(const m of list){if(!m.isMesh)continue;if(!by.has(m.material))by.set(m.material,[]);by.get(m.material).push(m);}const out=[];
+    for(const [mat,ms] of by){if(ms.length<2){out.push(...ms);continue;}const parts=[];let n=0;
+      for(const m of ms){const g=(m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone());g.applyMatrix4(m.matrixWorld);parts.push(g);n+=g.attributes.position.count;}
+      const pos=new Float32Array(n*3),nor=new Float32Array(n*3),uv=new Float32Array(n*2);let o=0;
+      for(const g of parts){pos.set(g.attributes.position.array,o*3);nor.set(g.attributes.normal.array,o*3);if(g.attributes.uv)uv.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;g.dispose();}
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('normal',new THREE.BufferAttribute(nor,3));geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+      geo.computeBoundingSphere();geo.computeBoundingBox();const merged=new THREE.Mesh(geo,mat);for(const m of ms)levelGroup.remove(m);levelGroup.add(merged);out.push(merged);}
+    return out;};
+  wallMeshes=mergeSet(levelGroup.children.filter(m=>walls.has(m)));   // 墙合并后仍然用来做射线检测
+  mergeSet(levelGroup.children.filter(m=>!walls.has(m)&&!wallMeshes.includes(m)));
+}catch(e){/* 测试替身里没有真实几何体，跳过 */}}
 // ---------- 炼油厂：储油罐、管道、阀门、检修走道、钠灯、蒸汽、警示条纹
 function refinery(i,j,cx,cz,sides){
   for(const w of sides){const r=wallRot(w);const nx=w.n[0],nz=w.n[1];
