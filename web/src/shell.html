@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Abyss Covenant">
 <title>Abyss Covenant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -173,6 +174,18 @@
   #briefDiff .dbtn.on{border-color:#f0d890;background:rgba(80,64,24,.45)}#briefDiff .dbtn.on b{color:#f0d890}
   .ccont{margin:0 0 14px;padding:12px 16px;border:1px solid #f0d890;background:linear-gradient(90deg,rgba(90,70,24,.55),rgba(20,18,14,.4));cursor:pointer}.ccont:hover{background:linear-gradient(90deg,rgba(120,94,30,.6),rgba(30,26,18,.5))}
   .ccont .cct{font:600 12px Oswald,sans-serif;letter-spacing:6px;color:#f0d890}.ccont .ccl{font:600 22px Oswald,sans-serif;letter-spacing:2px;color:#f2ead6}.ccont .cco{font:500 13px 'Barlow Condensed',sans-serif;color:#d8cfb6}.ccont .ccw{font:500 11px 'Barlow Condensed',sans-serif;color:#9a927e;margin-top:3px}
+  #touchUI{position:fixed;inset:0;z-index:20;display:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  #touchUI.scene .tb,#touchUI.scene #tTop{display:none!important}
+  body.touch,body.touch canvas{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+  #touchUI .tb{position:absolute;border-radius:50%;text-align:center;font-family:Oswald,sans-serif;font-weight:600;letter-spacing:1px;color:rgba(240,234,214,.9);background:rgba(20,20,18,.38);border:2px solid rgba(240,216,144,.45);box-shadow:0 0 12px rgba(0,0,0,.5)}
+  #touchUI .tb.on{background:rgba(240,216,144,.35);border-color:#f0d890}#touchUI #tb_fire{background:rgba(120,30,20,.42);border-color:rgba(255,120,90,.7)}#touchUI #tb_exec.ready{border-color:#ffb040;box-shadow:0 0 16px rgba(255,170,60,.7)}
+  #tJoy{position:absolute;display:none;width:130px;height:130px;margin:-65px 0 0 -65px;border-radius:50%;border:2px solid rgba(240,216,144,.35);background:rgba(20,20,18,.25)}
+  #tKnob{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(240,216,144,.45)}
+  #tTop{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px}#tTop button{width:52px;height:38px;padding:0;font:600 12px Oswald,sans-serif;background:rgba(20,20,18,.55);border:1px solid rgba(240,216,144,.4);color:#f0e8d0}
+  #tRot{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);color:#f0d890;font:600 22px Oswald,sans-serif;letter-spacing:3px}
+  body.touch #compass{top:58px}
+  body.touch #weapons{top:58px;bottom:auto;right:auto;left:50%;transform:translateX(-50%) scale(.82);transform-origin:top center;flex-direction:row;gap:6px}body.touch.incamp #weapons{top:96px}
+  body.touch #hud-br{bottom:8px}
   .oopt{margin-top:5px;font:600 11px "Barlow Condensed",sans-serif;letter-spacing:.1em;color:#7fd8ff}
   .sqord{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:5px;border-top:1px solid rgba(220,230,220,.18);font:600 11px "Barlow Condensed",sans-serif;letter-spacing:.12em;color:#9aa69c}.sqord b{color:#e8d9a0;font-weight:700}
   .sq.mate .pf{width:30px;height:34px;font-size:11px}.sq .sqi{flex:1;min-width:0}

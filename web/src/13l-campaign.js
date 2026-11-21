@@ -32,7 +32,7 @@ function updateScene(dt){if(CAMP.trans){updateTransition(dt);updateVox(dt);retur
 function endScene(skip){if(!SC.on)return;if(skip){for(let i=SC.i+1;i<SC.shots.length;i++){const S=SC.shots[i];if(S.act)S.act();if(S.tick)S.tick(0,1);}}
   SC.on=false;document.body.classList.remove('inscene');$('letterbox').classList.remove('show');$('cutCap').textContent='';$('fade').style.opacity=0;view.visible=true;player.shake=0;
   camera.position.set(player.pos.x,player.pos.y+(CLS[cls].eye||1.6),player.pos.z);camera.rotation.set(player.pitch,player.yaw,0,'YXZ');
-  const d=SC.done;SC.done=null;state='playing';SC.endAt=performance.now();canvas.requestPointerLock?.();if(!document.pointerLockElement)announce('Click to take control',2.5);if(d)d();}
+  const d=SC.done;SC.done=null;state='playing';SC.endAt=performance.now();canvas.requestPointerLock?.();if(!document.pointerLockElement&&!(typeof TOUCH!=='undefined'&&TOUCH.on))announce('Click to take control',2.5);if(d)d();}
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
 const shotAt=(p,l)=>({p,l});
 // ---------------- 地图工具
