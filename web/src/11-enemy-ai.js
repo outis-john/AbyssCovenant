@@ -33,7 +33,7 @@ function updateEnemies(dt){
     if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
     if(ENEMY_AI[e.type]&&ENEMY_AI[e.type](e,T,pp,to,dist,dt))continue;
     if(dist<e.reach){if(e.cd<=0)e.windup=0.35;}
-    else{const sp=e.speed*(e.legsLost?0.5:1);e.g.position.addScaledVector(dir,sp*dt);e.walk+=dt*sp*2;
+    else{const sp=e.speed*(e.legsLost?0.5:1);const sd=steer(e,dir,dt);e.g.position.addScaledVector(sd,sp*dt);e.walk+=dt*sp*2;
       e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;
       if(e.parts.armL.parent===e.g)e.parts.armL.rotation.x=-Math.sin(e.walk)*.5;if(e.parts.armR.parent===e.g)e.parts.armR.rotation.x=Math.sin(e.walk)*.5;}
     collide(e.g.position,e.r);
@@ -126,3 +126,16 @@ function slamFx(x,z){const P=new THREE.Vector3(x,0.3,z);play('boom');for(let i=0
   embers(P,10);if(player.pos.distanceTo(P)<14)player.shake=Math.max(player.shake,0.5);}
 function bossDown(e){const p=e.g.position;annTeam('深渊领主倒下了！它的心脏化作一件灵能圣物。',3);
   netDrop('rare',p.x,p.z);for(let k=0;k<4;k++)netDrop('relic',p.x+(Math.random()-.5)*4,p.z+(Math.random()-.5)*4);}
+
+// ---------- 绕障碍：前方有碰撞体就左右试探转向；原地卡住就侧移一会儿
+function blockedAt(x,z,r){for(const b of colliders)if(x>b.minX-r&&x<b.maxX+r&&z>b.minZ-r&&z<b.maxZ+r)return true;return false;}
+const _sd=new THREE.Vector3();
+function steer(e,dir,dt){const p=e.g.position;
+  e.stuckT=(e.stuckT||0)+dt;if(e.stuckT>0.8){const moved=e.lastP?Math.hypot(p.x-e.lastP.x,p.z-e.lastP.z):1;e.lastP={x:p.x,z:p.z};e.stuckT=0;
+    if(moved<0.25*e.speed*0.8/3){e.unstick=0.7;e.side=-(e.side||1);}}
+  if(e.unstick>0){e.unstick-=dt;return _sd.set(-dir.z*e.side,0,dir.x*e.side).addScaledVector(dir,.3).normalize();}
+  const look=1.1+e.r,r=e.r*0.8;if(!blockedAt(p.x+dir.x*look,p.z+dir.z*look,r))return dir;
+  const s0=e.side||(Math.random()<.5?1:-1);
+  for(const a of [0.6,1.1,1.6,2.2])for(const s of [s0,-s0]){const c=Math.cos(a*s),sn=Math.sin(a*s);_sd.set(dir.x*c-dir.z*sn,0,dir.x*sn+dir.z*c);
+    if(!blockedAt(p.x+_sd.x*look,p.z+_sd.z*look,r)){e.side=s;return _sd;}}
+  return dir;}
