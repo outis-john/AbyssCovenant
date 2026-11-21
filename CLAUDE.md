@@ -52,6 +52,7 @@
 - 离线单文件版 `docs/abyss-offline.html`：**用户要的时候才生成和发送**（`python3 tools/build.py --offline`），build.py 把 `web/vendor/three.module.js`（r160）内嵌进去，发给国内朋友用。
 
 ## 已知坑
+- 国内网络：谷歌字体改成异步加载（media=print onload），加载不到时用 @font-face local() 映射到系统窄体字（iPad Avenir Next Condensed / Windows Arial Narrow），页面不会被卡住；联机房主默认先连 broker.emqx.io（国内可连），连不上才用 hivemq；PeerJS 的 unpkg 只在 #p2p 模式加载。国内朋友用离线单文件 docs/abyss-offline.html。
 - 不要 `clone()` 带 `userData.enemy` 的网格（循环引用会让 Three.js 的 JSON 复制抛错）。
 - 网络序列化依赖 `Vector3.isVector3`；deser 也兼容 {x,y,z}。
 - 推送时 GitHub 会提示 "repository moved"，可忽略。
