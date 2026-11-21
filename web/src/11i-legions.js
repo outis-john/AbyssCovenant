@@ -93,7 +93,7 @@ function updateEbolts(dt){eSndT-=dt;
     if(hit){const P=b.p.clone();
       if(hit.kind==='player'){hurtPlayer(b.dmg,false,b.src&&b.src.alive?b.src:null);}
       else if(hit.kind==='ally'){allyHurt(hit.a,b.dmg,b.src);}
-      else{const e=hit.e,head=P.y>e.g.position.y+1.85*e.g.scale.y;const k=damageEnemy(e,b.dmg,head?'head':'body',dir,{_remote:true,point:P,knock:.25,stagger:.12});if(k&&b.W.kind==='bolt'&&Math.random()<.35)e.g.updateMatrixWorld();}
+      else{const e=hit.e,head=P.y>e.g.position.y+1.85*e.g.scale.y;const k=damageEnemy(e,b.dmg,head?'head':'body',dir,{_remote:true,point:P,knock:.25,stagger:b.src?(b.src.big?.1:0):.12});if(k&&b.W.kind==='bolt'&&Math.random()<.35)e.g.updateMatrixWorld();}
       boltPop(P,dir,b.W);if(b.W.splash)shellBlast(P,b);b.life=0;}
     else if(w){boltPop(b.p.clone(),dir,b.W,w.face&&w.face.normal);if(b.W.splash)shellBlast(b.p.clone(),b);b.life=0;}
     else if(b.W.splash&&(b.p.y<.25||b.life<=0)){b.p.y=Math.max(b.p.y,.2);shellBlast(b.p.clone(),b);b.life=0;}
