@@ -1,6 +1,6 @@
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
-const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling','dblood','ddecay','dexcess','dchange','soh','we','ec','militia','warsinger','malk'];
+const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling','dblood','ddecay','dexcess','dchange','soh','we','ec','militia','warsinger','malk','tpred','rtank','tdread'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
@@ -42,7 +42,7 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   if(e.shieldHp>0&&dir&&!opts._noShield)dmg=shieldBlock(e,dmg,dir,opts);
   if(e.blessT>0&&!opts._exec)dmg*=0.5;
   if(player.bless==='blood'&&!opts._remote&&state==='playing'&&WEAPONS[cur]&&WEAPONS[cur].melee)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,e.hp)*0.1);   // 血怒：近战吸血if(e.type==='tanker'&&dir&&dir.clone().setY(0).normalize().dot(new THREE.Vector3(Math.sin(e.g.rotation.y),0,Math.cos(e.g.rotation.y)))>0.3){dmg*=3;hitSparks(e.g.position.clone().setY(1.6*e.g.scale.y),dir,6);}   // 打中背后的油罐
-  e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
+  e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:e.vehicle?0.02:e.heavy?0.25:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9*res);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
   spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,head?10:5);
@@ -65,6 +65,7 @@ function killEnemy(e,dir,explode,how={}){
   if(e.type==='nest'&&!isClient()){addProgress('nest',1);annTeam('Demon nest destroyed!',2);}
   e.alive=false;{const near=e.g.position.distanceTo(player.pos)<9;if(near){play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);}}e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);
+  if(e.vehicle){vehicleDeath(e);match.kills++;return;}
   try{
     if(how.melt){meltPuddle(e);}
     else if(how.burst){burstKill(e,how.burst.p,how.burst.dir);}

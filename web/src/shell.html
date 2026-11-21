@@ -215,7 +215,7 @@
     <div class="scr"><canvas id="ausCv" width="300" height="220"></canvas></div>
     <div class="foot"><i class="grl"></i><i class="led"></i><i class="led g"></i><span>RNG 32M</span></div></div>
 </div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="godab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
-<div id="obj"></div><div id="vox"></div><div id="titleCard"></div><div id="wp"></div><div id="allyTags"></div>
+<div id="obj"></div><div id="vox"></div><div id="titleCard"></div><div id="wp"></div><div id="emarks"></div><div id="objBanner"></div><canvas id="compass" width="460" height="30"></canvas><div id="allyTags"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> Pod <span style="color:#60ffb0">●</span> Clue / terminal <span style="color:#ff9a40">●</span> Parts · M to enlarge</div></div>
 <div class="layer" id="splat"></div>
 <div id="announce"></div>
@@ -284,6 +284,14 @@
   body.incamp #squad{position:fixed;left:18px;top:30%;width:200px}body.incamp #squad .sq{margin-top:5px;align-items:center}body.incamp #squad .pf{width:26px;height:28px;font-size:10px}body.incamp #squad .nm{font-size:12px}
   body.inscene #cross,body.inscene #zab,body.inscene #godab,body.inscene #obj,body.inscene #mapWrap,body.inscene #hud-bl,body.inscene #weapons,body.inscene #wp,body.inscene #allyTags,body.inscene #bossbar,body.inscene #progress,body.inscene #announce,body.inscene #prompt{visibility:hidden}
   body.openmap #mapWrap{display:none}
+  #compass{position:fixed;left:50%;top:10px;transform:translateX(-50%);width:460px;height:30px;display:none;z-index:12;pointer-events:none;border-bottom:1px solid rgba(220,230,220,.25)}body.incamp #compass{display:block}body.inscene #compass,body.inscene #emarks{visibility:hidden}
+  #wp i{width:16px;height:16px;border-width:3px}#wp b{font-size:13px;letter-spacing:3px}#wp.off i{border:0;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:18px solid #f0d890;transform-origin:50% 60%;box-shadow:none}
+  #emarks{position:fixed;inset:0;pointer-events:none;z-index:11}.emk{position:absolute;transform:translate(-50%,-100%);text-align:center;font:600 10px 'Barlow Condensed',sans-serif;color:#ff9080;text-shadow:0 1px 2px #000}
+  .emk i{display:block;width:9px;height:9px;margin:0 auto 2px;border:2px solid #ff5040;transform:rotate(45deg)}.emk.off i{border:0;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid #ff5040}
+  #objBanner{position:fixed;left:50%;top:14%;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:31;opacity:0}#objBanner small{display:block;font:500 11px Oswald,sans-serif;letter-spacing:6px;color:#f0d890}
+  #objBanner div{font:600 26px Oswald,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#f2ead6;text-shadow:0 0 14px #000;padding:4px 26px 6px;border-top:1px solid rgba(240,216,144,.6);border-bottom:1px solid rgba(240,216,144,.6);background:linear-gradient(90deg,transparent,rgba(10,10,8,.75),transparent)}
+  #objBanner.go{animation:objb 4s ease forwards}@keyframes objb{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}10%{opacity:1;transform:translateX(-50%)}82%{opacity:1}100%{opacity:0}}
+  #obj .odone{color:#7a8a7a;text-decoration:line-through;font-size:12px}#obj .ocur{color:#f2ead6;font-weight:600}#obj .ohint{color:#f0d890;font-size:12px;margin-top:3px}
   #squad .sq.dead{opacity:.45}#squad .sq i{display:block;height:3px;background:rgba(0,0,0,.5);margin-top:3px;width:120px}#squad .sq i b{display:block;height:100%;background:#70e090}
   #campBtn{pointer-events:auto;margin:0;padding:8px 0;font:500 14px Oswald,sans-serif;letter-spacing:5px;text-transform:uppercase;background:rgba(20,24,22,.9);border-color:#8a7a5a;color:#e8dcc0}#campBtn:hover{border-color:#d8a657}
   #campaign,#brief{position:fixed;inset:0;z-index:60;display:none;background:radial-gradient(ellipse at 30% 20%,rgba(40,30,20,.96),rgba(6,5,4,.98));color:#e0d6c0;overflow:auto}

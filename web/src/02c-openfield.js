@@ -62,10 +62,10 @@ function updateWarLayer(dt){const W=OPEN.war;if(!W)return;const M=new THREE.Matr
 function oRandF(a,b){return a+Math.random()*(b-a);}
 function setTimeoutSafe(f,ms){try{setTimeout(f,ms);}catch(e){}}
 function updateOpenField(dt){if(!OPEN.on)return;for(const f of OPEN.fires){f.ph+=dt*9;f.m.scale.set(1+Math.sin(f.ph)*.12,1+Math.sin(f.ph*1.7)*.25,1+Math.cos(f.ph)*.12);if(Math.random()<dt*2.5)puff(new THREE.Vector3(f.x,f.y+1.4*f.s,f.z),1,0x2a2422,1.6*f.s);}
-  updateWarLayer(dt);}
+  updateWarLayer(dt);updateTitans(dt);}
 // ---------------- 生成：伊斯塔万三号 · 唱诗之城外围
 function buildOpenField(theme){if(levelGroup)scene.remove(levelGroup);levelGroup=new THREE.Group();scene.add(levelGroup);
-  colliders=[];wallMeshes=[];candles=[];roomTypes={};conn=new Set();OPEN.fires=[];OPEN.on=true;OPEN.theme=theme;const R=OPEN.R;
+  colliders=[];wallMeshes=[];candles=[];roomTypes={};conn=new Set();OPEN.fires=[];OPEN.titans=[];OPEN.on=true;OPEN.theme=theme;const R=OPEN.R;
   for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i<G-1)conn.add(key(i,j,i+1,j));if(j<G-1)conn.add(key(i,j,i,j+1));}
   // 地形：可玩区几乎平整，外圈抬升成山丘
   const S=560,N=140,geo=new THREE.PlaneGeometry(S,S,N,N);geo.rotateX(-Math.PI/2);const p=geo.attributes.position,col=[];const c0=new THREE.Color(0x8a7c6c),c1=new THREE.Color(0x544a42),c2=new THREE.Color(0x9a8266);

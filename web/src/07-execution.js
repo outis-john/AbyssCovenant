@@ -1,7 +1,7 @@
 // ============================================================ 处决：需要充能，动作由手持武器决定，期间无敌，回复等量生命
 const ex={active:false,t:0,dur:1.1,type:'',target:null,fired:{}};
 const exChain={until:0,left:0};
-const canExecute=e=>player.exCharge>=100&&e.alive&&!e.boss&&!e.static&&(!e.elite||e.hp<=e.maxHp*0.5);
+const canExecute=e=>player.exCharge>=100&&e.alive&&!e.boss&&!e.static&&!e.vehicle&&!e.heavy&&(!e.elite||e.hp<=e.maxHp*0.5);
 function executeTarget(){if(player.exCharge<100)return null;const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));let best=null,bd=3.6;
   for(const e of enemies){if(!canExecute(e))continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<bd&&to.normalize().dot(fwd)>0.2){bd=d;best=e;}}return best;}
 function execute(mode='full'){

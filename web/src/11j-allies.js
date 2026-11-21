@@ -53,7 +53,7 @@ function clearAllies(){for(const a of allies)scene.remove(a.root);allies=[];cons
 function allyTargets(){const t=[];for(const a of allies)if(a.alive&&!a.down)t.push({pos:a.pos,ally:a});return t;}
 function allyHurt(a,n,src){if(!a||!a.alive||a.down||a.invuln)return;n*=a.big?.5:.6;a.hp-=n;a.lastHit=gameTime;a.flash=.1;a.flinch=Math.min(1,(a.flinch||0)+.6);if(src&&src.alive&&!a.target)a.target=src;
   if(a.hp<a.maxHp*.35&&Math.random()<.15)bark(a,'hurt');
-  if(a.hp<=0){if(a.def.essential){a.down=true;a.hp=0;a.downT=9;bark(a,'down');}else allyDie(a);}}
+  if(a.hp<=0){if(a.vehicle){allyVehicleDie(a);return;}if(a.def.essential){a.down=true;a.hp=0;a.downT=9;bark(a,'down');}else allyDie(a);}}
 function allyDie(a,silent){if(!a.alive)return;a.alive=false;a.deathT=0;a.fallDir=Math.random()<.5?-1:1;spawnBlood(a.pos.clone().setY(1.3),null,30);if(a.J.chev)a.J.chev.visible=false;
   if(!silent){play('hurt');const o=allies.find(b=>b.alive&&b!==a&&!b.down);if(o)vox(o.id,ALLY_LINES.lost[Math.floor(Math.random()*ALLY_LINES.lost.length)].replace('#',a.name.split(' ').pop()),true);}}
 const ALLY_LINES={
@@ -73,11 +73,11 @@ function allyLOS(a,e){const o=a.pos.clone();o.y+=a.big?3:2.1;const t=e.g.positio
 // 身体碰撞：玩家、队友、敌人互相推开，谁也穿不过谁（玩家被推得少一些，手感不黏）
 function separateBodies(){const B=[];const pr=CLS[cls]&&CLS[cls].r||.45;if(state==='playing'||state==='scene')B.push({p:player.pos,r:pr,w:.25});
   for(const a of allies)if(a.alive)B.push({p:a.pos,r:a.r+.08,w:a.big?.15:1});
-  for(const e of enemies)if(e.alive&&!e.lifted&&!e.inHole&&!e.static&&!e.leap)B.push({p:e.g.position,r:e.r+.05,w:e.boss?.1:.8});
+  for(const e of enemies)if(e.alive&&!e.lifted&&!e.inHole&&!e.static&&!e.leap)B.push({p:e.g.position,r:e.r+.05,w:e.vehicle?.04:e.heavy?.2:e.boss?.1:.8});
   for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++){const A=B[i],C2=B[j];const dx=C2.p.x-A.p.x,dz=C2.p.z-A.p.z,R=A.r+C2.r;const d2=dx*dx+dz*dz;if(d2>=R*R)continue;
     const d=Math.sqrt(d2)||.001,o=R-d,nx=dx/d,nz=dz/d,wt=A.w+C2.w||1;A.p.x-=nx*o*A.w/wt;A.p.z-=nz*o*A.w/wt;C2.p.x+=nx*o*C2.w/wt;C2.p.z+=nz*o*C2.w/wt;}}
 function updateAllies(dt){
-  for(const a of allies){const J=a.J;
+  for(const a of allies){const J=a.J;if(a.vehicle){if(a.alive)updateAllyVehicle(a,dt);continue;}
     if(!a.alive){if(a.deathT<1.2){a.deathT+=dt;const k=Math.min(1,a.deathT/.9),e=1-Math.pow(1-k,3);
         if(a.big){a.root.rotation.z=a.fallDir*e*.35;a.pos.y=-e*.4;}
         else{const kn=Math.min(1,k*2.2);J.kneeL.rotation.x=J.kneeR.rotation.x=kn*1.6;J.hipL.rotation.x=J.hipR.rotation.x=-kn*.6;a.pos.y=-kn*.5;

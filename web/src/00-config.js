@@ -22,6 +22,9 @@ const CFG={
     ec:    {hp:220,speed:4.6,dmg:22,reach:2.3,scale:1.12,color:0x6a2a7a},                 // 帝皇之子剑士（格挡反击）
     militia:{hp:48,speed:4.2,dmg:7,reach:1.5,scale:.9,color:0x6a6050},                    // 伊斯塔万叛军民兵（激光枪）
     warsinger:{hp:120,speed:3.0,dmg:20,reach:1.5,scale:1.0,color:0xd8d0c0},               // 战歌者（灵能尖啸）
+    tpred: {hp:1800,speed:2.6,dmg:40,reach:3,scale:1,color:0x2f5a52},                     // 叛军掠食者坦克
+    rtank: {hp:900, speed:2.4,dmg:30,reach:3,scale:1,color:0x5a5444},                     // 伊斯塔万叛军坦克
+    tdread:{hp:2200,speed:2.4,dmg:48,reach:3.2,scale:1.75,color:0x3a6e62},                // 叛军无畏（康坦普托）
     malk:  {hp:2400,speed:4.6,dmg:30,reach:2.3,scale:1.25,color:0x2f5a52},                // 马尔克中士（第三幕 Boss）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },

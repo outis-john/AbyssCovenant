@@ -94,8 +94,9 @@ function updateEbolts(dt){eSndT-=dt;
       if(hit.kind==='player'){hurtPlayer(b.dmg,false,b.src&&b.src.alive?b.src:null);}
       else if(hit.kind==='ally'){allyHurt(hit.a,b.dmg,b.src);}
       else{const e=hit.e,head=P.y>e.g.position.y+1.85*e.g.scale.y;const k=damageEnemy(e,b.dmg,head?'head':'body',dir,{_remote:true,point:P,knock:.25,stagger:.12});if(k&&b.W.kind==='bolt'&&Math.random()<.35)e.g.updateMatrixWorld();}
-      boltPop(P,dir,b.W);b.life=0;}
-    else if(w){boltPop(b.p.clone(),dir,b.W,w.face&&w.face.normal);b.life=0;}
+      boltPop(P,dir,b.W);if(b.W.splash)shellBlast(P,b);b.life=0;}
+    else if(w){boltPop(b.p.clone(),dir,b.W,w.face&&w.face.normal);if(b.W.splash)shellBlast(b.p.clone(),b);b.life=0;}
+    else if(b.W.splash&&(b.p.y<.25||b.life<=0)){b.p.y=Math.max(b.p.y,.2);shellBlast(b.p.clone(),b);b.life=0;}
     if(b.life<=0)scene.remove(b.m);}
   ebolts=ebolts.filter(b=>b.life>0);}
 function segT(o,d,len,c,r){const oc=c.clone().sub(o);const t=oc.dot(d);if(t<0||t>len)return null;const q=o.clone().addScaledVector(d,t);return q.distanceTo(c)<r?t:null;}
@@ -123,7 +124,7 @@ function leapUpdate(e,T,dt){const L=e.leap;L.t+=dt;const k=Math.min(1,L.t/L.dur)
   e.parts.armR.rotation.x=e.parts.armL.rotation.x=-2.6+k*2.6;
   if(k>=1){e.g.position.y=0;e.leap=null;collide(e.g.position,e.r);dust(e.g.position,10);if(e.g.position.distanceTo(player.pos)<14){play('boom');player.shake=Math.max(player.shake,.3);}
     if(T&&Math.hypot(T.pos.x-e.g.position.x,T.pos.z-e.g.position.z)<2.6)damageTarget(T,e.dmg*1.3,e);}}
-function startLeap(e,pp){const to=pp.clone().setY(0);const d=to.clone().sub(e.g.position).setY(0);d.setLength(Math.max(0,d.length()-1.4));e.leap={t:0,dur:.55,from:e.g.position.clone(),to:e.g.position.clone().add(d)};play('whoosh');}
+function startLeap(e,pp){const to=pp.clone().setY(0);const d=to.clone().sub(e.g.position).setY(0);{const L=d.length();if(L>0.01)d.multiplyScalar(Math.max(0,L-1.4)/L);}e.leap={t:0,dur:.55,from:e.g.position.clone(),to:e.g.position.clone().add(d)};play('whoosh');}
 // 帝皇之子：正面挡下玩家的普通近战并反击，重击 / 背后 / 处决可破防
 function duelistGuard(e,dmg,dir,opts){if((e.parryCd||0)>0||e.stun>0||!dir||opts._remote)return dmg;
   const W=WEAPONS[cur];if(!W||!W.melee||e.g.position.distanceTo(player.pos)>4.5)return dmg;
@@ -136,8 +137,8 @@ Object.assign(ENEMY_AI,{
   militia:(e,T,pp,to,dist,dt)=>shooterAI(e,T,pp,to,dist,dt,EWEAP.las,[6,20],2,[1.1,2.2],.16),
   we:(e,T,pp,to,dist,dt)=>{if(!e.rage&&e.hp<e.maxHp*.5){e.rage=true;e.speed*=1.35;e.dmg*=1.15;if(e.g.position.distanceTo(player.pos)<20){play('growl');play('frenzy');}}
     if(e.leap){leapUpdate(e,T,dt);return true;}
-    e.leapCd=(e.leapCd??1.5+Math.random()*2)-dt;
-    if(dist>4.5&&dist<10&&e.leapCd<=0&&hasLOS(e,pp)){startLeap(e,pp);e.leapCd=4+Math.random()*3;return true;}
+    e.leapCd=(e.leapCd??.2+Math.random()*.5)-dt;
+    if(dist>3.5&&dist<11&&e.leapCd<=0&&hasLOS(e,pp)){startLeap(e,pp);e.leapCd=4+Math.random()*3;return true;}
     e.parts.armL.rotation.z=.25;e.parts.armR.rotation.z=-.25;return false;},
   ec:(e,T,pp,to,dist,dt)=>{e.parryCd=Math.max(0,(e.parryCd||0)-dt);
     if(e.riposte>0){e.riposte-=dt;if(e.riposte<=0){e.parts.armR.rotation.set(0,0,0);if(dist<e.reach+.9){damageTarget(T,e.dmg*1.3,e);play('whoosh');}}return true;}
@@ -171,3 +172,19 @@ function malkAI(e,T,pp,to,dist,dt){const r=e.hp/e.maxHp;
   if(dist>5&&dist<12&&e.leapCd<=0&&hasLOS(e,pp)){startLeap(e,pp);e.leapCd=e.phase===3?3:5;return true;}
   if(dist>7){const sh=shooterAI(e,T,pp,to,dist,dt,EWEAP.pistol,[7,14],2,[1,1.8],.18);if(sh){e.parts.armL.rotation.x=-1.5;return true;}}
   if(e.phase===3)e.cd=Math.min(e.cd,.25);return false;}
+// ============================================================ 叛军关节动画：腿绕髋、手臂绕肩转（以前是绕部件中心转，枪和腿会“漂”）；呼吸、看向目标、受击后仰、步幅平滑
+// AI 照旧只设部件的 rotation；这里每帧按关节点把 position 补回来，所以所有旧动画自动变成正确的关节运动
+function rigSetup(e){const P=e.parts,R={};for(const k of ['legL','legR','armL','armR']){const p=P[k];const h=p.geometry&&p.geometry.parameters?p.geometry.parameters.height:.9;R[k]={x:p.position.x,y:p.position.y+h/2,z:p.position.z,h};}
+  R.body={y:P.body.position.y};R.head={y:P.head.position.y,z:P.head.position.z};e.rig=R;e.stride=0;}
+function jointPos(p,J){const rx=p.rotation.x,ry=p.rotation.y,rz=p.rotation.z,y=-J.h/2;const cz=Math.cos(rz),sz=Math.sin(rz),cy=Math.cos(ry),sy=Math.sin(ry),cx=Math.cos(rx),sx=Math.sin(rx);
+  let x1=-y*sz,y1=y*cz,z1=0;let x2=x1*cy+z1*sy,y2=y1,z2=-x1*sy+z1*cy;let y3=y2*cx-z2*sx,z3=y2*sx+z2*cx;p.position.set(J.x+x2,J.y+y3,J.z+z3);}
+function updateRigs(dt){for(const e of enemies){if(!e.alive||!e.rig||e.lifted||e.inHole)continue;const P=e.parts,R=e.rig;
+    // 步幅：按实际移动速度平滑，停下时腿慢慢收回
+    const mv=e.rigP?Math.hypot(e.g.position.x-e.rigP.x,e.g.position.z-e.rigP.z)/Math.max(dt,1e-4):0;e.rigP=e.rigP||new THREE.Vector3();e.rigP.copy(e.g.position);
+    e.stride=lerp(e.stride,Math.min(1,mv/3.5),Math.min(1,dt*8));
+    if(e.stride<.15&&!e.leap){for(const k of ['legL','legR'])if(P[k].parent===e.g)P[k].rotation.x*=Math.max(0,1-dt*10);}
+    // 呼吸、后仰、头看目标
+    const br=Math.sin(gameTime*2.2+e.id)*.015;P.body.position.y=R.body.y+br;if(!e.hover)P.body.rotation.x=-e.lean*.45-(e.stride>.5?.08:0);
+    if(P.head.parent===e.g){P.head.position.y=R.head.y+br*1.3;P.head.rotation.y=Math.sin(gameTime*.7+e.id)*.12*(1-(e.aimK||0));}
+    for(const k of ['legL','legR','armL','armR']){const p=P[k];if(p.parent!==e.g)continue;jointPos(p,R[k]);}}}
+for(const t of ['soh','we','ec','militia','warsinger','malk']){const f=ENEMY_BUILD[t];ENEMY_BUILD[t]=e=>{f(e);rigSetup(e);};}
