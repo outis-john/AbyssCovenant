@@ -85,7 +85,7 @@ CSTEPS['3-1']=[
       if(CAMP.wave1===2)later(3,()=>loyalReinforce(2));if(CAMP.wave1===3){const t=spawnEnemy('rtank',-14,30);t.campaign=true;t.hullYaw=Math.PI;vox('ardan','Rebel armour on the left flank!',true);}}
     return CAMP.wave1>=3&&waveDone();}},
   // B. 摧毁三座战歌放大塔
-  {enter(){CAMP.pyl=[[-32,22],[30,8],[-8,-12]].map(([x,z])=>{const p=spawnEnemy('pylon',x,z);p.campaign=true;return p;});CAMP.pylAmb=new Set();spawnTitan(TITANCOL.loyal,[V3(100,0,70),V3(100,0,-70),V3(60,0,-100),V3(100,0,70)]);
+  {enter(){CAMP.pyl=[[-32,22],[30,8],[-8,-12]].map(([x,z])=>{const p=spawnEnemy('pylon',x,z);p.campaign=true;return p;});CAMP.pylAmb=new Set();spawnTitan(TITANCOL.loyal,[V3(125,0,80),V3(125,0,-80),V3(70,0,-125),V3(125,0,80)]);
       vox('tavik','Those spires — vox-choir pylons. They amplify the Warsingers’ song across the whole city. Bring them down.',true);later(6,()=>vox('loken','Titan support is walking with us. Legio Solaria — mind their fire lanes.',true));},
     mark:e=>e.type==='pylon',update(){for(const p of CAMP.pyl){if(!p.alive||CAMP.pylAmb.has(p.id))continue;if(p.g.position.distanceTo(player.pos)<32){CAMP.pylAmb.add(p.id);openSpawn('militia',8,p.g.position,4,12,{minP:12});openSpawn('warsinger',2,p.g.position,3,8,{minP:12});}}
       const left=CAMP.pyl.filter(p=>p.alive).length;if(left!==CAMP.pylLeft){if(CAMP.pylLeft!==undefined&&left<CAMP.pylLeft)vox('tavik',left?`Pylon down. ${left} remain.`:'The last pylon falls. The song weakens.',true);CAMP.pylLeft=left;}

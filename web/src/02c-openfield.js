@@ -1,6 +1,8 @@
 // ============================================================ 大型开放战场（战役用）：没有天花板的外星地表——废墟城市、弹坑、倒塌尖塔、残骸、远处的城市天际线与地平线上的大战
 // 物理地面仍是 y=0（可玩区 ±R 内只有极小起伏），R 外的地形抬升成山丘；废墟墙体进 colliders / wallMeshes，所以射线、掩体、绕障碍全都照常
 const OPEN={on:false,next:null,R:70,fires:[],war:null,theme:null};
+// 地形高度（可玩区内≈0，外圈抬升成山丘）：建地形和让泰坦踩在山坡上共用
+function groundH(x,z){const R=OPEN.R,d=Math.max(Math.abs(x),Math.abs(z));const n=Math.sin(x*.07)*Math.cos(z*.06)+Math.sin(x*.023+z*.031)*1.6;return d<R+3?n*.03:Math.pow((d-R-3)/55,1.5)*32+n*4;}
 function oRand(a,b){return a+rng()*(b-a);}
 const texAsh=pixelTex((g,s)=>{noisy(g,s,[64,56,50],26);g.fillStyle='rgba(20,14,12,.55)';for(let i=0;i<5;i++){let x=Math.floor(Math.random()*s),y=Math.floor(Math.random()*s);for(let k=0;k<7;k++){g.fillRect(x,y,1,1);x=(x+(Math.random()<.5?1:-1)+s)%s;y=(y+1)%s;}}});
 function openBox(x,z,w,d,y0,y1,mat=matBrick,rotY=0,col=true){const geo=scaleBoxUV(new THREE.BoxGeometry(w,y1-y0,d),w,y1-y0,d);const m=new THREE.Mesh(geo,mat);m.position.set(x,(y0+y1)/2,z);m.rotation.y=rotY;levelGroup.add(m);
@@ -69,8 +71,8 @@ function buildOpenField(theme){if(levelGroup)scene.remove(levelGroup);levelGroup
   for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i<G-1)conn.add(key(i,j,i+1,j));if(j<G-1)conn.add(key(i,j,i,j+1));}
   // 地形：可玩区几乎平整，外圈抬升成山丘
   const S=560,N=140,geo=new THREE.PlaneGeometry(S,S,N,N);geo.rotateX(-Math.PI/2);const p=geo.attributes.position,col=[];const ash=theme==='ash';const c0=new THREE.Color(ash?0x5a5852:0x8a7c6c),c1=new THREE.Color(ash?0x2e2c2a:0x544a42),c2=new THREE.Color(ash?0x6a6660:0x9a8266);
-  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),d=Math.max(Math.abs(x),Math.abs(z));const n=Math.sin(x*.07)*Math.cos(z*.06)+Math.sin(x*.023+z*.031)*1.6;
-    let y=d<R+3?n*.03:Math.pow((d-R-3)/55,1.5)*32+n*4;p.setY(i,y);const c=c0.clone().lerp(c1,Math.min(1,Math.max(0,(n+1.5)/3))).lerp(c2,Math.min(1,Math.max(0,(y-8)/30)));col.push(c.r,c.g,c.b);}
+  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);const n=Math.sin(x*.07)*Math.cos(z*.06)+Math.sin(x*.023+z*.031)*1.6;
+    const y=groundH(x,z);p.setY(i,y);const c=c0.clone().lerp(c1,Math.min(1,Math.max(0,(n+1.5)/3))).lerp(c2,Math.min(1,Math.max(0,(y-8)/30)));col.push(c.r,c.g,c.b);}
   geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.attributes.uv.array.forEach((v,i,a)=>a[i]=v*S/4);geo.computeVertexNormals();
   const ground=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({map:texAsh,vertexColors:true}));levelGroup.add(ground);
   // 边界：看不见的墙 + 外圈碎石堆

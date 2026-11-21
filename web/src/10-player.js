@@ -10,10 +10,12 @@ function hurtPlayer(n,self=false,att=null){
       player.blocking=false;MS.step={p:'h',dm:2.4,cleave:true,fin:true};MS.dir=stepDir();MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
     n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
   if(HELL.on&&player.hp-n<1)n=Math.max(0,player.hp-1);   // 在深渊里不会死
+  if(n>0&&!self)player.lastHurt=gameTime;
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);
   if(player.hp<=0)beginDeath();
 }
 function updatePlayer(dt){
+  breathRegen(dt);
   updateHold(dt);updateExHold(dt);updateGunExtras(dt);updateClassExtras(dt);
   const sprint=!CLS[cls].noSprint&&keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
   let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;sp*=(player.speedMul||1)*(player.stimT>0?1.3:1)*(match&&match.carrier&&match.carrier===net.myId?0.7:1)*(player.slowT>0?0.55:1);if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active||player.mounted)sp=0;
@@ -80,3 +82,9 @@ function updatePlayer(dt){
   player.mana=Math.min(player.maxMana,player.mana+8*dt*(player.bless==='change'?2:1));player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
 }
 
+// 呼吸回血：5 秒没挨打就开始喘息回血，越喘越快；有呼吸声，屏幕边缘的红色慢慢褪去
+function breathRegen(dt){if(state!=='playing'||player.hp<=0||player.hp>=player.maxHp||HELL.on){player.breathT=0;return;}
+  const since=gameTime-(player.lastHurt??-99);if(since<5){player.breathT=0;return;}
+  player.breathT=(player.breathT||0)+dt;const rate=player.maxHp*(.04+Math.min(.08,player.breathT*.02));player.hp=Math.min(player.maxHp,player.hp+rate*dt);
+  player.breathP=(player.breathP||0)-dt;if(player.breathP<=0){player.breathP=2.4;if(actx){noiseHit(700,.05,.9);tone('sine',140,110,.02,.8,1.1);noiseHit(420,.04,1.1);}}
+  const h=$('hurt');if(h&&h.style&&player.hp<player.maxHp*.4)h.style.opacity=.15+(1-player.hp/player.maxHp)*.25;}

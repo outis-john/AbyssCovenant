@@ -97,14 +97,14 @@ const CLEVELS={
     brief:[['tarvitz','…this is Captain Saul Tarvitz. Any loyal ear on Isstvan III — our own fleet is loading virus bombs. The Life-Eater.'],
       ['tarvitz','They mean to kill every one of us. Get underground. Now.'],
       ['loken','Garro took the Eisenstein to warn Terra. We are what is left. The bunkers lie beneath the palace — run, and don’t look back.']]},
-  '3-3':{title:'The Precentor’s Palace',place:'Isstvan III · Ruins of the Precentor’s Palace',seed:3103,biome:'sanctum',open:'choral',build(){palaceRing(0,0);},start:V3(2,0,2),tanks:[{id:'pred2',name:'Predator ‘Last Vigil’',x:-10,z:9,hold:V3(-10,0,9)}],titan:{col:'mortis',side:'traitor',path:[V3(-95,0,-110),V3(110,0,-100),V3(110,0,60),V3(-95,0,-110)]},allies:['ardan','krosk','lucan','tavik','hesk','leg1','leg3','leg4','leg5'],
+  '3-3':{title:'The Precentor’s Palace',place:'Isstvan III · Ruins of the Precentor’s Palace',seed:3103,biome:'sanctum',open:'choral',build(){palaceRing(0,0);},start:V3(2,0,2),tanks:[{id:'pred2',name:'Predator ‘Last Vigil’',x:-10,z:9,hold:V3(-10,0,9)}],titan:{col:'mortis',side:'traitor',path:[V3(-120,0,-130),V3(130,0,-120),V3(130,0,80),V3(-120,0,-130)]},allies:['ardan','krosk','lucan','tavik','hesk','leg1','leg3','leg4','leg5'],
     obj:['Hold the palace','Hold the palace','Hold the palace','Face Oren Malk'],
     brief:[['loken','The virus failed. We still breathe, and they will not forgive us for it. They are coming down now — all of them.'],
       ['tavik','Three Legions in the sky, Kaedric. And among them a voice I know.'],
       ['tavik','Malk is coming.'],
       ['kaedric','Then I’ll be waiting for him.']]}};
 const CORDER=['3-1','3-2','3-3'];
-const TITANCOL={loyal:{hull:0xd8d0b8,trim:0x2a2a2a,metal:0x8a6a2a,eye:0x80c0ff},mortis:{hull:0x222222,trim:0x6a1a10,metal:0x8a8070,eye:0xff3010}};
+const TITANCOL={loyal:{hull:0xd8d0b8,trim:0x2a2a2a,metal:0x8a6a2a,eye:0x80c0ff,banner:0x8a1a14},mortis:{hull:0x222222,trim:0x6a1a10,metal:0x8a8070,eye:0xff3010,banner:0x1a1a1a}};
 // ---------------- 每关的步骤
 // ---------------- 开放战场的刷怪：从废墟后面涌出 / 空降舱砸下来
 function openSpawn(type,n,c,rmin,rmax,opt={}){const out=[];for(let k=0;k<n;k++){let p;for(let t=0;t<14;t++){const a=Math.random()*6.28,r=rmin+Math.random()*(rmax-rmin);p=V3(c.x+Math.cos(a)*r,0,c.z+Math.sin(a)*r);
@@ -123,7 +123,7 @@ const CSTEPS={
     {enter(){CAMP.wave1=0;CAMP.wT=1.5;},update(dt){CAMP.wT-=dt;if(CAMP.wave1<3&&CAMP.wT<=0&&campAlive()<5){CAMP.wave1++;CAMP.wT=7;
         const c=V3((CAMP.wave1-2)*22,0,32);openSpawn('militia',8,c,3,12);if(CAMP.wave1>=2)openSpawn('warsinger',1,c,8,14);if(CAMP.wave1===3)vox('tavik','A Warsinger. Kill it before it finds its voice!',true);}
       return CAMP.wave1>=3&&campAlive()===0;}},
-    {enter(){CAMP.wp=V3(0,0,-36);CAMP.wpName='SIRENHOLD';CAMP.amb=0;spawnTitan(TITANCOL.loyal,[V3(100,0,70),V3(100,0,-70),V3(60,0,-100),V3(100,0,70)]);later(4,()=>vox('loken','Titan support is walking with us. Legio Solaria — mind their fire lanes.',true));
+    {enter(){CAMP.wp=V3(0,0,-36);CAMP.wpName='SIRENHOLD';CAMP.amb=0;spawnTitan(TITANCOL.loyal,[V3(125,0,80),V3(125,0,-80),V3(70,0,-125),V3(125,0,80)]);later(4,()=>vox('loken','Titan support is walking with us. Legio Solaria — mind their fire lanes.',true));
       vox('loken','Landing zone secure. Push for the Sirenhold — the great cathedral to the north. That’s where the choirs sing.',true);
       later(18,()=>vox('malk','Kaedric, it’s Malk. Listen — stay close to the Sirenhold. Whatever happens. Trust me on this.',true));
       later(23,()=>vox('kaedric','Malk? Why aren’t you down here with us, brother?',true));later(28,()=>vox('malk','…The Warmaster has other work for me. Good hunting.',true));},

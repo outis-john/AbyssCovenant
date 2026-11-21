@@ -692,6 +692,8 @@ function roomLayout(rt,cx,cz){const Q=[[-1,-1],[1,-1],[-1,1],[1,1]];
 // ============================================================ 大型开放战场（战役用）：没有天花板的外星地表——废墟城市、弹坑、倒塌尖塔、残骸、远处的城市天际线与地平线上的大战
 // 物理地面仍是 y=0（可玩区 ±R 内只有极小起伏），R 外的地形抬升成山丘；废墟墙体进 colliders / wallMeshes，所以射线、掩体、绕障碍全都照常
 const OPEN={on:false,next:null,R:70,fires:[],war:null,theme:null};
+// 地形高度（可玩区内≈0，外圈抬升成山丘）：建地形和让泰坦踩在山坡上共用
+function groundH(x,z){const R=OPEN.R,d=Math.max(Math.abs(x),Math.abs(z));const n=Math.sin(x*.07)*Math.cos(z*.06)+Math.sin(x*.023+z*.031)*1.6;return d<R+3?n*.03:Math.pow((d-R-3)/55,1.5)*32+n*4;}
 function oRand(a,b){return a+rng()*(b-a);}
 const texAsh=pixelTex((g,s)=>{noisy(g,s,[64,56,50],26);g.fillStyle='rgba(20,14,12,.55)';for(let i=0;i<5;i++){let x=Math.floor(Math.random()*s),y=Math.floor(Math.random()*s);for(let k=0;k<7;k++){g.fillRect(x,y,1,1);x=(x+(Math.random()<.5?1:-1)+s)%s;y=(y+1)%s;}}});
 function openBox(x,z,w,d,y0,y1,mat=matBrick,rotY=0,col=true){const geo=scaleBoxUV(new THREE.BoxGeometry(w,y1-y0,d),w,y1-y0,d);const m=new THREE.Mesh(geo,mat);m.position.set(x,(y0+y1)/2,z);m.rotation.y=rotY;levelGroup.add(m);
@@ -760,8 +762,8 @@ function buildOpenField(theme){if(levelGroup)scene.remove(levelGroup);levelGroup
   for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i<G-1)conn.add(key(i,j,i+1,j));if(j<G-1)conn.add(key(i,j,i,j+1));}
   // 地形：可玩区几乎平整，外圈抬升成山丘
   const S=560,N=140,geo=new THREE.PlaneGeometry(S,S,N,N);geo.rotateX(-Math.PI/2);const p=geo.attributes.position,col=[];const ash=theme==='ash';const c0=new THREE.Color(ash?0x5a5852:0x8a7c6c),c1=new THREE.Color(ash?0x2e2c2a:0x544a42),c2=new THREE.Color(ash?0x6a6660:0x9a8266);
-  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),d=Math.max(Math.abs(x),Math.abs(z));const n=Math.sin(x*.07)*Math.cos(z*.06)+Math.sin(x*.023+z*.031)*1.6;
-    let y=d<R+3?n*.03:Math.pow((d-R-3)/55,1.5)*32+n*4;p.setY(i,y);const c=c0.clone().lerp(c1,Math.min(1,Math.max(0,(n+1.5)/3))).lerp(c2,Math.min(1,Math.max(0,(y-8)/30)));col.push(c.r,c.g,c.b);}
+  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);const n=Math.sin(x*.07)*Math.cos(z*.06)+Math.sin(x*.023+z*.031)*1.6;
+    const y=groundH(x,z);p.setY(i,y);const c=c0.clone().lerp(c1,Math.min(1,Math.max(0,(n+1.5)/3))).lerp(c2,Math.min(1,Math.max(0,(y-8)/30)));col.push(c.r,c.g,c.b);}
   geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.attributes.uv.array.forEach((v,i,a)=>a[i]=v*S/4);geo.computeVertexNormals();
   const ground=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({map:texAsh,vertexColors:true}));levelGroup.add(ground);
   // 边界：看不见的墙 + 外圈碎石堆
@@ -1892,10 +1894,12 @@ function hurtPlayer(n,self=false,att=null){
       player.blocking=false;MS.step={p:'h',dm:2.4,cleave:true,fin:true};MS.dir=stepDir();MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
     n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
   if(HELL.on&&player.hp-n<1)n=Math.max(0,player.hp-1);   // 在深渊里不会死
+  if(n>0&&!self)player.lastHurt=gameTime;
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);
   if(player.hp<=0)beginDeath();
 }
 function updatePlayer(dt){
+  breathRegen(dt);
   updateHold(dt);updateExHold(dt);updateGunExtras(dt);updateClassExtras(dt);
   const sprint=!CLS[cls].noSprint&&keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
   let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;sp*=(player.speedMul||1)*(player.stimT>0?1.3:1)*(match&&match.carrier&&match.carrier===net.myId?0.7:1)*(player.slowT>0?0.55:1);if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active||player.mounted)sp=0;
@@ -1962,6 +1966,12 @@ function updatePlayer(dt){
   player.mana=Math.min(player.maxMana,player.mana+8*dt*(player.bless==='change'?2:1));player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
 }
 
+// 呼吸回血：5 秒没挨打就开始喘息回血，越喘越快；有呼吸声，屏幕边缘的红色慢慢褪去
+function breathRegen(dt){if(state!=='playing'||player.hp<=0||player.hp>=player.maxHp||HELL.on){player.breathT=0;return;}
+  const since=gameTime-(player.lastHurt??-99);if(since<5){player.breathT=0;return;}
+  player.breathT=(player.breathT||0)+dt;const rate=player.maxHp*(.04+Math.min(.08,player.breathT*.02));player.hp=Math.min(player.maxHp,player.hp+rate*dt);
+  player.breathP=(player.breathP||0)-dt;if(player.breathP<=0){player.breathP=2.4;if(actx){noiseHit(700,.05,.9);tone('sine',140,110,.02,.8,1.1);noiseHit(420,.04,1.1);}}
+  const h=$('hurt');if(h&&h.style&&player.hp<player.maxHp*.4)h.style.opacity=.15+(1-player.hp/player.maxHp)*.25;}
 // ============================================================ 敌人 AI
 function updateEnemies(dt){
   distTimer-=dt;if(distTimer<=0){distTimer=0.4;distCache=new Map();}
@@ -2958,13 +2968,18 @@ function buildTitan(col){const g=new THREE.Group();const A=new THREE.MeshLambert
   for(let i=0;i<4;i++)box(body,.6,2.2,.6,-2.4+i*1.6,5.2,-1.8,D);J.body=body;
   for(const s of [-1,1]){const arm=new THREE.Group();arm.position.set(s*5,1.6,0);body.add(arm);box(arm,2.4,2.4,3,0,0,0,M);const gun=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.1,9,10),D);gun.rotation.x=Math.PI/2;gun.position.set(0,-.6,4.5);arm.add(gun);
     for(let i=0;i<3;i++)box(arm,2.2,2.2,.4,0,-.6,1.2+i*2.2,T);const mz=new THREE.Object3D();mz.position.set(0,-.6,9.2);arm.add(mz);J[s<0?'gunL':'gunR']=mz;J[s<0?'armL':'armR']=arm;}
-  return {g,J};}
-function spawnTitan(col,path,opt={}){if(!OPEN.on)return null;const t=buildTitan(col);t.g.position.copy(path[0]);levelGroup.add(t.g);const T={...t,path,pi:1,walk:0,fireT:3+Math.random()*3,hornT:4,side:opt.side||'loyal',target:opt.target||null,lastStep:0};(OPEN.titans=OPEN.titans||[]).push(T);return T;}
+  // 细节：头冠、肩甲、挂在腰间的军团旗、背后的排气塔
+  box(body,1.2,1.6,.4,0,3.4,4.6,T);for(const s of [-1,1]){const pa=box(body,3.2,1.2,4.4,s*4.6,4.6,0,A);pa.rotation.z=s*-.25;box(body,3.4,.3,4.6,s*4.7,5.25,0,M).rotation.z=s*-.25;}
+  const ban=new THREE.Mesh(new THREE.PlaneGeometry(3.2,7),new THREE.MeshLambertMaterial({color:col.banner||col.trim,side:THREE.DoubleSide}));ban.position.set(0,-4.6,2.3);pelvis.add(ban);J.banner=ban;
+  const emb=new THREE.Mesh(new THREE.CircleGeometry(.9,16),lmat(col.metal));emb.position.set(0,-3.4,2.32);pelvis.add(emb);
+  for(const s of [-1,1]){const st=new THREE.Mesh(new THREE.CylinderGeometry(.5,.7,4,8),D);st.position.set(s*1.8,5.4,-3.2);body.add(st);(J.stacks=J.stacks||[]).push(st);}
+  g.scale.setScalar(2.4);return {g,J};}
+function spawnTitan(col,path,opt={}){if(!OPEN.on)return null;const t=buildTitan(col);t.g.position.copy(path[0]);t.g.position.y=groundH(path[0].x,path[0].z)-1;levelGroup.add(t.g);const T={...t,path,pi:1,walk:0,fireT:3+Math.random()*3,hornT:4,side:opt.side||'loyal',target:opt.target||null,lastStep:0};(OPEN.titans=OPEN.titans||[]).push(T);return T;}
 function titanHorn(T){if(!actx)return;const d=T.g.position.distanceTo(player.pos);const v=Math.max(.05,.5-d/400);tone('sawtooth',62,58,v,2.2);tone('sawtooth',93,88,v*.7,2.2);tone('square',46,44,v*.5,2.4);}
 function updateTitans(dt){if(!OPEN.titans)return;for(const T of OPEN.titans){const tgt=T.path[T.pi];const to=tgt.clone().sub(T.g.position).setY(0);const d=to.length();
-    if(d<2){T.pi=(T.pi+1)%T.path.length;}else{const yaw=Math.atan2(to.x,to.z);T.g.rotation.y+=wrapA(yaw-T.g.rotation.y)*Math.min(1,dt*.4);T.g.position.addScaledVector(to.normalize(),2.2*dt);}
-    T.walk+=dt*1.1;const sw=Math.sin(T.walk);T.J.hipL.rotation.x=sw*.32;T.J.hipR.rotation.x=-sw*.32;T.J.kneeL.rotation.x=Math.max(0,-sw)*.45;T.J.kneeR.rotation.x=Math.max(0,sw)*.45;T.J.pelvis.position.y=15+Math.abs(Math.cos(T.walk))*.5;T.J.body.rotation.z=Math.cos(T.walk)*.03;
-    const step=Math.sign(sw);if(step!==T.lastStep){T.lastStep=step;const dd=T.g.position.distanceTo(player.pos);if(dd<160){player.shake=Math.max(player.shake,Math.max(0,.35-dd/450));if(actx)noiseHit(70,Math.max(.04,.3-dd/500),.9);}}
+    if(d<2){T.pi=(T.pi+1)%T.path.length;}else{const yaw=Math.atan2(to.x,to.z);T.g.rotation.y+=wrapA(yaw-T.g.rotation.y)*Math.min(1,dt*.4);T.g.position.addScaledVector(to.normalize(),4.6*dt);}
+    T.g.position.y=lerp(T.g.position.y,groundH(T.g.position.x,T.g.position.z)-1,Math.min(1,dt*2));T.walk+=dt*.85;if(T.J.banner)T.J.banner.rotation.x=Math.sin(gameTime*1.3)*.12;if(T.J.stacks&&Math.random()<dt*3){const st=T.J.stacks[Math.random()<.5?0:1];puff(st.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,5,0)),1,0x2a2622,8);}const sw=Math.sin(T.walk);T.J.hipL.rotation.x=sw*.32;T.J.hipR.rotation.x=-sw*.32;T.J.kneeL.rotation.x=Math.max(0,-sw)*.45;T.J.kneeR.rotation.x=Math.max(0,sw)*.45;T.J.pelvis.position.y=15+Math.abs(Math.cos(T.walk))*.5;T.J.body.rotation.z=Math.cos(T.walk)*.03;
+    const step=Math.sign(sw);if(step!==T.lastStep){T.lastStep=step;const dd=T.g.position.distanceTo(player.pos);if(dd<260){player.shake=Math.max(player.shake,Math.max(.05,.5-dd/500));if(actx)noiseHit(55,Math.max(.06,.35-dd/700),1.2);}}
     T.hornT-=dt;if(T.hornT<=0){T.hornT=22+Math.random()*16;titanHorn(T);}
     T.fireT-=dt;if(T.fireT<=0){T.fireT=3.5+Math.random()*3;titanFire(T);}}}
 // 泰坦开火：我方泰坦专打远处成群的敌人；敌方泰坦轰击玩家附近（25 米以外）的阵地
@@ -3832,14 +3847,14 @@ const CLEVELS={
     brief:[['tarvitz','…this is Captain Saul Tarvitz. Any loyal ear on Isstvan III — our own fleet is loading virus bombs. The Life-Eater.'],
       ['tarvitz','They mean to kill every one of us. Get underground. Now.'],
       ['loken','Garro took the Eisenstein to warn Terra. We are what is left. The bunkers lie beneath the palace — run, and don’t look back.']]},
-  '3-3':{title:'The Precentor’s Palace',place:'Isstvan III · Ruins of the Precentor’s Palace',seed:3103,biome:'sanctum',open:'choral',build(){palaceRing(0,0);},start:V3(2,0,2),tanks:[{id:'pred2',name:'Predator ‘Last Vigil’',x:-10,z:9,hold:V3(-10,0,9)}],titan:{col:'mortis',side:'traitor',path:[V3(-95,0,-110),V3(110,0,-100),V3(110,0,60),V3(-95,0,-110)]},allies:['ardan','krosk','lucan','tavik','hesk','leg1','leg3','leg4','leg5'],
+  '3-3':{title:'The Precentor’s Palace',place:'Isstvan III · Ruins of the Precentor’s Palace',seed:3103,biome:'sanctum',open:'choral',build(){palaceRing(0,0);},start:V3(2,0,2),tanks:[{id:'pred2',name:'Predator ‘Last Vigil’',x:-10,z:9,hold:V3(-10,0,9)}],titan:{col:'mortis',side:'traitor',path:[V3(-120,0,-130),V3(130,0,-120),V3(130,0,80),V3(-120,0,-130)]},allies:['ardan','krosk','lucan','tavik','hesk','leg1','leg3','leg4','leg5'],
     obj:['Hold the palace','Hold the palace','Hold the palace','Face Oren Malk'],
     brief:[['loken','The virus failed. We still breathe, and they will not forgive us for it. They are coming down now — all of them.'],
       ['tavik','Three Legions in the sky, Kaedric. And among them a voice I know.'],
       ['tavik','Malk is coming.'],
       ['kaedric','Then I’ll be waiting for him.']]}};
 const CORDER=['3-1','3-2','3-3'];
-const TITANCOL={loyal:{hull:0xd8d0b8,trim:0x2a2a2a,metal:0x8a6a2a,eye:0x80c0ff},mortis:{hull:0x222222,trim:0x6a1a10,metal:0x8a8070,eye:0xff3010}};
+const TITANCOL={loyal:{hull:0xd8d0b8,trim:0x2a2a2a,metal:0x8a6a2a,eye:0x80c0ff,banner:0x8a1a14},mortis:{hull:0x222222,trim:0x6a1a10,metal:0x8a8070,eye:0xff3010,banner:0x1a1a1a}};
 // ---------------- 每关的步骤
 // ---------------- 开放战场的刷怪：从废墟后面涌出 / 空降舱砸下来
 function openSpawn(type,n,c,rmin,rmax,opt={}){const out=[];for(let k=0;k<n;k++){let p;for(let t=0;t<14;t++){const a=Math.random()*6.28,r=rmin+Math.random()*(rmax-rmin);p=V3(c.x+Math.cos(a)*r,0,c.z+Math.sin(a)*r);
@@ -3858,7 +3873,7 @@ const CSTEPS={
     {enter(){CAMP.wave1=0;CAMP.wT=1.5;},update(dt){CAMP.wT-=dt;if(CAMP.wave1<3&&CAMP.wT<=0&&campAlive()<5){CAMP.wave1++;CAMP.wT=7;
         const c=V3((CAMP.wave1-2)*22,0,32);openSpawn('militia',8,c,3,12);if(CAMP.wave1>=2)openSpawn('warsinger',1,c,8,14);if(CAMP.wave1===3)vox('tavik','A Warsinger. Kill it before it finds its voice!',true);}
       return CAMP.wave1>=3&&campAlive()===0;}},
-    {enter(){CAMP.wp=V3(0,0,-36);CAMP.wpName='SIRENHOLD';CAMP.amb=0;spawnTitan(TITANCOL.loyal,[V3(100,0,70),V3(100,0,-70),V3(60,0,-100),V3(100,0,70)]);later(4,()=>vox('loken','Titan support is walking with us. Legio Solaria — mind their fire lanes.',true));
+    {enter(){CAMP.wp=V3(0,0,-36);CAMP.wpName='SIRENHOLD';CAMP.amb=0;spawnTitan(TITANCOL.loyal,[V3(125,0,80),V3(125,0,-80),V3(70,0,-125),V3(125,0,80)]);later(4,()=>vox('loken','Titan support is walking with us. Legio Solaria — mind their fire lanes.',true));
       vox('loken','Landing zone secure. Push for the Sirenhold — the great cathedral to the north. That’s where the choirs sing.',true);
       later(18,()=>vox('malk','Kaedric, it’s Malk. Listen — stay close to the Sirenhold. Whatever happens. Trust me on this.',true));
       later(23,()=>vox('kaedric','Malk? Why aren’t you down here with us, brother?',true));later(28,()=>vox('malk','…The Warmaster has other work for me. Good hunting.',true));},
@@ -4148,7 +4163,7 @@ CSTEPS['3-1']=[
       if(CAMP.wave1===2)later(3,()=>loyalReinforce(2));if(CAMP.wave1===3){const t=spawnEnemy('rtank',-14,30);t.campaign=true;t.hullYaw=Math.PI;vox('ardan','Rebel armour on the left flank!',true);}}
     return CAMP.wave1>=3&&waveDone();}},
   // B. 摧毁三座战歌放大塔
-  {enter(){CAMP.pyl=[[-32,22],[30,8],[-8,-12]].map(([x,z])=>{const p=spawnEnemy('pylon',x,z);p.campaign=true;return p;});CAMP.pylAmb=new Set();spawnTitan(TITANCOL.loyal,[V3(100,0,70),V3(100,0,-70),V3(60,0,-100),V3(100,0,70)]);
+  {enter(){CAMP.pyl=[[-32,22],[30,8],[-8,-12]].map(([x,z])=>{const p=spawnEnemy('pylon',x,z);p.campaign=true;return p;});CAMP.pylAmb=new Set();spawnTitan(TITANCOL.loyal,[V3(125,0,80),V3(125,0,-80),V3(70,0,-125),V3(125,0,80)]);
       vox('tavik','Those spires — vox-choir pylons. They amplify the Warsingers’ song across the whole city. Bring them down.',true);later(6,()=>vox('loken','Titan support is walking with us. Legio Solaria — mind their fire lanes.',true));},
     mark:e=>e.type==='pylon',update(){for(const p of CAMP.pyl){if(!p.alive||CAMP.pylAmb.has(p.id))continue;if(p.g.position.distanceTo(player.pos)<32){CAMP.pylAmb.add(p.id);openSpawn('militia',8,p.g.position,4,12,{minP:12});openSpawn('warsinger',2,p.g.position,3,8,{minP:12});}}
       const left=CAMP.pyl.filter(p=>p.alive).length;if(left!==CAMP.pylLeft){if(CAMP.pylLeft!==undefined&&left<CAMP.pylLeft)vox('tavik',left?`Pylon down. ${left} remain.`:'The last pylon falls. The song weakens.',true);CAMP.pylLeft=left;}

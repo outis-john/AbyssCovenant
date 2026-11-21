@@ -93,13 +93,18 @@ function buildTitan(col){const g=new THREE.Group();const A=new THREE.MeshLambert
   for(let i=0;i<4;i++)box(body,.6,2.2,.6,-2.4+i*1.6,5.2,-1.8,D);J.body=body;
   for(const s of [-1,1]){const arm=new THREE.Group();arm.position.set(s*5,1.6,0);body.add(arm);box(arm,2.4,2.4,3,0,0,0,M);const gun=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.1,9,10),D);gun.rotation.x=Math.PI/2;gun.position.set(0,-.6,4.5);arm.add(gun);
     for(let i=0;i<3;i++)box(arm,2.2,2.2,.4,0,-.6,1.2+i*2.2,T);const mz=new THREE.Object3D();mz.position.set(0,-.6,9.2);arm.add(mz);J[s<0?'gunL':'gunR']=mz;J[s<0?'armL':'armR']=arm;}
-  return {g,J};}
-function spawnTitan(col,path,opt={}){if(!OPEN.on)return null;const t=buildTitan(col);t.g.position.copy(path[0]);levelGroup.add(t.g);const T={...t,path,pi:1,walk:0,fireT:3+Math.random()*3,hornT:4,side:opt.side||'loyal',target:opt.target||null,lastStep:0};(OPEN.titans=OPEN.titans||[]).push(T);return T;}
+  // 细节：头冠、肩甲、挂在腰间的军团旗、背后的排气塔
+  box(body,1.2,1.6,.4,0,3.4,4.6,T);for(const s of [-1,1]){const pa=box(body,3.2,1.2,4.4,s*4.6,4.6,0,A);pa.rotation.z=s*-.25;box(body,3.4,.3,4.6,s*4.7,5.25,0,M).rotation.z=s*-.25;}
+  const ban=new THREE.Mesh(new THREE.PlaneGeometry(3.2,7),new THREE.MeshLambertMaterial({color:col.banner||col.trim,side:THREE.DoubleSide}));ban.position.set(0,-4.6,2.3);pelvis.add(ban);J.banner=ban;
+  const emb=new THREE.Mesh(new THREE.CircleGeometry(.9,16),lmat(col.metal));emb.position.set(0,-3.4,2.32);pelvis.add(emb);
+  for(const s of [-1,1]){const st=new THREE.Mesh(new THREE.CylinderGeometry(.5,.7,4,8),D);st.position.set(s*1.8,5.4,-3.2);body.add(st);(J.stacks=J.stacks||[]).push(st);}
+  g.scale.setScalar(2.4);return {g,J};}
+function spawnTitan(col,path,opt={}){if(!OPEN.on)return null;const t=buildTitan(col);t.g.position.copy(path[0]);t.g.position.y=groundH(path[0].x,path[0].z)-1;levelGroup.add(t.g);const T={...t,path,pi:1,walk:0,fireT:3+Math.random()*3,hornT:4,side:opt.side||'loyal',target:opt.target||null,lastStep:0};(OPEN.titans=OPEN.titans||[]).push(T);return T;}
 function titanHorn(T){if(!actx)return;const d=T.g.position.distanceTo(player.pos);const v=Math.max(.05,.5-d/400);tone('sawtooth',62,58,v,2.2);tone('sawtooth',93,88,v*.7,2.2);tone('square',46,44,v*.5,2.4);}
 function updateTitans(dt){if(!OPEN.titans)return;for(const T of OPEN.titans){const tgt=T.path[T.pi];const to=tgt.clone().sub(T.g.position).setY(0);const d=to.length();
-    if(d<2){T.pi=(T.pi+1)%T.path.length;}else{const yaw=Math.atan2(to.x,to.z);T.g.rotation.y+=wrapA(yaw-T.g.rotation.y)*Math.min(1,dt*.4);T.g.position.addScaledVector(to.normalize(),2.2*dt);}
-    T.walk+=dt*1.1;const sw=Math.sin(T.walk);T.J.hipL.rotation.x=sw*.32;T.J.hipR.rotation.x=-sw*.32;T.J.kneeL.rotation.x=Math.max(0,-sw)*.45;T.J.kneeR.rotation.x=Math.max(0,sw)*.45;T.J.pelvis.position.y=15+Math.abs(Math.cos(T.walk))*.5;T.J.body.rotation.z=Math.cos(T.walk)*.03;
-    const step=Math.sign(sw);if(step!==T.lastStep){T.lastStep=step;const dd=T.g.position.distanceTo(player.pos);if(dd<160){player.shake=Math.max(player.shake,Math.max(0,.35-dd/450));if(actx)noiseHit(70,Math.max(.04,.3-dd/500),.9);}}
+    if(d<2){T.pi=(T.pi+1)%T.path.length;}else{const yaw=Math.atan2(to.x,to.z);T.g.rotation.y+=wrapA(yaw-T.g.rotation.y)*Math.min(1,dt*.4);T.g.position.addScaledVector(to.normalize(),4.6*dt);}
+    T.g.position.y=lerp(T.g.position.y,groundH(T.g.position.x,T.g.position.z)-1,Math.min(1,dt*2));T.walk+=dt*.85;if(T.J.banner)T.J.banner.rotation.x=Math.sin(gameTime*1.3)*.12;if(T.J.stacks&&Math.random()<dt*3){const st=T.J.stacks[Math.random()<.5?0:1];puff(st.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,5,0)),1,0x2a2622,8);}const sw=Math.sin(T.walk);T.J.hipL.rotation.x=sw*.32;T.J.hipR.rotation.x=-sw*.32;T.J.kneeL.rotation.x=Math.max(0,-sw)*.45;T.J.kneeR.rotation.x=Math.max(0,sw)*.45;T.J.pelvis.position.y=15+Math.abs(Math.cos(T.walk))*.5;T.J.body.rotation.z=Math.cos(T.walk)*.03;
+    const step=Math.sign(sw);if(step!==T.lastStep){T.lastStep=step;const dd=T.g.position.distanceTo(player.pos);if(dd<260){player.shake=Math.max(player.shake,Math.max(.05,.5-dd/500));if(actx)noiseHit(55,Math.max(.06,.35-dd/700),1.2);}}
     T.hornT-=dt;if(T.hornT<=0){T.hornT=22+Math.random()*16;titanHorn(T);}
     T.fireT-=dt;if(T.fireT<=0){T.fireT=3.5+Math.random()*3;titanFire(T);}}}
 // 泰坦开火：我方泰坦专打远处成群的敌人；敌方泰坦轰击玩家附近（25 米以外）的阵地
