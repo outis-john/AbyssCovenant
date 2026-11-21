@@ -24,6 +24,7 @@ function updateEnemies(dt){
       for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=ei+a,nj=ej+b;if(ni<0||nj<0||ni>=G||nj>=G||!connected(ei,ej,ni,nj))continue;if(cellDist[ni][nj]<bd){bd=cellDist[ni][nj];best=[ni,nj];}}
       if(best){const door=new THREE.Vector3((ei+best[0])/2*C,0,(ej+best[1])/2*C);
         const dd=door.distanceTo(e.g.position);target=dd<1.5?new THREE.Vector3(best[0]*C,0,best[1]*C):door;}}
+    if(ei===pi&&ej===pj)target=tacticTarget(e,target,pp,dist);
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
@@ -139,3 +140,12 @@ function steer(e,dir,dt){const p=e.g.position;
   for(const a of [0.6,1.1,1.6,2.2])for(const s of [s0,-s0]){const c=Math.cos(a*s),sn=Math.sin(a*s);_sd.set(dir.x*c-dir.z*sn,0,dir.x*sn+dir.z*c);
     if(!blockedAt(p.x+_sd.x*look,p.z+_sd.z*look,r)){e.side=s;return _sd;}}
   return dir;}
+
+// ---------- 配合：猎犬从两侧包抄；小恶魔近身后散开围成一圈；骨盾恶魔挡在术士前面
+function tacticTarget(e,target,pp,dist){const p=e.g.position;
+  if(e.type==='hound'&&dist>3.5&&!e.leap){const to=new THREE.Vector3(pp.x-p.x,0,pp.z-p.z).normalize();const s=e.id%2?1:-1;
+    return new THREE.Vector3(pp.x-to.z*s*4.5,0,pp.z+to.x*s*4.5);}
+  if(e.type==='imp'&&dist<6&&dist>e.reach){const a=(e.id%7)/7*Math.PI*2;return new THREE.Vector3(pp.x+Math.cos(a)*1.4,0,pp.z+Math.sin(a)*1.4);}
+  if(e.type==='bulwark'&&dist>3.5){let c=null,cd=10;for(const o of enemies){if(!o.alive||o.type!=='caster')continue;const d=o.g.position.distanceTo(p);if(d<cd){cd=d;c=o;}}
+    if(c){const dir=new THREE.Vector3(pp.x-c.g.position.x,0,pp.z-c.g.position.z).normalize();e.guarding=c;return c.g.position.clone().addScaledVector(dir,2.4).setY(0);}}
+  e.guarding=null;return target;}
