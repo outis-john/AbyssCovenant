@@ -67,7 +67,7 @@ function updateHUD(dt){updateBossBar();
   h+=`<div>Loot carried: ${match.loot}${match.rare?' + psy-relic':''} · Sent back: ${match.safeLoot} · Beacons: ${match.beacons}</div>`;
   if(isNet()){const ts=[...net.remotes.values()].filter(r=>r.inMatch);if(ts.length)h+='<div style="margin-top:6px;color:#8fd0ff">Squad: '+ts.map(r=>(CLS_INFO[r.cls]?.name||'Teammate')+' '+(r.dead?'Down':Math.max(0,r.hp)+'/'+r.maxHp)).join(' · ')+'</div>';}
   $('obj').innerHTML=h;
-  $('weapons').innerHTML=WEAPONS.map((w,i)=>{if(i===1&&CLS[cls].noPistol)return '';const a=ammo[i];const pad=n=>String(n).padStart(3,'0');
+  $('weapons').innerHTML=WEAPONS.map((w,i)=>{if(i===1&&CLS[cls].noPistol)return '';if(i===0&&CLS[cls].noPrimary)return '';const a=ammo[i];const pad=n=>String(n).padStart(3,'0');
     const am=(w.block&&player.ssPistol)?`${pad(ammo[1].mag)}<small>∞</small>`:(w.id==='power'&&player.field>0)?`<span style="color:#8fd0ff">${player.field.toFixed(1)}</span><small>FIELD</small>`:(w.id==='power'&&player.fieldCd>0)?`${Math.ceil(player.fieldCd)}<small>COOLDOWN</small>`:
       (w.id==='saw'&&player.frenzy>0)?`<span style="color:#ffb040">${player.frenzy.toFixed(1)}</span><small>FRENZY</small>`:w.heat?(heat.over>0?'<span class="low">VENT</span><small>OVERHEAT</small>':`${Math.round(heat.v)}<small>HEAT${heat.charge>0.05?' · '+Math.round(heat.charge*100)+'%':''}</small>`):
       w.melee?'—':`<span class="${a.mag<=w.magSize*0.25?'low':''}">${pad(a.mag)}</span><small>${a.res===Infinity?'∞':a.res}</small>`;

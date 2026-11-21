@@ -27,7 +27,7 @@ function updateLifts(dt){
       if(g.position.y<=0){g.position.y=0;e.lifted=false;L.done=true;g.rotation.set(0,g.rotation.y,0);
         play('boom');player.shake=Math.max(player.shake,0.3);hitstop=Math.max(hitstop,0.05);dust(g.position,18);
         damageEnemy(e,e.elite?90:70,'body',new THREE.Vector3(0,1,0),{stagger:.9,point:g.position.clone().setY(.5)});
-        for(const o of enemies)if(o!==e&&o.alive&&!o.lifted&&o.g.position.distanceTo(g.position)<2.6)damageEnemy(o,20,'body',o.g.position.clone().sub(g.position).normalize(),{knock:1.2});}}
+        for(const o of enemies)if(o!==e&&o.alive&&!o.lifted&&o.g.position.distanceTo(g.position)<2.6)damageEnemy(o,20,'body',o.g.position.clone().sub(g.position).normalize(),{knock:1.2});godEcho(g.position.clone(),.6);}}
     if(L.phase!=='slam'){g.rotation.x=Math.sin(L.t*18)*0.25;g.rotation.z=Math.sin(L.t*13)*0.2;
       e.parts.legL.rotation.x=Math.sin(L.t*26)*.9;e.parts.legR.rotation.x=-Math.sin(L.t*26)*.9;
       if(e.parts.armL.parent===g)e.parts.armL.rotation.x=-2.7;if(e.parts.armR.parent===g)e.parts.armR.rotation.x=-2.7;
@@ -62,12 +62,12 @@ function updateHoles(dt){
     if(H.t>=H.dur){H.done=true;scene.remove(H.g);play('boom');player.shake=Math.max(player.shake,.4);
       const fl=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),new THREE.MeshBasicMaterial({color:0xe0b0ff,transparent:true,opacity:.8}));fl.position.copy(H.P);scene.add(fl);beams.push({m:fl,life:.3,grow:true});
       if(!H.visual)for(const e of H.caught){if(!e.alive)continue;e.inHole=false;const dir=e.g.position.clone().sub(H.P).setY(.4).normalize();
-        e.g.scale.setScalar(e.s0);e.g.position.y=0;if(e.g.position.distanceTo(H.P.clone().setY(0))<5)damageEnemy(e,60,'body',dir,{knock:2.5,stagger:.6,explode:true});}}}
+        e.g.scale.setScalar(e.s0);e.g.position.y=0;if(e.g.position.distanceTo(H.P.clone().setY(0))<5)damageEnemy(e,60,'body',dir,{knock:2.5,stagger:.6,explode:true});}if(!H.visual)godEcho(H.P.clone().setY(0),1.2);}}
   holes=holes.filter(H=>!H.done);
 }
 function castBT(){
   if(PSY.bt.cd>0){announce('Slow Time cooling down',0.8);return;}
-  payPsy(60,0.8);PSY.bt.cd=PSY.bt.max;bt.t=cls==='tide'?8:6;play('bt');announce('Slow Time · Lifesteal',1.6);
+  payPsy(60,0.8);PSY.bt.cd=PSY.bt.max;bt.t=cls==='tide'?8:6;play('bt');announce('Slow Time · Lifesteal',1.6);godEcho(player.pos.clone(),1);
   if(player.ovl>=player.maxOvl)backlash();
 }
 // ============================================================ 灵能

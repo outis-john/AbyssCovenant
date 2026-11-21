@@ -86,7 +86,7 @@ function buildCharacter(c){
   g.position.y=0.42;return g;
 }
 const CLS_INFO={
-  tide:{name:'Tidecaller',desc:'A sanctioned psyker. The Abyss whispers in his ear, and he twists its power into weapons with runes. The harder he pushes, the stronger — and more dangerous — it gets.',stats:[['HP',100,150],['Psy slots',4,5],['Overload cap',130,130],['Gun damage',1,1.3],['Damage reduction',0,.2]],
+  tide:{name:'Tidecaller',desc:'A sanctioned psyker. The Abyss whispers in his ear, and he twists its power into weapons. His frail body bears only a bolt pistol and a blade; push the warp too hard and a dark god will claim him.',stats:[['HP',100,150],['Psy slots',4,5],['Overload cap',130,130],['Gun damage',1,1.3],['Damage reduction',0,.2]],
     perks:'4 psy core slots · overload cap +30% · 25% chance to ignore backlash'},
   ward:{name:'Forged Warden',desc:'A gene-forged elite in power armour. Hits harder with guns and takes more punishment, but has little psychic gift.',stats:[['HP',150,150],['Psy slots',3,5],['Overload cap',100,130],['Gun damage',1.3,1.3],['Damage reduction',.2,.2]],
     perks:'3 psy core slots · gun damage +30% · damage taken -20%'}};
@@ -118,8 +118,8 @@ function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));
 function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>Loot<b>${v.loot}</b></span><span>Relics<b style="color:#d070ff">${v.rare}</b></span><span title="Deployments / extractions">Record<b>${v.extracted}/${v.runs}</b></span>`;}
 function renderLoadout(){
   const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).filter(w=>{const a=typeof CLS!=='undefined'&&CLS[cls]&&CLS[cls][key==='primary'?'guns':'melee'];return !a||a.includes(w.id);}).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
-  mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
-  $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>: ${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>: ${MELEE[loadout.melee].desc}<div class="dim">${masteryText(loadout.primary)} · ${masteryText(loadout.melee)}</div>`;
+  mk('loPrimary',RANGED,'primary');if(CLS[cls]&&CLS[cls].noPrimary)$('loPrimary').innerHTML='<div class="dim">A psyker’s body cannot bear heavy weapons — bolt pistol and melee only</div>';mk('loMelee',MELEE,'melee');
+  $('loDesc').innerHTML=`${CLS[cls]&&CLS[cls].noPrimary?'':`<b>${RANGED[loadout.primary].name}</b>: ${RANGED[loadout.primary].desc}<br>`}<b>${MELEE[loadout.melee].name}</b>: ${MELEE[loadout.melee].desc}<div class="dim">${masteryText(loadout.primary)} · ${masteryText(loadout.melee)}</div>`;
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});
 }
 function enterHub(){

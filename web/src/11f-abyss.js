@@ -17,10 +17,13 @@ function updateAbyss(dt){if(!match)return;
   if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(Object.keys(GODS)[Math.floor(Math.random()*4)]);
   if(!HELL.on&&r<0.2)player.taint=Math.max(0,(player.taint||0)-dt*1.5);   // 不用灵能时侵蚀慢慢消退
   if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
-  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god],k=1-HELL.t/CFG.taint.hell;setProgress(k,'Falling');
-    $('hellTint').style.opacity=.45+Math.sin(gameTime*4)*.2;player.warp=Math.max(player.warp||0,.6);player.shake=Math.max(player.shake,.08+k*.12);
-    HELL.wT=(HELL.wT||0)-dt;if(HELL.wT<=0){HELL.wT=1.6;announce(G.whisper,1.5);play('backlash');}
-    if(HELL.t<=0)exitHell();}
+  if(HELL.on){HELL.t+=dt;const G=GODS[HELL.god];player.warp=Math.max(player.warp||0,.5);
+    $('hellTint').style.opacity=.4+Math.sin(gameTime*4)*.18;
+    HELL.wT=(HELL.wT||0)-dt;if(HELL.wT<=0){HELL.wT=HELL.phase==='fall'?1.2:4;announce(G.whisper,1.5);play('backlash');}
+    if(HELL.phase==='fall'){setProgress(HELL.t/CFG.taint.hell,'Falling');player.shake=Math.max(player.shake,.1+HELL.t*.05);
+      if(HELL.t>=CFG.taint.hell){HELL.phase='wave';HELL.t=0;setProgress(-1);spawnDaemons(G.daemon,CFG.taint.waveN);ultBanner('Survive the '+G.realm,{color:G.css,sub:'Slay '+G.name+'’s servants to earn the blessing'});}}
+    else{const left=enemies.filter(e=>e.alive&&e.daemon).length;$('obj').dataset.hell=left;
+      if((HELL.t>3&&left===0)||HELL.t>CFG.taint.waveMax)exitHell();}}
   else $('hellTint').style.opacity=player.corrupt?.12+Math.sin(gameTime*1.3)*.06:0;
   updateGodSkill(dt);
   $('taint').firstElementChild.style.width=(player.taint||0)+'%';$('taintTxt').textContent=Math.round(player.taint||0)+'%';
@@ -28,13 +31,13 @@ function updateAbyss(dt){if(!match)return;
 function realmVisual(G){scene.fog.color.setHex(G.fog);scene.fog.density=.055;scene.background.setHex(G.bg);for(const l of candleLights)l.color.setHex(G.lamp);
   matBrick.color.setHex(G.color).lerp(new THREE.Color(0xffffff),.45);$('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
 // 侵蚀满了：随机一位邪神开始腐化你（6 秒堕落过程，期间不会受伤），结束后获得赐福 + 专属灵能技能，画面留下扭曲
-function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.wT=0;const G=GODS[god];
+function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=0;HELL.phase='fall';HELL.wT=0;const G=GODS[god];
   realmVisual(G);play('backlash');play('hole');player.shake=.6;
-  ultBanner(G.realm,{color:G.css,sub:`${G.name} claims you. Your soul is being reshaped...`});}
-function exitHell(){HELL.on=false;player.taint=0;applyBiome();setProgress(-1);
+  ultBanner(G.realm,{color:G.css,sub:`${G.name} drags you into the ${G.realm}`});}
+function exitHell(){HELL.on=false;for(const e of enemies)if(e.alive&&e.daemon){e.alive=false;scene.remove(e.g);embersBlue(e.g.position.clone().setY(1),6);}player.taint=0;applyBiome();setProgress(-1);
   const G=GODS[HELL.god];grantBless(HELL.god);player.godSkill=HELL.god;player.godCd=0;player.corrupt=(player.corrupt||0)+1;
   $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 45%,${G.css} 150%)`;
-  ultBanner(G.bless,{color:G.css,sub:`${G.desc} · New power: [Y] ${GOD_SKILL[HELL.god].name}`});play('choir');}
+  ultBanner(G.bless,{color:G.css,sub:`${G.desc} · ${ECHO_TXT[HELL.god]} · New gift: [Tab] ${GOD_SKILL[HELL.god].name}`});play('choir');}
 function corruptFilter(){if(!player.corrupt||state==='hub')return'';const c=Math.min(3,player.corrupt);return ` hue-rotate(${Math.sin(gameTime*.9)*8*c}deg) blur(${(.25+Math.sin(gameTime*2.3)*.2)*c}px) contrast(${1+.05*c})`;}
 function stopAllLoops(){if(typeof loops!=='undefined')for(const k of Object.keys(loops))loopSound(k,false);if(typeof whisperGain!=='undefined'&&whisperGain)whisperGain.gain.value=0;
   if(HELL.on){HELL.on=false;applyBiome();}$('hellTint').style.opacity=0;}

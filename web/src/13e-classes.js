@@ -1,7 +1,7 @@
 // ============================================================ 职业扩展：属性、武器限制、Z 职业技能、模型
 // psy：能否用灵能（V G Q C）；guns/melee：可用武器（null = 全部）；eye：视线高度；r：碰撞半径
 const CLS={
-  tide:    {hp:100,speed:1,   dmgTaken:1,   gunMul:1,   meleeMul:1,  psy:true, guns:null,melee:null,z:'surge'},
+  tide:    {hp:100,speed:1,   dmgTaken:1,   gunMul:1,   meleeMul:1,  psy:true, guns:null,melee:null,z:'surge',noPrimary:true},
   ward:    {hp:150,speed:1,   dmgTaken:.8,  gunMul:1.3, meleeMul:1,  psy:false,guns:['bolter','shotgun','melta','plasma','needle'],melee:['saw','power','ssword','axe'],z:'stim'},
   reforged:{hp:175,speed:1.08,dmgTaken:.75, gunMul:1.3, meleeMul:1.1,psy:false,guns:['bolter','shotgun','plasma','needle'],melee:['saw','power','axe','ssword'],z:'grenade'},
   bastion: {hp:240,speed:.8,  dmgTaken:.6,  gunMul:1.2, meleeMul:1.2,psy:false,guns:['bolter','hbolter','flamer','melta'],melee:['hammer','fist','power','ssword'],z:'warp',noSprint:true,heavy:true},
@@ -24,11 +24,12 @@ function applyClassStats(){const c=CLS[cls]||CLS.ward;
   Object.assign(player,{maxHp:c.hp,hp:c.hp,gunMul:c.gunMul,dmgTaken:c.dmgTaken,meleeMul:c.meleeMul,speedMul:c.speed,eye:c.eye||1.6,r:c.r||.45,zcd:0,stimT:0,auraT:0,dash:0});
   if(cls==='tide'){player.slots=4;player.maxOvl=130;player.ignoreChance=0.25;}
   document.body.classList.toggle('nopsy',!c.psy);}
+function CLS_NOPRIM(){try{return CLS[cls]&&CLS[cls].noPrimary;}catch(e){return false;}}
 function fixLoadoutForClass(){const c=CLS[cls];if(!c)return;
   if(c.guns&&!c.guns.includes(loadout.primary))loadout.primary=c.guns[0];if(c.melee&&!c.melee.includes(loadout.melee))loadout.melee=c.melee[0];}
 // ---------- Z 技能
 function classAbility(){if(ex.active)return;const c=CLS[cls],Z=ZAB[c.z];if(player.zcd>0){announce(Z.name+' cooling down '+Math.ceil(player.zcd)+' s',0.8);return;}
-  player.zcd=Z.cd;const fwd=fwdFlat();if(c.z!=='warp')ultCast(c.z);
+  player.zcd=Z.cd;const fwd=fwdFlat();if(c.z!=='warp')ultCast(c.z);godEcho(player.pos.clone().addScaledVector(fwd,3),1);
   if(c.z==='surge'){player.ovl=0;player.hp=Math.min(player.maxHp,player.hp+15);play('choir');embersBlue(player.pos.clone().setY(1.2),16);}
   else if(c.z==='stim'){player.stimT=6;player.hp=Math.min(player.maxHp,player.hp+20);play('frenzy');}
   else if(c.z==='grenade'){const {o,d}=aimRay(0);grenades.push({p:o.clone().addScaledVector(d,.6),v:d.clone().multiplyScalar(16).add(new THREE.Vector3(0,4,0)),t:1.1,

@@ -19,7 +19,7 @@ function updatePyreBeam(dt){if(!PB.on)return;PB.t+=dt;const k=Math.min(1,PB.t/.2
       const off=c.distanceTo(a.clone().addScaledVector(d,t));if(off>.9+e.r)continue;kill=damageEnemy(e,11*PB.mul,'body',d,{stagger:.15,knock:.2,how:{melt:true},_noShield:true})||kill;if(!isClient())e.burn=Math.max(e.burn,3);any=true;}
     if(any)showHit(kill);if(wall&&Math.random()<.7){const p=wall.point;addFirePatch(p.x-d.x*.6,p.z-d.z*.6);}
     embers(b.clone(),3);fxSend('pbeam',{ax:a.x,ay:a.y,az:a.z,bx:b.x,by:b.y,bz:b.z});}
-  if(PB.t>=PB.dur){PB.on=false;scene.remove(PB.grp);loopSound('flame',false);const P=b.clone();play('boom');play('melta');
+  if(PB.t>=PB.dur){PB.on=false;scene.remove(PB.grp);loopSound('flame',false);const P=b.clone();play('boom');play('melta');godEcho(P.clone().setY(0),1.2);
     const d2={k:'pyre',x:P.x,z:P.z};ultFx(d2);fxSend('ult',d2);
     for(const e of enemies){if(!e.alive)continue;const dd=e.g.position.distanceTo(P.clone().setY(0));if(dd<3+e.r)damageEnemy(e,40*PB.mul,'body',e.g.position.clone().sub(P).setY(0).normalize(),{knock:1.5,stagger:.5,how:{melt:true}});}}}
 function castRayWalls(o,d,far){ray.set(o,d);ray.far=far;const h=ray.intersectObjects(wallMeshes,false);return h[0]||null;}

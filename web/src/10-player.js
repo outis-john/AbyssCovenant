@@ -1,6 +1,6 @@
 // ============================================================ 玩家
 function hurtPlayer(n,self=false,att=null){
-  if(HELL.on&&!self)return;   // 堕落过程中不会受伤
+  if(HELL.on&&!self&&HELL.phase==='fall')return;   // 坠落过程中不会受伤
   if(state!=='playing'||ex.active)return;
   if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;if(!self)taintAffinity('decay',n/10);
   if(!self&&player.blocking){
@@ -9,6 +9,7 @@ function hurtPlayer(n,self=false,att=null){
       $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);announce('Parry!',0.8);
       player.blocking=false;MS.step={p:'h',dm:2.4,cleave:true,fin:true};MS.dir=stepDir();MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
     n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
+  if(HELL.on&&player.hp-n<1)n=Math.max(0,player.hp-1);   // 在深渊里不会死
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);
   if(player.hp<=0)beginDeath();
 }

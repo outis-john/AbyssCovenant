@@ -14,7 +14,7 @@ function openSettings(){const b=$('setRows');
 $('setClose').onclick=()=>$('settings').classList.remove('show');
 $('setBtn').onclick=openSettings;$('pauseSet').onclick=openSettings;
 const HELP=[['WASD / Space / Shift','Move / jump / sprint'],['LMB · RMB','Attack · weapon special (charge, field, frenzy, pistol swap)'],['1 2 3 / Wheel','Primary · bolt pistol · melee'],['R','Reload'],['E','Raise shield (Sword & Shield; perfect timing parries / reflects fireballs)'],
-  ['X','Execute (when charged): tap for quick execution, hold for full execution (terrifies nearby enemies); chain up to 2 more within 3s for free'],['V · G · Q','Psychic: Choke · Void Rift · Slow Time'],['C · Tab','Rune skill · build runes'],['F','Interact / pick up'],['T','Auspex: see nearby demons through walls (non-psykers)'],['B','Call recovery beacon'],['M','Enlarge minimap'],['H','Show / hide this help'],['Esc','Pause / settings'],['F3','FPS']];
+  ['X','Execute (when charged): tap for quick execution, hold for full execution (terrifies nearby enemies); chain up to 2 more within 3s for free'],['V · G · Q','Psychic: Choke · Void Rift · Slow Time'],['C','Pyre Beam'],['Tab','Dark gift (after a god corrupts you)'],['F','Interact / pick up'],['T','Auspex: see nearby demons through walls (non-psykers)'],['B','Call recovery beacon'],['M','Enlarge minimap'],['H','Show / hide this help'],['Esc','Pause / settings'],['F3','FPS']];
 $('helpBody').innerHTML=HELP.map(([k,v])=>`<div class="hk"><b>${k}</b><span>${v}</span></div>`).join('');
 function toggleHelp(on){const h=$('help');h.classList.toggle('show',on??!h.classList.contains('show'));}
 $('pauseHelp').onclick=()=>toggleHelp(true);
