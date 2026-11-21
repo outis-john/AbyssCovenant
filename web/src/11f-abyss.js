@@ -14,7 +14,8 @@ function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.mi
 function pickGod(){return Object.entries(HELL.aff).sort((a,b)=>b[1]-a[1])[0][0];}
 function updateAbyss(dt){if(!match)return;
   // 过载偏高时持续侵蚀；灵能使用记入万变
-  const r=player.ovl/player.maxOvl;if(r>0.6&&!HELL.on)addTaint(dt*(r-0.6)*CFG.taint.ovlRate,'change');
+  const r=player.ovl/player.maxOvl;if(r>0.4&&!HELL.on)addTaint(dt*(r-0.4)*CFG.taint.ovlRate,'change');
+  if(!HELL.on&&r<0.2)player.taint=Math.max(0,(player.taint||0)-dt*1.5);   // 不用灵能时侵蚀慢慢消退
   if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
   if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
   if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'Beyond the Abyss');

@@ -1,7 +1,7 @@
 // ============================================================ 新灵能技能：V 锁喉提摔 · G 黑洞 · Q 子弹时间（C 为符文技能）
 const PSY={lift:{cd:0,max:CFG.psy.lift},hole:{cd:0,max:CFG.psy.hole},bt:{cd:0,max:CFG.psy.bt}};
 const bt={t:0};let lifts=[],holes=[];
-function payPsy(cost,ovlMul=1){const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
+function payPsy(cost,ovlMul=1){addTaint(CFG.taint.perCast,'change');const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
 function fwdFlat(){return new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));}
 function castLift(free=false){
   if(!free&&PSY.lift.cd>0){announce('Choke cooling down',0.8);return;}
@@ -81,7 +81,7 @@ const spellSlots=s=>2+s.mods.length;
 const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'Pyre Beam':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
 function castSpell(i){
   const s=spells[i];if(!s||spellSlots(s)>player.slots)return;
-  const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;
+  const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;addTaint(CFG.taint.perCast,'change');
   player.mana-=paid;player.ovl+=paid*0.6*(s.elem==='void'?1.2:1)+miss*2;
   play('spell',s.elem==='lightning'?900:s.elem==='void'?250:500);
   const go=()=>{if(state!=='playing')return;const n=s.mods.includes('split')?3:1;

@@ -11,4 +11,8 @@ step(110);const daemons=enemies.filter(e=>e.alive&&e.daemon).length;log('daemons
 const hp0=player.maxHp,gm=player.gunMul;HELL.t=0.01;step(3);log('survived → bless',player.bless,'| gun mul',(player.gunMul/gm).toFixed(2),'| daemons cleared',enemies.filter(e=>e.alive&&e.daemon).length===0,'| taint reset',player.taint===0);
 // 万变：过载不反噬
 grantBless('change');player.ovl=player.maxOvl+30;const h1=player.hp;backlash();log('change bless backlash only burns',Math.round(h1-player.hp));
+// 连放 3 个灵能就会被拖进深渊彼岸
+resetAbyss();player.bless=null;player.mana=999;for(const k in PSY)PSY[k].cd=0;enemies.forEach(e=>{e.alive=false;scene.remove(e.g)});enemies=[];
+player.pos.set(0,0,0);player.yaw=0;for(let i=0;i<3;i++){const e=spawnEnemy('imp',(i-1),-5);e.cd=99;}step(1);const tl=[];castLift();step(2);tl.push(Math.round(player.taint));castHole();step(2);tl.push(Math.round(player.taint));castBT();step(3);
+log('3 casts: taint',tl.join(' -> '),'| in hell after 3rd',HELL.on);
 log('DONE');})();

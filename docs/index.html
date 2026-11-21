@@ -331,7 +331,7 @@ const CFG={
     axe:   {dmg:54,windup:.16,slash:.16},   // 链锯战斧
   },
   // 深渊侵蚀：过载偏高 / 反噬 / 被灵能攻击打中会涨；满了被拖入深渊彼岸 hell 秒，活下来获得邪神赐福
-  taint:{ovlRate:22,backlash:30,psyHit:8,hell:20,wave:5,waveN:3},
+  taint:{perCast:36,ovlRate:40,backlash:45,psyHit:15,hell:20,wave:5,waveN:3},   // perCast：每放一次灵能 +36，连放 3 个就会被拖进深渊彼岸
   heavyHold:0.28,   // 按住左键多少秒算重击
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
@@ -1445,7 +1445,7 @@ function updateExHold(dt){if(!exHold.on)return;exHold.t+=dt;if(exHold.t>=0.3){ex
 // ============================================================ 新灵能技能：V 锁喉提摔 · G 黑洞 · Q 子弹时间（C 为符文技能）
 const PSY={lift:{cd:0,max:CFG.psy.lift},hole:{cd:0,max:CFG.psy.hole},bt:{cd:0,max:CFG.psy.bt}};
 const bt={t:0};let lifts=[],holes=[];
-function payPsy(cost,ovlMul=1){const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
+function payPsy(cost,ovlMul=1){addTaint(CFG.taint.perCast,'change');const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
 function fwdFlat(){return new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));}
 function castLift(free=false){
   if(!free&&PSY.lift.cd>0){announce('Choke cooling down',0.8);return;}
@@ -1525,7 +1525,7 @@ const spellSlots=s=>2+s.mods.length;
 const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'Pyre Beam':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
 function castSpell(i){
   const s=spells[i];if(!s||spellSlots(s)>player.slots)return;
-  const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;
+  const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;addTaint(CFG.taint.perCast,'change');
   player.mana-=paid;player.ovl+=paid*0.6*(s.elem==='void'?1.2:1)+miss*2;
   play('spell',s.elem==='lightning'?900:s.elem==='void'?250:500);
   const go=()=>{if(state!=='playing')return;const n=s.mods.includes('split')?3:1;
@@ -2165,7 +2165,8 @@ function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.mi
 function pickGod(){return Object.entries(HELL.aff).sort((a,b)=>b[1]-a[1])[0][0];}
 function updateAbyss(dt){if(!match)return;
   // 过载偏高时持续侵蚀；灵能使用记入万变
-  const r=player.ovl/player.maxOvl;if(r>0.6&&!HELL.on)addTaint(dt*(r-0.6)*CFG.taint.ovlRate,'change');
+  const r=player.ovl/player.maxOvl;if(r>0.4&&!HELL.on)addTaint(dt*(r-0.4)*CFG.taint.ovlRate,'change');
+  if(!HELL.on&&r<0.2)player.taint=Math.max(0,(player.taint||0)-dt*1.5);   // 不用灵能时侵蚀慢慢消退
   if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
   if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
   if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'Beyond the Abyss');
