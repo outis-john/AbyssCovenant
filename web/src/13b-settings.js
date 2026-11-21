@@ -1,10 +1,10 @@
 // ============================================================ 设置（Esc 暂停菜单 / 战舰里的“设置”按钮）+ 按键说明（H）
-function loadSet(){const d={sens:1,vol:75,fov:80,pix:3,fps:false,seenHelp:false};try{return Object.assign(d,JSON.parse(localStorage.getItem('abyss_settings'))||{});}catch(e){return d;}}
+function loadSet(){const d={sens:1,vol:75,music:60,fov:80,pix:3,fps:false,seenHelp:false};try{return Object.assign(d,JSON.parse(localStorage.getItem('abyss_settings'))||{});}catch(e){return d;}}
 const SET=loadSet();
 function saveSet(){try{localStorage.setItem('abyss_settings',JSON.stringify(SET));}catch(e){}}
 function applySet(){camera.fov=SET.fov;camera.updateProjectionMatrix();PIX=SET.pix;resize();if(master)master.gain.value=0.75*SET.vol/75;
   perfMon.on=SET.fps;$('perf').style.display=SET.fps?'':'none';}
-const SET_ROWS=[['sens','鼠标灵敏度',0.2,3,0.05,v=>v.toFixed(2)+'×'],['vol','音量',0,100,1,v=>v+'%'],['fov','视野 FOV',60,110,1,v=>v+'°'],['pix','像素大小（越大越复古、越流畅）',1,6,1,v=>v+'']];
+const SET_ROWS=[['sens','鼠标灵敏度',0.2,3,0.05,v=>v.toFixed(2)+'×'],['vol','音量',0,100,1,v=>v+'%'],['music','音乐音量',0,100,1,v=>v+'%'],['fov','视野 FOV',60,110,1,v=>v+'°'],['pix','像素大小（越大越复古、越流畅）',1,6,1,v=>v+'']];
 function openSettings(){const b=$('setRows');
   b.innerHTML=SET_ROWS.map(([k,n,a,z,st])=>`<label class="setrow"><span>${n}</span><input type="range" id="set_${k}" min="${a}" max="${z}" step="${st}" value="${SET[k]}"><b id="setv_${k}"></b></label>`).join('')+
     `<label class="setrow"><span>显示帧率（F3）</span><input type="checkbox" id="set_fps" ${SET.fps?'checked':''}></label>`;

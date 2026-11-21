@@ -100,7 +100,7 @@ function simWorld(dt){if(isClient())updateEnemiesClient(dt);else updateEnemies(d
 function frame(now){
   requestAnimationFrame(frame);
   let dt=Math.min(0.05,(now-last)/1000);last=now;
-  netTick(dt);updatePerf(dt);
+  netTick(dt);updatePerf(dt);if(actx){musicBiome(state==='hub'||state==='matching'||!match?'hub':curBiome);musicIntensity(dt);}
   if(state==='hub'||state==='matching'){updateHub(dt);renderer.render(hubScene,hubCam);return;}
   if(state==='playing'){
     if(hitstop>0){hitstop-=dt;dt*=0.05;}   // 顿帧
