@@ -88,7 +88,7 @@
   #auspex .grl{flex:1;height:8px;background:repeating-linear-gradient(90deg,#0c0b0a 0 3px,#3a372f 3px 5px);border:1px solid #0a0908}
   #auspex .led{width:7px;height:7px;border-radius:50%;background:#ff3018;box-shadow:0 0 6px #ff3018;animation:ausLed 1s steps(2) infinite}#auspex .led.g{background:#60ff70;box-shadow:0 0 6px #60ff70;animation-delay:.5s}
   @keyframes ausLed{50%{opacity:.25}}
-  body.inhub #auspex{display:none}
+  body.inhub #auspex,#auspex{display:none!important}
   #ultTint,#ultFlash{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0}
   #ultBanner{position:fixed;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:30;opacity:0}#ultBanner.go{animation:ub 1.4s ease-out}
   #ultBanner .un{font-size:44px;letter-spacing:12px;font-weight:bold;text-shadow:0 0 18px currentColor,0 2px 0 #000}#ultBanner .us{font-size:15px;color:#f0dcb8;letter-spacing:4px;text-shadow:0 0 6px #000;margin-top:4px}

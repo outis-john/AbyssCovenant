@@ -27,7 +27,7 @@
 - 灵能：V 锁喉提摔、G 黑洞、Q 子弹时间（攻击吸血）、C 符文技能（Tab 拼装；火+射线 = 焚灭火柱 `11g-pyrebeam`，引导 1.6 秒穿透点燃，终点爆炸）；过载反噬。
 - 深渊侵蚀（`11f-abyss`，四位**原创**邪神：血怒之王 blood / 腐朽之母 decay / 欲焰之主 excess / 万变之眼 change，不用战锤名字）：player.taint 由每次施放灵能（perCast 36，连放 3 个就满）、过载偏高、反噬、被灵能攻击（spit，hurt 消息 psy:1）增加，不用灵能时慢慢消退；满 100 → **随机一位邪神**开始腐化（enterHell，6 秒堕落，期间 hurtPlayer 免伤、不刷仆从）→ 获得赐福 player.bless（属性+代价）+ 专属灵能 player.godSkill（`11h-godskills`，Y 键：decay 瘟疫之风毒云 / excess 幻影诱敌（decoyTargets，被打就爆开眩晕）/ blood 血祭收割连斩 5 敌 / change 万变诡计让 10 米内敌人互殴 confusedTargets）；敌人命中统一走 hitTarget；player.corrupt 层数让画面持续扭曲（corruptFilter）。死亡/回战舰调用 stopAllLoops 关掉持续音效。
 - 成长：职业解锁 CFG.unlock（vault.unlocked；CFG.unlockAll=true 时测试阶段全部解锁）、武器熟练度 CFG.mastery（vault.mastery，每级伤害 +5%）、涂装 PAINTS（loadout.paint，hello/快照同步给队友）。配乐 MUS：区域氛围底音 + 按附近敌人数量叠鼓点（每帧排程，别用 setInterval，测试会挂住）。改键 SET.keys（默认键→玩家键，捕获阶段翻译后重新派发）；手柄标准布局（pad.active 时不需要鼠标锁定也能开火）。
-- 侦测仪（`13k-auspex`，原创名，非灵能职业都有）：T 开关，左侧倾斜全息屏 #auspex 画雷达（红点=恶魔，模糊抖动，扫描扇面点亮；绿点队友，金方块逃生舱）；模型头戴设备 addAuspexGear（人形头侧/机甲天线）。链锯战斧音效 axeSwing/axeChop/axeBite + 低沉锯链引擎（sawPitch）。
+- 侦测仪（`13k-auspex`，原创名，非灵能职业都有）：T 开关，独立 3D 模型挂在 camera 上（buildAuspexRig，Lambert 深色金属框+机械臂，受场景光照），半透明屏幕用 CanvasTexture（drawAuspex，30Hz）画周围 colliders 轮廓 + 透墙红点（扫描扇面点亮）+ 绿点队友 + 金方块逃生舱；旧 DOM #auspex 已隐藏；模型头戴设备 addAuspexGear（人形头侧/机甲天线）。链锯战斧音效 axeSwing/axeChop/axeBite + 低沉锯链引擎（sawPitch）。
 - 音效全部 WebAudio 合成；链锯引擎按二冲程点火模拟（ScriptProcessor）。
 - 联机：默认走**中继**（`RelayPeer`，自写的最小 MQTT-over-WebSocket 客户端，公共服务器 broker.emqx.io，备用 hivemq；接口模仿 PeerJS，房间码最后一位奇偶表示用哪台服务器），这样国内朋友也能连；网址加 `#p2p` 才用旧的 PeerJS 直连。房主权威；队友本地判定命中，把 dmg / sever / stun / interact / cast / beacon 发给房主；房主 12Hz 快照；kill 事件带死法参数各端重现。
 
