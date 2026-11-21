@@ -60,17 +60,17 @@ function sprayAlongChain(p,n){
     v.x+=(Math.random()-.5)*2;v.z+=(Math.random()-.5)*2;bloods.push({m,v,rest:false});}
   capBloods();
 }
-function meleeSound(M,fin){play(M.id==='power'?'powerHit':M.id==='saw'?'grind':'clang');play('hit');if(fin)play('rip');}
+function meleeSound(M,fin){if(M.id==='axe'){play('axeChop');play('axeBite');if(fin){play('rip');play('axeChop');}return;}play(M.id==='power'?'powerHit':M.id==='saw'?'grind':'clang');play('hit');if(fin)play('rip');}
 function updateMelee(dt){
   if(MS.phase==='none'||MS.phase==='charge')return;MS.t+=dt;const M=WEAPONS[2],st=MS.step||{dm:1},fm=frenzyMul();
   const fwd=fwdFlat(),W=M.windup*fm,SL=M.slash*fm*(st.thrust?1.2:1);
   if(MS.phase==='windup'){const k=Math.min(1,MS.t/W),e=1-(1-k)*(1-k);
-    blendPose(POSE.rest,POSE.restPos,poseAt(0),posAt(0),e,1.1);if(MS.t>=W){MS.phase='slash';MS.t=0;play(M.id==='power'?'zap':'whoosh');if(M.id==='power'&&player.field>0){showLitany();play('choir');}}}
+    blendPose(POSE.rest,POSE.restPos,poseAt(0),posAt(0),e,1.1);if(MS.t>=W){MS.phase='slash';MS.t=0;play(M.id==='power'?'zap':M.id==='axe'||M.id==='hammer'?'axeSwing':'whoosh');if(M.id==='power'&&player.field>0){showLitany();play('choir');}}}
   else if(MS.phase==='slash'){MS.s=Math.min(1,(MS.t/SL)**(st.thrust?1:1.6));applyPose(MS.s);
     if(!MS.hitDone&&MS.s>=0.5&&st.k){MS.hitDone=true;doHeavy(M,st);}
     if(!MS.hitDone&&MS.s>=0.5){MS.hitDone=true;const c=meleeCandidates(st.thrust?3.8:3.0,st.thrust?0.8:0.45);
       if(c.length&&st.bite){MS.target=c[0];MS.phase='bite';MS.t=0;MS.tick=0;MS.s=0.5;MS.biteDur=st.biteDur||0.34;
-        hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.3);player.punch=0.06;splat();play('grind');
+        hitstop=Math.max(hitstop,0.07);player.shake=Math.max(player.shake,0.3);player.punch=0.06;splat();play(M.id==='axe'?'axeBite':'grind');
         for(const e of c.slice(1))damageEnemy(e,30,'body',fwd,{stagger:.4,knock:1.2,point:contactPoint(e)});}
       else if(c.length){const targets=(M.cleave||st.cleave||st.thrust&&M.id==='power')?c:[c[0]];let k=false;const dmgv=M.dmg*st.dm*fieldMul();
         for(const e of targets){const p=contactPoint(e);const pl=swingPlane(p);if(!st.thrust)severArmsByPlane(e,pl.p,pl.n,dmgv);

@@ -75,3 +75,10 @@ function doHeavy(M,st){const fwd=fwdFlat(),right=new THREE.Vector3(Math.cos(play
       kill=damageEnemy(e,base,'head',fwd,{stagger:.8,knock:1,point:p,how:{headBurst:true}})||kill;sprayAlongChain(p,18);hit++;}play('grind');}
   if(hit){meleeSound(M,true);hitstop=0.14;player.shake=Math.max(player.shake,.5);player.punch=.1;splat();showHit(kill);}else play('whoosh');
 }
+
+// ---------- 链锯战斧音效：沉重斧劈（低频重击 + 骨裂 + 金属余震）+ 低沉锯链咬肉
+Object.assign(sfx,{
+  axeSwing(){noiseHit(380,0.32,0.38,'bandpass');tone('sine',95,55,0.18,0.32);},
+  axeChop(){tone('sine',85,30,1.0,0.45);noiseHit(320,0.9,0.4);noiseHit(2600,0.45,0.08,'highpass');tone('square',160,70,0.25,0.18);
+    noiseHit(5200,0.25,0.05,'highpass',0.03);tone('triangle',620,560,0.12,0.6,0.02);},
+  axeBite(){noiseHit(900,0.55,0.3,'bandpass');tone('sawtooth',70,110,0.35,0.3);noiseHit(180,0.5,0.35);tone('square',140,90,0.18,0.25);}});

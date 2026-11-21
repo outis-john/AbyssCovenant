@@ -14,7 +14,7 @@ function openSettings(){const b=$('setRows');
 $('setClose').onclick=()=>$('settings').classList.remove('show');
 $('setBtn').onclick=openSettings;$('pauseSet').onclick=openSettings;
 const HELP=[['WASD / 空格 / Shift','移动 / 跳 / 冲刺'],['左键 · 右键','攻击 · 武器特殊功能（蓄力、力场、狂热、切手枪）'],['1 2 3 / 滚轮','主武器 · 爆弹手枪 · 近战'],['R','换弹'],['E','举盾格挡（剑盾，时机准可防反 / 弹反火球）'],
-  ['X','处决（充能满时）：点按快速处决，按住完整处决（震慑周围敌人）；处决后 3 秒内可免充能连环处决 2 次'],['V · G · Q','灵能：锁喉提摔 · 黑洞 · 子弹时间'],['C · Tab','符文技能 · 拼装符文'],['F','互动 / 拾取'],['B','呼叫回收装置'],['M','放大小地图'],['H','显示 / 隐藏本说明'],['Esc','暂停 / 设置'],['F3','帧率']];
+  ['X','处决（充能满时）：点按快速处决，按住完整处决（震慑周围敌人）；处决后 3 秒内可免充能连环处决 2 次'],['V · G · Q','灵能：锁喉提摔 · 黑洞 · 子弹时间'],['C · Tab','符文技能 · 拼装符文'],['F','互动 / 拾取'],['T','侦测仪：隔墙显示附近恶魔（非灵能职业）'],['B','呼叫回收装置'],['M','放大小地图'],['H','显示 / 隐藏本说明'],['Esc','暂停 / 设置'],['F3','帧率']];
 $('helpBody').innerHTML=HELP.map(([k,v])=>`<div class="hk"><b>${k}</b><span>${v}</span></div>`).join('');
 function toggleHelp(on){const h=$('help');h.classList.toggle('show',on??!h.classList.contains('show'));}
 $('pauseHelp').onclick=()=>toggleHelp(true);

@@ -6,7 +6,7 @@ function prepareMatch(seedArg){
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   if(!isNet())pendingBiome=null;curBiome=pickBiome();buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
-  applyClassStats();fixLoadoutForClass();resetAbyss();
+  applyClassStats();fixLoadoutForClass();resetAbyss();AUS.on=false;$('auspex').classList.remove('show');
   player.pos.set(0,0,0);
   spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
   applyProgress();applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
@@ -84,7 +84,7 @@ addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET
   keys[e.code]=true;if(state!=='playing')return;
   if(e.code==='Space'&&player.onGround&&!CLS[cls].noJump){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
-  if(e.code==='KeyZ')classAbility();
+  if(e.code==='KeyZ')classAbility();if(e.code==='KeyT'){toggleAuspex();return;}
   if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('只有唤潮者能使用灵能 · 按 Z 使用职业技能',1.2);return;}
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');

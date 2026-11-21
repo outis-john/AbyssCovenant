@@ -198,7 +198,7 @@ function updateEnemiesClient(dt){
 // ---------- 队友的模型
 function updateRemotes(dt){
   for(const r of net.remotes.values()){if(!r.inMatch||!r.tp)continue;
-    if(!r.model){r.model=buildCharacter(r.cls||'ward');paintModel(r.model,r.paint||0);addRemoteGun(r.model,r.cls||'ward');scene.add(r.model);}
+    if(!r.model){r.model=buildCharacter(r.cls||'ward');paintModel(r.model,r.paint||0);addAuspexGear(r.model,r.cls||'ward');addRemoteGun(r.model,r.cls||'ward');scene.add(r.model);}
     r.pos.lerp(r.tp,Math.min(1,dt*12));r.model.position.set(r.pos.x,r.pos.y,r.pos.z);r.model.rotation.set(r.dead?-Math.PI/2:0,r.yaw+Math.PI,0);
     if(r.dead)r.model.position.y=0.3;}
 }

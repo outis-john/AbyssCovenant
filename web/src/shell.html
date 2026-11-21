@@ -63,6 +63,14 @@
   #exBars{position:fixed;inset:0;pointer-events:none;z-index:6;background:linear-gradient(#000 0 9%,transparent 9% 91%,#000 91%);opacity:0;transition:opacity .15s}#exBars.show{opacity:1}
   #hellTint{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity 1s;mix-blend-mode:screen}
   #blessTag{margin-top:4px;font-size:12px;font-weight:bold;text-shadow:0 0 6px currentColor}
+  #auspex{position:fixed;left:9%;top:24%;width:300px;z-index:15;pointer-events:none;opacity:0;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(.3);transform-origin:left center;transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1)}
+  #auspex.show{opacity:.92;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(1);animation:ausFlick 3s infinite}
+  #auspex canvas{display:block;width:300px;height:220px;border:2px solid rgba(255,140,60,.7);box-shadow:0 0 18px rgba(255,90,30,.45),inset 0 0 30px rgba(0,0,0,.6);background:rgba(10,4,2,.6);filter:blur(.4px)}
+  #auspex .ah{font-size:11px;color:#ffb070;letter-spacing:2px;background:rgba(40,12,4,.8);border:1px solid rgba(255,140,60,.6);border-bottom:0;padding:3px 8px}#auspex .ah span{float:right;color:#ff6040}
+  #auspex .st{position:absolute;right:100%;height:3px;background:linear-gradient(90deg,rgba(60,50,40,.9),rgba(160,120,80,.9));transform-origin:right center}
+  #auspex .s1{top:24%;width:150px;transform:rotate(-28deg)}#auspex .s2{top:62%;width:160px;transform:rotate(-34deg)}#auspex .s3{top:96%;width:120px;transform:rotate(-30deg)}
+  @keyframes ausFlick{0%,96%,100%{filter:none}97%{filter:brightness(1.6) hue-rotate(-10deg)}98%{filter:brightness(.7)}}
+  body.inhub #auspex{display:none}
   #ultTint,#ultFlash{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0}
   #ultBanner{position:fixed;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:30;opacity:0}#ultBanner.go{animation:ub 1.4s ease-out}
   #ultBanner .un{font-size:44px;letter-spacing:12px;font-weight:bold;text-shadow:0 0 18px currentColor,0 2px 0 #000}#ultBanner .us{font-size:15px;color:#f0dcb8;letter-spacing:4px;text-shadow:0 0 6px #000;margin-top:4px}
@@ -146,7 +154,7 @@
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
 <div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
-<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="auspex"><i class="st s1"></i><i class="st s2"></i><i class="st s3"></i><div class="ah">侦测仪 · 生命信号扫描 <span id="ausN"></span></div><canvas id="ausCv" width="300" height="220"></canvas></div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
 <div class="layer" id="splat"></div>

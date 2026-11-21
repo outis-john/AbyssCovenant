@@ -5,7 +5,7 @@ const es=[0,1,2].map(i=>{const e=spawnEnemy('imp',0,-4-i*2.5);e.hp=e.maxHp=500;e
 log('pyre beam: channel done',!PB.on,'| enemies hit',es.filter(e=>e.hp<500||!e.alive).length,'/3 | dmg',es.map(e=>Math.round(500-e.hp)).join(','),'| burning',es[0].burn>0||!es[0].alive);
 // 侵蚀：被灵能打中 / 反噬 → 满了进深渊彼岸 → 活下来获得赐福
 enemies.forEach(e=>{e.alive=false;scene.remove(e.g)});enemies=[];
-for(let i=0;i<20;i++)taintAffinity('blood',5);addTaint(60,'change');player.ovl=player.maxOvl+20;backlash();log('taint after psy hit+backlash',Math.round(player.taint));
+for(let i=0;i<20;i++)taintAffinity('blood',5);addTaint(60,'change');player.ignoreChance=0;player.ovl=player.maxOvl+20;backlash();log('taint after psy hit+backlash',Math.round(player.taint));
 addTaint(30);step(2);log('dragged into hell',HELL.on,'| god',HELL.god,GODS[HELL.god].name);
 step(110);const daemons=enemies.filter(e=>e.alive&&e.daemon).length;log('daemons spawned',daemons);
 const hp0=player.maxHp,gm=player.gunMul;HELL.t=0.01;step(3);log('survived → bless',player.bless,'| gun mul',(player.gunMul/gm).toFixed(2),'| daemons cleared',enemies.filter(e=>e.alive&&e.daemon).length===0,'| taint reset',player.taint===0);

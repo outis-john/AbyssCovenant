@@ -25,7 +25,8 @@ function initSaw(){
   const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1500;lp.Q.value=0.5;
   const g=actx.createGain();g.gain.value=0.5;sp.connect(muff).connect(lp).connect(g).connect(master);
 }
-function sawEngine(out,mode,rc=0){if(!saw)return;saw.onT=out?1:0;saw.target=mode==='bite'?8000:mode==='rev'?4000+rc*9500:mode==='swing'?12500:2900;saw.loadT=mode==='bite'?1:0;}
+let sawPitch=1;
+function sawEngine(out,mode,rc=0){if(!saw)return;saw.onT=out?1:0;saw.target=(mode==='bite'?8000:mode==='rev'?4000+rc*9500:mode==='swing'?12500:2900)*sawPitch;saw.loadT=mode==='bite'?1:0;}
 function initAudio(){
   if(actx) return;
   actx=new (window.AudioContext||window.webkitAudioContext)();

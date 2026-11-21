@@ -62,7 +62,8 @@ function updatePlayer(dt){
     ghost.visible=MS.phase==='slash'||MS.phase==='rip';ghost.material.color.setHex(M.id==='power'?(player.field>0?0x4090ff:0x8fd0ff):0xd8d0c0);ghost.material.opacity=M.id==='power'&&player.field>0?.45:.25;
     ghost.rotation.order='YXZ';ghost.position.copy(sword.position);
     ghost.rotation.x=lerp(ghost.rotation.x,sword.rotation.x,0.45);ghost.rotation.y=lerp(ghost.rotation.y,sword.rotation.y,0.45);ghost.rotation.z=lerp(ghost.rotation.z,sword.rotation.z,0.45);
-    sawEngine(M.id==='saw',(MS.phase==='bite'||(ex.active&&ex.type==='saw'&&ex.t>.15&&ex.t<.85))?'bite':player.revving?'rev':(fast||MS.phase==='windup'||player.frenzy>0)?'swing':'idle',player.revCharge||0);humEngine(M.id==='power',fast||player.field>0);
+    sawPitch=M.id==='axe'?.62:1;   // 战斧的锯链引擎更低沉
+    sawEngine(M.id==='saw'||M.id==='axe',(MS.phase==='bite'||(ex.active&&ex.type==='saw'&&ex.t>.15&&ex.t<.85))?'bite':player.revving?'rev':(fast||MS.phase==='windup'||player.frenzy>0)?'swing':'idle',player.revCharge||0);humEngine(M.id==='power',fast||player.field>0);
   } else {sword.visible=false;ghost.visible=false;RANGED_MODELS.forEach(m=>m.visible=m===W.model||(ex.active&&!ex.melee&&m===WEAPONS[cur].model));sawEngine(false,'idle');humEngine(false,false);}
   if(M.block&&player.ssPistol&&cur===2&&!ex.active){sword.visible=false;ghost.visible=false;pistol.visible=true;}
   // 盾牌
