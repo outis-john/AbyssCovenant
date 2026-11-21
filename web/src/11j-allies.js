@@ -95,9 +95,10 @@ function updateAllies(dt){
     const E=a.target&&a.target.alive?a.target:null;if(!E)a.target=null;
     // 目的地
     let goal;const idx=allies.indexOf(a),n=allies.length,row=Math.floor(idx/4),ang=player.yaw+((idx%4)-1.5)*.62;
-    if(a.hold)goal=a.hold.clone();
-    else if(E&&(a.role==='melee'||a.role==='blade')&&E.g.position.distanceTo(a.pos)<16)goal=E.g.position.clone();
-    else{const rr=3.4+row*2.4;goal=player.pos.clone().add(new THREE.Vector3(Math.sin(ang)*rr,0,Math.cos(ang)*rr));collide(goal,a.r);}
+    const tac=typeof allyTacGoal==='function';
+    if(a.hold){goal=a.hold.clone();if(E&&tac&&!a.vehicle)goal=allyTacGoal(a,E,goal,6);}
+    else if(E&&(a.role==='melee'||a.role==='blade')&&E.g.position.distanceTo(a.pos)<16)goal=tac?allyMeleeGoal(a,E):E.g.position.clone();
+    else{const rr=3.4+row*2.4;goal=player.pos.clone().add(new THREE.Vector3(Math.sin(ang)*rr,0,Math.cos(ang)*rr));collide(goal,a.r);if(E&&tac)goal=allyTacGoal(a,E,goal,11);}
     const way=navStep(a.pos,goal,a);const to=way.sub(a.pos).setY(0);const dd=goal.distanceTo(a.pos);
     const near=E&&(a.role==='melee'||a.role==='blade')&&E.g.position.distanceTo(a.pos)<E.r+1.7;
     const firing=a.burst>0||(a.reloadT||0)>0;
