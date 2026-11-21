@@ -33,7 +33,7 @@ function wallAlongX(z,x1,x2,door){
 function buildLevel(){
   if(levelGroup)scene.remove(levelGroup);
   levelGroup=new THREE.Group();scene.add(levelGroup);
-  colliders=[];wallMeshes=[];candles=[];conn=new Set();
+  colliders=[];wallMeshes=[];candles=[];conn=new Set();roomTypes={};
   // 随机生成树 + 几条回路
   const vis=new Set(['0,0']);const stack=[[0,0]];
   while(stack.length){const [i,j]=stack[stack.length-1];const nb=[[1,0],[-1,0],[0,1],[0,-1]].map(([a,b])=>[i+a,j+b]).filter(([a,b])=>a>=0&&b>=0&&a<G&&b<G&&!vis.has(a+','+b));
@@ -52,8 +52,9 @@ function buildLevel(){
     if(i===0)wallAlongZ(cx-HALF,cz-HALF,cz+HALF,false);
     wallAlongX(cz+HALF,cx-HALF,cx+HALF,j<G-1&&connected(i,j,i,j+1));
     if(j===0)wallAlongX(cz-HALF,cx-HALF,cx+HALF,false);
-    // 装饰：柱子、蜡烛、骨堆
-    if(rng()<0.7)for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){
+    // 房间类型：标准（柱子）/ 掩体 / 迷宫 / 大厅 / Boss 竞技场
+    const rt=roomType(i,j);roomTypes[i+','+j]=rt;if(rt!=='std')roomLayout(rt,cx,cz);
+    if(rt==='std'&&rng()<0.85)for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){
       const px=cx+sx*5.5,pz=cz+sz*5.5;addBox(px,pz,1.4,1.4,0,H);addBox(px,pz,2,2,0,0.6,matDark);
       if(rng()<0.6){candles.push(new THREE.Vector3(px+sx*-1.3,0.6,pz));const c=new THREE.Mesh(new THREE.BoxGeometry(.12,.35,.12),matCandle);c.position.set(px+sx*-1.3,0.18,pz);levelGroup.add(c);}
     }
