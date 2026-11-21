@@ -1,6 +1,6 @@
 // ============================================================ 按键自定义 + 手柄
 // 改键：把玩家按的键翻译成默认键再交给原来的处理函数（捕获阶段拦截，重新派发）
-const ACTIONS=[['KeyW','Forward'],['KeyS','Back'],['KeyA','Left'],['KeyD','Right'],['Space','Jump'],['ShiftLeft','Sprint'],['KeyR','Reload'],['KeyF','Interact'],['KeyX','Execute'],['KeyZ','Class ability'],['KeyT','Auspex'],
+const ACTIONS=[['KeyW','Forward'],['KeyS','Back'],['KeyA','Left'],['KeyD','Right'],['Space','Jump'],['ShiftLeft','Sprint'],['KeyR','Reload'],['KeyF','Interact'],['KeyX','Execute'],['KeyZ','Class ability'],['KeyT','Auspex'],['KeyY','Squad order'],
   ['KeyE','Block'],['KeyB','Beacon'],['KeyM','Map'],['KeyV','Choke'],['KeyG','Void Rift'],['KeyQ','Slow Time'],['KeyC','Rune skill'],['KeyH','Help']];
 let REMAP={},BLOCK=new Set();
 function rebuildRemap(){REMAP={};BLOCK=new Set();const b=SET.keys||{};const used=new Set(Object.values(b));

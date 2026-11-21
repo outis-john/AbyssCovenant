@@ -168,6 +168,7 @@
   body{font-family:"Barlow Condensed","Oswald","Arial Narrow","Microsoft YaHei",sans-serif}
   #hud-bl{left:22px;bottom:20px;width:300px;font-size:13px;letter-spacing:.5px}
   .sq{display:flex;gap:8px;align-items:flex-start;margin-top:6px}.sq .pf{width:44px;height:50px;flex:none;border:1px solid rgba(220,230,220,.35);background:linear-gradient(160deg,#2a2e2c,#0d0f0e);display:grid;place-items:center;font:600 15px Oswald,sans-serif;color:#cfd8d0;letter-spacing:1px}
+  .sqord{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:5px;border-top:1px solid rgba(220,230,220,.18);font:600 11px "Barlow Condensed",sans-serif;letter-spacing:.12em;color:#9aa69c}.sqord b{color:#e8d9a0;font-weight:700}
   .sq.mate .pf{width:30px;height:34px;font-size:11px}.sq .sqi{flex:1;min-width:0}
   .sq .nm{display:flex;justify-content:space-between;font-weight:600;font-size:14px;color:#e8eee8;text-transform:uppercase;letter-spacing:1px}.sq .nm .hpn{font-weight:500;color:#9aa8a0;font-size:12px}
   .sq.mate .nm{font-size:12px}.sq.mate .bar{height:4px;margin:3px 0}
@@ -352,7 +353,7 @@
   <button id="runeDone">done</button>
 </div></div>
 
-<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="campNext" style="display:none">Next Mission</button><button id="campRetry" style="display:none">Retry Mission</button><button id="backBtn">Return to Ship</button></div></div>
+<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="campNext" style="display:none">Next Mission</button><button id="campCk" style="display:none">Restart from Checkpoint</button><button id="campRetry" style="display:none">Retry Mission</button><button id="backBtn">Return to Ship</button></div></div>
 <div id="campaign"><div class="ch"><div><div class="ct">CAMPAIGN</div><div class="cs">The Horus Heresy · as witnessed by Sergeant Kaedric Vorne</div></div><button id="campClose" class="ghost">Back</button></div><div id="campActs"></div></div>
 <div id="brief"><div class="bi"><div id="briefAct"></div><div id="briefTitle"></div><div id="briefPlace"></div><div class="bh">Objectives</div><div id="briefObj"></div><div class="bh">Transmission log</div><div id="briefLog"></div><div class="bb"><button id="briefBack" class="ghost">Back</button><button id="briefGo">Deploy</button></div></div></div>
 

@@ -91,7 +91,7 @@ function updateAllies(dt){
     // 选目标
     a.scanT-=dt;if(a.scanT<=0){a.scanT=.35+Math.random()*.25;let best=null,bd=a.role==='melee'||a.role==='blade'?18:34,cur=a.target&&a.target.alive?a.target:null;
       for(const e of enemies){if(!e.alive||e.lifted)continue;const d=e.g.position.distanceTo(a.pos)-(e===cur?4:0);if(d<bd&&allyLOS(a,e)){bd=d;best=e;}}
-      if(best&&!cur&&gameTime-(a.contactT||-99)>20){a.contactT=gameTime;bark(a,best.marine?'contactAst':'contact');}a.target=best;}
+      if(best&&!cur&&gameTime-(a.contactT||-99)>20){a.contactT=gameTime;bark(a,best.marine?'contactAst':'contact');}a.target=(typeof squadFocus==='function'&&squadFocus(a))||best;}
     const E=a.target&&a.target.alive?a.target:null;if(!E)a.target=null;
     // 目的地
     let goal;const idx=allies.indexOf(a),n=allies.length,row=Math.floor(idx/4),ang=player.yaw+((idx%4)-1.5)*.62;
