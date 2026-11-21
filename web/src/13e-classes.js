@@ -124,5 +124,6 @@ function redeemerModel(){const g=new THREE.Group();const T=mk(g);const {B,Cy,S}=
   for(const z of [.85,1.75])Cy(.26,.26,.08,trim,gx,1.72,z,Math.PI/2);
   return g;}
 // ---------- 战舰里的职业卡片
-$('clsCards').innerHTML=Object.keys(CLS).map(k=>`<div class="card" data-cls="${k}"><b>${CLS_INFO[k].name}</b><div>${CLS_INFO[k].tag}</div></div>`).join('');
+$('clsCards').innerHTML=Object.keys(CLS).map((k,i)=>`<div class="card" data-cls="${k}"><span class="ix">0${i+1}</span><b>${CLS_INFO[k].name}</b><div>${CLS_INFO[k].tag}</div></div>`).join('');
 document.querySelectorAll('#clsCards .card').forEach(el=>el.onclick=()=>{initAudio();selectClass(el.dataset.cls);});
+document.querySelectorAll('#hub .tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#hub .tabs button,#hub .tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===b.dataset.tab));play('equip');});

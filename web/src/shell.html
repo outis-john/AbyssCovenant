@@ -241,27 +241,52 @@
 
 <div id="letterbox"><div class="lb top"></div><div class="lb bot"><span id="cutCap"></span><span class="skip">Click / Space to skip</span></div></div>
 <div class="layer" id="fade" style="background:#000;opacity:0"></div>
+<style>
+  /* ---- 战舰大厅（简洁版）：左侧名册 · 中间模型 · 右侧分页档案 · 底部出击条 ---- */
+  #hub .hbar{top:18px}#hub .title{font:600 22px Oswald,sans-serif;letter-spacing:10px}#hub .sub{font-size:11px;letter-spacing:3px}
+  #vaultInfo{display:flex;gap:16px;margin-right:8px;font:500 12px 'Barlow Condensed',sans-serif;letter-spacing:2px;color:var(--mute);text-transform:uppercase}
+  #vaultInfo span{border:0;background:none;padding:0}#vaultInfo b{display:block;font:600 18px Oswald,sans-serif;color:var(--ink);letter-spacing:1px}
+  #hub .roster{position:absolute;left:28px;top:110px;width:270px;pointer-events:auto}#hub .card b{white-space:nowrap}#hub .stat span{width:96px;white-space:nowrap;font-size:12px}
+  #hub .roster h4,#hub .side h4{font:500 11px 'Barlow Condensed',sans-serif;letter-spacing:4px;color:var(--mute);text-transform:uppercase;margin:0 0 10px}
+  #hub .clsrow{display:flex;flex-direction:column;gap:2px}
+  #hub .card{display:flex;align-items:baseline;gap:10px;border:0;border-left:2px solid transparent;background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(0,0,0,0));padding:8px 10px 8px 12px;transition:all .15s}
+  #hub .card .ix{font:500 11px Oswald,sans-serif;color:#6e6052;width:16px}
+  #hub .card b{font:600 16px Oswald,sans-serif;letter-spacing:1px;text-transform:uppercase;color:#bfae92}#hub .card div{display:none}
+  #hub .card:hover{border-left-color:#8a5a32}#hub .card:hover b{color:var(--ink)}
+  #hub .card.sel{border-left-color:var(--gold);background:linear-gradient(90deg,rgba(216,166,87,.22),rgba(216,166,87,0));box-shadow:none}#hub .card.sel b{color:#fff0d0}#hub .card.sel div{display:block;font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin:0 0 0 auto}
+  #hub .side{position:absolute;right:28px;top:110px;width:330px;max-height:calc(100vh - 250px);overflow:auto;padding:0 18px 14px}
+  #hub .tabs{display:flex;position:sticky;top:0;background:var(--pnl);margin:0 -18px 12px;border-bottom:1px solid var(--line);z-index:1}
+  #hub .tabs button{flex:1;margin:0;padding:11px 0 9px;background:none;border:0;border-bottom:2px solid transparent;font:500 13px 'Barlow Condensed',sans-serif;letter-spacing:3px;text-transform:uppercase;color:var(--mute);cursor:pointer}
+  #hub .tabs button.on{color:var(--ink);border-bottom-color:var(--gold)}#hub .tab{display:none}#hub .tab.on{display:block}
+  #hub .side::-webkit-scrollbar{width:4px}#hub .side::-webkit-scrollbar-thumb{background:#4a3324}
+  #hub #clsInfo{margin-top:0;font-size:13px}#hub #clsInfo h3{display:block;font:600 24px Oswald,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#fff0d0;margin:0 0 6px}
+  #hub .bottom{bottom:20px}#hub .deploy{width:auto;display:flex;align-items:center;gap:18px;padding:10px 12px 10px 18px;text-align:left;border-top-width:1px}
+  #hub #deployOpts{display:flex;flex-direction:column;gap:6px}#hub #deployOpts .lbl{display:none}#hub #deployOpts .ths{justify-content:flex-start;gap:4px;margin:0!important}
+  #hub #deployOpts .th{flex:none;max-width:none;padding:5px 10px;font-size:12px;letter-spacing:1px}#hub #deployOpts .th small,#hub #deployOpts .th br+*{font-size:10px}
+  #hub #deployOpts>div:last-child:not(.ths){font-size:11px;color:#6e6458}
+  #hub .drow{margin:0;flex-direction:column;gap:6px;align-items:stretch}#hub #goBtn{padding:14px 40px;font:600 20px Oswald,sans-serif;letter-spacing:8px;text-transform:uppercase}
+  #hub .mp{opacity:.85}#hub .mp .nb,#hub #joinCode{padding:6px 10px!important;font-size:12px!important}#hub #joinCode{width:90px}
+  #hub .hint{position:absolute;left:0;right:0;bottom:-18px;text-align:center;font-size:11px;margin:0;color:#5e554a}
+</style>
 <div id="hub" class="show">
   <header class="hbar">
-    <div><div class="title">ABYSS COVENANT</div><div class="sub">Warship "Eternal Night Oath" · Armoury Deck</div></div>
+    <div><div class="title">ABYSS COVENANT</div><div class="sub">Warship “Eternal Night Oath” · Armoury Deck</div></div>
     <div class="hbar-r"><div id="vaultInfo"></div><button id="trainBtn" class="ghost">Training</button><button id="setBtn" class="ghost">Settings</button></div>
   </header>
-  <section class="left pnl">
-    <h4>Class</h4>
-    <div class="clsrow" id="clsCards"></div>
-    <div id="clsInfo"></div>
-    <h4>Primary</h4><div class="lo" id="loPrimary"></div>
-    <h4>Melee</h4><div class="lo" id="loMelee"></div>
-    <div class="small" id="loDesc"></div>
-    <div class="small dim">Sidearm: bolt pistol (infinite ammo) · drag the model to rotate</div>
+  <section class="roster"><h4>Operatives</h4><div class="clsrow" id="clsCards"></div></section>
+  <section class="side pnl">
+    <nav class="tabs"><button data-tab="dos" class="on">Dossier</button><button data-tab="arm">Armoury</button><button data-tab="forge">Forge</button></nav>
+    <div class="tab on" data-tab="dos"><div id="clsInfo"></div></div>
+    <div class="tab" data-tab="arm"><h4>Primary</h4><div class="lo" id="loPrimary"></div><h4 style="margin-top:14px">Melee</h4><div class="lo" id="loMelee"></div><div class="small" id="loDesc"></div>
+      <div class="small dim">Sidearm: bolt pistol (infinite ammo) · drag the model to rotate</div></div>
+    <div class="tab" data-tab="forge"><div id="shop"></div></div>
   </section>
-  <section class="right pnl"><div id="shop"></div></section>
   <div class="bottom">
     <div class="deploy pnl">
       <div id="deployOpts"></div>
-      <div class="drow"><button id="goBtn">Deploy Solo</button>
-        <div class="mp"><button id="hostBtn" class="nb">Create Room</button><input id="joinCode" maxlength="6" placeholder="Room code"><button id="joinBtn" class="nb">Join</button></div></div>
-      <div class="hint">Extraction unknown · death loses everything you carry · press H for controls</div>
+      <div class="drow"><button id="goBtn">Deploy</button>
+        <div class="mp"><button id="hostBtn" class="nb">Create Room</button><input id="joinCode" maxlength="6" placeholder="Code"><button id="joinBtn" class="nb">Join</button></div></div>
+      <div class="hint">Extraction unknown · death loses everything you carry · H for controls</div>
     </div>
   </div>
 </div>
@@ -274,7 +299,7 @@
   <button id="mmCancel">Cancel</button>
   <div class="hint">Multiplayer in development — deploying solo for now</div>
 </div>
-<div class="panel" id="ready"><div class="box" style="text-align:center"><h2>Drop pod has landed</h2><p>Hive Sector 7. Extraction method unknown — find data-slate clues.</p><button id="readyBtn">Click to deploy</button></div></div>
+<div class="panel" id="ready"><div class="box" style="text-align:center"><h2>Boots on the ground</h2><p>Extraction method unknown — find data-slate clues.</p><button id="readyBtn">Click to deploy</button></div></div>
 
 <div class="panel" id="settings"><div class="box" style="width:520px"><h2>Settings</h2><div id="setRows"></div><h3 style="margin:16px 0 4px;color:#d8a657;font-size:14px">Controls (click then press a new key, Esc to cancel) · gamepad supported</h3><div id="keyRows" style="max-height:220px;overflow:auto"></div><button id="setClose">done</button></div></div>
 <div id="help"><h3 style="margin:0 0 6px">Help <small>(H close)</small></h3><div id="helpBody"></div></div>
