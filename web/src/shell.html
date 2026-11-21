@@ -285,7 +285,14 @@
   .atag i{display:block;width:46px;height:3px;margin:2px auto 0;background:rgba(0,0,0,.6)}.atag s{display:block;height:100%;background:#70e090;text-decoration:none}.atag.low{color:#ffd080}.atag.low s{background:#ffb040}
   body.incamp #squad{position:fixed;left:18px;top:30%;width:200px}body.incamp #squad .sq{margin-top:5px;align-items:center}body.incamp #squad .pf{width:26px;height:28px;font-size:10px}body.incamp #squad .nm{font-size:12px}
   body.inscene #cross,body.inscene #zab,body.inscene #godab,body.inscene #obj,body.inscene #mapWrap,body.inscene #hud-bl,body.inscene #weapons,body.inscene #wp,body.inscene #allyTags,body.inscene #bossbar,body.inscene #progress,body.inscene #announce,body.inscene #prompt{visibility:hidden}
-  body.openmap #mapWrap{display:none}
+  body.incamp #mapWrap{top:20px;left:22px;right:auto;text-align:left}body.incamp #mapWrap #minimap{width:170px;height:170px;border-color:rgba(240,216,144,.35)}body.incamp #mapWrap.big{top:50%;right:50%;transform:translate(50%,-50%);z-index:40}body.incamp #mapWrap.big #minimap{width:440px;height:440px}
+  .wpx{position:fixed;transform:translate(-50%,-50%);display:none;pointer-events:none;z-index:12;text-align:center;font:600 11px Oswald,sans-serif;letter-spacing:2px;color:var(--c);text-shadow:0 1px 2px #000}
+  .wpx i{display:block;width:12px;height:12px;margin:0 auto 3px;border:2px solid var(--c);transform:rotate(45deg)}.wpx span{display:block;font:500 11px 'Barlow Condensed',sans-serif;opacity:.8}
+  .wpx.off i{border:0;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:15px solid var(--c);transform-origin:50% 60%}
+  body.inscene .wpx,body.inhub .wpx{display:none!important}
+  .ohint{margin:3px 0 4px 14px;font:500 12px 'Barlow Condensed',sans-serif;line-height:1.3;color:#c9c2ad;max-width:290px}
+  .ohost{margin-top:4px;font:600 11px 'Barlow Condensed',sans-serif;letter-spacing:.1em;color:#ff7a5a}
+  #objBanner em{display:block;margin-top:6px;font:500 15px 'Barlow Condensed',sans-serif;font-style:normal;letter-spacing:1px;color:#e6dcc4;text-shadow:0 1px 3px #000}
   #compass{position:fixed;left:50%;top:10px;transform:translateX(-50%);width:460px;height:30px;display:none;z-index:12;pointer-events:none;border-bottom:1px solid rgba(220,230,220,.25)}body.incamp #compass{display:block}body.inscene #compass,body.inscene #emarks{visibility:hidden}
   #wp i{width:16px;height:16px;border-width:3px}#wp b{font-size:13px;letter-spacing:3px}#wp.off i{border:0;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:18px solid #f0d890;transform-origin:50% 60%;box-shadow:none}
   #emarks{position:fixed;inset:0;pointer-events:none;z-index:11}.emk{position:absolute;transform:translate(-50%,-100%);text-align:center;font:600 10px 'Barlow Condensed',sans-serif;color:#ff9080;text-shadow:0 1px 2px #000}
