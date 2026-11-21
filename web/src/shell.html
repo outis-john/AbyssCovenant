@@ -61,6 +61,15 @@
   body.inhub #weapons,body.inhub #zab{display:none}
   body.nopsy #hud-br{display:none}
   #exBars{position:fixed;inset:0;pointer-events:none;z-index:6;background:linear-gradient(#000 0 9%,transparent 9% 91%,#000 91%);opacity:0;transition:opacity .15s}#exBars.show{opacity:1}
+  #ultTint,#ultFlash{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0}
+  #ultBanner{position:fixed;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:30;opacity:0}#ultBanner.go{animation:ub 1.4s ease-out}
+  #ultBanner .un{font-size:44px;letter-spacing:12px;font-weight:bold;text-shadow:0 0 18px currentColor,0 2px 0 #000}#ultBanner .us{font-size:15px;color:#f0dcb8;letter-spacing:4px;text-shadow:0 0 6px #000;margin-top:4px}
+  @keyframes ub{0%{opacity:0;transform:scale(1.6)}12%{opacity:1;transform:scale(1)}70%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+  #zab{position:fixed;left:18px;bottom:150px;display:flex;gap:10px;align-items:center;z-index:20;text-shadow:0 0 4px #000;max-width:320px}
+  #zab .zi{width:42px;height:42px;border-radius:50%;background:conic-gradient(var(--c) var(--p),rgba(0,0,0,.6) var(--p));display:grid;place-items:center;border:2px solid #000;flex:none}
+  #zab .zi b{width:30px;height:30px;border-radius:50%;background:#120a08;display:grid;place-items:center;color:#f0dcb8;font-size:14px}
+  #zab .zn{font-size:14px;font-weight:bold}#zab .zn span{color:#a8977c;font-weight:normal}#zab .zn .rd{color:#8fd08f}#zab .zd{font-size:11px;color:#cbb89a}
+  .ultbox{margin-top:10px;border-left:3px solid;padding:6px 10px;background:rgba(0,0,0,.3);font-size:12px;line-height:1.55;color:#d8c8a8}
   #ckFrame{position:fixed;inset:0;pointer-events:none;display:none;z-index:5;
     background:linear-gradient(135deg,#0c0a08 0 9%,transparent 9.2%),linear-gradient(225deg,#0c0a08 0 9%,transparent 9.2%),linear-gradient(to bottom,#0c0a08 0 4%,transparent 4.5% 93%,#0c0a08 93.5%),
       repeating-linear-gradient(to bottom,rgba(255,180,80,.035) 0 2px,transparent 2px 4px),radial-gradient(ellipse at center,transparent 55%,rgba(20,10,0,.55) 100%)}
@@ -135,7 +144,7 @@
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
 <div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
-<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="exBars"></div><div id="zab" style="position:fixed;left:18px;bottom:150px;color:#ffd23a;font-size:13px;text-shadow:0 0 4px #000;z-index:20"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="ultTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
 <div class="layer" id="splat"></div>

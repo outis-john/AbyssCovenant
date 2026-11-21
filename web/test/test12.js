@@ -1,4 +1,4 @@
-;(async()=>{let now=0;const step=n=>{for(let i=0;i<n;i++){now+=16;frame(now);}};const log=console.log;globalThis.setTimeout=(f)=>{f();return 0;};
+;(async()=>{let now=1e7;const step=n=>{for(let i=0;i<n;i++){now+=16;frame(now);}};const log=console.log;globalThis.setTimeout=(f)=>{f();return 0;};
 const clear=()=>{enemies.forEach(e=>{e.alive=false;scene.remove(e.g)});enemies=[];};
 for(const c of Object.keys(CLS)){cls=c;loadout.primary='needle';loadout.melee='saw';prepareMatch(3);state='playing';clear();wallMeshes.length=0;colliders.length=0;
   player.pos.set(0,0,0);player.yaw=0;player.pitch=0;step(2);

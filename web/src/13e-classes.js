@@ -28,14 +28,14 @@ function fixLoadoutForClass(){const c=CLS[cls];if(!c)return;
   if(c.guns&&!c.guns.includes(loadout.primary))loadout.primary=c.guns[0];if(c.melee&&!c.melee.includes(loadout.melee))loadout.melee=c.melee[0];}
 // ---------- Z 技能
 function classAbility(){if(ex.active)return;const c=CLS[cls],Z=ZAB[c.z];if(player.zcd>0){announce(Z.name+' 冷却中 '+Math.ceil(player.zcd)+' 秒',0.8);return;}
-  player.zcd=Z.cd;announce(Z.name+'！',1);const fwd=fwdFlat();
+  player.zcd=Z.cd;const fwd=fwdFlat();if(c.z!=='warp')ultCast(c.z);
   if(c.z==='surge'){player.ovl=0;player.hp=Math.min(player.maxHp,player.hp+15);play('choir');embersBlue(player.pos.clone().setY(1.2),16);}
   else if(c.z==='stim'){player.stimT=6;player.hp=Math.min(player.maxHp,player.hp+20);play('frenzy');}
   else if(c.z==='grenade'){const {o,d}=aimRay(0);grenades.push({p:o.clone().addScaledVector(d,.6),v:d.clone().multiplyScalar(16).add(new THREE.Vector3(0,4,0)),t:1.1,
-    m:(()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.16),gunDark);scene.add(m);return m;})()});play('whoosh');}
+    m:(()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.16),gunDark);const l=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.07),new THREE.MeshBasicMaterial({color:0xff2020}));l.position.y=.1;m.add(l);m.userData.led=l;scene.add(m);return m;})()});play('whoosh');}
   else if(c.z==='warp'){const to=player.pos.clone();for(let i=0;i<20;i++){const n=to.clone().addScaledVector(fwd,.5);const t=n.clone();collide(t,player.r);if(t.distanceTo(n)>0.01)break;to.copy(n);}
-    fxSend('warp',{x0:player.pos.x,z0:player.pos.z,x1:to.x,z1:to.z});embersBlue(player.pos.clone().setY(1),16);player.pos.copy(to);play('zap');play('boom');shockwave(player.pos,4,90,1.5);}
-  else if(c.z==='aegis'){auraAt(player.pos.x,player.pos.z);sendNet({t:'aura',x:player.pos.x,z:player.pos.z});if(isHost())bcast({t:'aura',x:player.pos.x,z:player.pos.z});play('choir');}
+    const x0=player.pos.x,z0=player.pos.z;embersBlue(player.pos.clone().setY(1),16);player.pos.copy(to);ultCast('warp',{x0,z0});play('zap');play('boom');shockwave(player.pos,4,90,1.5);}
+  else if(c.z==='aegis'){auraAt(player.pos.x,player.pos.z,true);sendNet({t:'aura',x:player.pos.x,z:player.pos.z});if(isHost())bcast({t:'aura',x:player.pos.x,z:player.pos.z});}
   else if(c.z==='stomp'){player.dash=0.6;player.dashHit=new Set();play('charge');play('growl');}
   else if(c.z==='pyre'){play('melta');for(const e of enemies){if(!e.alive)continue;const d=e.g.position.distanceTo(player.pos);if(d>6+e.r)continue;
       damageEnemy(e,80*player.gunMul,'body',e.g.position.clone().sub(player.pos).setY(0).normalize(),{knock:1,stagger:.5,how:{melt:d<2.5}});if(!isClient())e.burn=Math.max(e.burn,4);}
@@ -44,18 +44,17 @@ function classAbility(){if(ex.active)return;const c=CLS[cls],Z=ZAB[c.z];if(playe
 function stunE2(e,d){e.stun=Math.max(e.stun,d);if(isClient()&&e.remote)sendNet({t:'stun',id:e.id,dur:d});}
 function shockwave(P,R,dmg,stun){fxSend('slam',{x:+P.x.toFixed(2),z:+P.z.toFixed(2)});for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.g.position.x-P.x,e.g.position.z-P.z);if(d>R+e.r)continue;
   const dir=e.g.position.clone().sub(P).setY(0).normalize();damageEnemy(e,dmg*(1-d/(R*2)),'body',dir,{knock:2,stagger:.6,point:contactPoint(e)});if(e.alive)stunE2(e,stun);}slamFx(P.x,P.z);}
-function auraAt(x,z){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;announce('圣盾领域：受到伤害减半',1.2);}
-  const m=new THREE.Mesh(new THREE.CylinderGeometry(7,7,.1,24,1,true),new THREE.MeshBasicMaterial({color:0xffd060,transparent:true,opacity:.35,side:2,depthWrite:false}));m.position.set(x,1,z);m.scale.y=20;scene.add(m);beams.push({m,life:6,fade:true});}
+function auraAt(x,z,self=false){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;if(!self)announce('圣盾领域：受到伤害减半',1.2);}if(!self)ultFx({k:'aegis',x,z});}
 let grenades=[];
 function updateClassExtras(dt){player.slowT=Math.max(0,(player.slowT||0)-dt);canvas.style.filter=player.slowT>0?'saturate(.6) hue-rotate(-20deg) brightness(1.1)':(canvas.style.filter.includes('hue-rotate(-20')?'':canvas.style.filter);updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
-  for(const g of grenades){g.t-=dt;g.v.y-=18*dt;g.p.addScaledVector(g.v,dt);if(g.p.y<.1){g.p.y=.1;g.v.y*=-.3;g.v.x*=.6;g.v.z*=.6;}g.m.position.copy(g.p);
+  for(const g of grenades){g.t-=dt;g.v.y-=18*dt;g.p.addScaledVector(g.v,dt);if(g.p.y<.1){g.p.y=.1;g.v.y*=-.3;g.v.x*=.6;g.v.z*=.6;}g.m.position.copy(g.p);g.m.rotation.x+=dt*12;if(g.m.userData.led)g.m.userData.led.visible=Math.sin(gameTime*30)>0;if(Math.random()<.5)puff(g.p.clone(),1,0x707070,.4);
     if(g.t>0&&enemies.some(e=>e.alive&&e.g.position.distanceTo(g.p.clone().setY(0))<e.r+.8&&g.p.y<2.5*e.g.scale.y))g.t=0;   // 碰到敌人就炸
-    if(g.t<=0){g.dead=true;scene.remove(g.m);play('boom');puff(g.p,8,0x444444,1.2);hitSparks(g.p,null,10);shockwave(g.p,3.5,120*player.gunMul,1.2);}}
+    if(g.t<=0){g.dead=true;scene.remove(g.m);const d={k:'grenade',x:g.p.x,z:g.p.z};ultFx(d);fxSend('ult',d);hitSparks(g.p,null,10);shockwave(g.p,3.5,120*player.gunMul,1.2);}}
   grenades=grenades.filter(g=>!g.dead);
-  if(player.dash>0){player.dash-=dt;const f=fwdFlat();player.pos.addScaledVector(f,14*dt);collide(player.pos,player.r);player.shake=Math.max(player.shake,.2);
+  if(player.dash>0){if(Math.random()<.6)puff(player.pos.clone().setY(.3),1,0x6a5a4a,1.2);if(player.dash-dt<=0){shockwave(player.pos,3.5,60*player.meleeMul,1);ultFx({k:'stomp',x:player.pos.x,z:player.pos.z});fxSend('ult',{k:'stomp',x:player.pos.x,z:player.pos.z});player.shake=.6;}player.dash-=dt;const f=fwdFlat();player.pos.addScaledVector(f,14*dt);collide(player.pos,player.r);player.shake=Math.max(player.shake,.2);
     for(const e of enemies){if(!e.alive||player.dashHit.has(e))continue;if(e.g.position.distanceTo(player.pos)<player.r+e.r+.6){player.dashHit.add(e);
       damageEnemy(e,140*player.meleeMul,'body',f,{knock:4,stagger:1,point:contactPoint(e),how:{burst:{p:contactPoint(e),dir:f}}});if(e.alive)stunE2(e,1);play('clang');hitstop=.06;}}}
-  const z=ZAB[(CLS[cls]||CLS.ward).z];$('zab').textContent=`Z ${z.name}${player.zcd>0?' · '+Math.ceil(player.zcd)+'s':' · 就绪'}`;$('zab').style.opacity=player.zcd>0?.55:1;}
+  updateUltOverlays(dt);}
 // ---------- 模型：在铸甲卫士模型上换颜色 / 加厚；机甲是独立的箱形棺椁
 function recolor(g,map){g.traverse(o=>{if(o.material&&o.material.color){const h=o.material.color.getHex();if(map[h]!==undefined){o.material=o.material.clone();o.material.color.setHex(map[h]);}}});return g;}
 const EXTRA_MODELS={
