@@ -168,6 +168,11 @@
   body{font-family:"Barlow Condensed","Oswald","Arial Narrow","Microsoft YaHei",sans-serif}
   #hud-bl{left:22px;bottom:20px;width:300px;font-size:13px;letter-spacing:.5px}
   .sq{display:flex;gap:8px;align-items:flex-start;margin-top:6px}.sq .pf{width:44px;height:50px;flex:none;border:1px solid rgba(220,230,220,.35);background:linear-gradient(160deg,#2a2e2c,#0d0f0e);display:grid;place-items:center;font:600 15px Oswald,sans-serif;color:#cfd8d0;letter-spacing:1px}
+  #briefDiff{display:flex;gap:8px;margin:6px 0 4px}#briefDiff .dbtn{flex:1;text-align:left;padding:8px 10px;background:rgba(20,22,20,.7);border:1px solid rgba(220,220,200,.18);color:#cfc8b4;cursor:pointer}
+  #briefDiff .dbtn b{display:block;font:600 14px Oswald,sans-serif;letter-spacing:2px;color:#e8e0c8}#briefDiff .dbtn small{display:block;font:500 11px 'Barlow Condensed',sans-serif;opacity:.75;margin-top:2px}
+  #briefDiff .dbtn.on{border-color:#f0d890;background:rgba(80,64,24,.45)}#briefDiff .dbtn.on b{color:#f0d890}
+  .ccont{margin:0 0 14px;padding:12px 16px;border:1px solid #f0d890;background:linear-gradient(90deg,rgba(90,70,24,.55),rgba(20,18,14,.4));cursor:pointer}.ccont:hover{background:linear-gradient(90deg,rgba(120,94,30,.6),rgba(30,26,18,.5))}
+  .ccont .cct{font:600 12px Oswald,sans-serif;letter-spacing:6px;color:#f0d890}.ccont .ccl{font:600 22px Oswald,sans-serif;letter-spacing:2px;color:#f2ead6}.ccont .cco{font:500 13px 'Barlow Condensed',sans-serif;color:#d8cfb6}.ccont .ccw{font:500 11px 'Barlow Condensed',sans-serif;color:#9a927e;margin-top:3px}
   .oopt{margin-top:5px;font:600 11px "Barlow Condensed",sans-serif;letter-spacing:.1em;color:#7fd8ff}
   .sqord{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:5px;border-top:1px solid rgba(220,230,220,.18);font:600 11px "Barlow Condensed",sans-serif;letter-spacing:.12em;color:#9aa69c}.sqord b{color:#e8d9a0;font-weight:700}
   .sq.mate .pf{width:30px;height:34px;font-size:11px}.sq .sqi{flex:1;min-width:0}
@@ -363,7 +368,7 @@
 
 <div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="campNext" style="display:none">Next Mission</button><button id="campCk" style="display:none">Restart from Checkpoint</button><button id="campRetry" style="display:none">Retry Mission</button><button id="backBtn">Return to Ship</button></div></div>
 <div id="campaign"><div class="ch"><div><div class="ct">CAMPAIGN</div><div class="cs">The Horus Heresy · as witnessed by Sergeant Kaedric Vorne</div></div><button id="campClose" class="ghost">Back</button></div><div id="campActs"></div></div>
-<div id="brief"><div class="bi"><div id="briefAct"></div><div id="briefTitle"></div><div id="briefPlace"></div><div class="bh">Objectives</div><div id="briefObj"></div><div class="bh">Transmission log</div><div id="briefLog"></div><div class="bb"><button id="briefBack" class="ghost">Back</button><button id="briefGo">Deploy</button></div></div></div>
+<div id="brief"><div class="bi"><div id="briefAct"></div><div id="briefTitle"></div><div id="briefPlace"></div><div class="bh">Objectives</div><div id="briefObj"></div><div class="bh">Transmission log</div><div id="briefLog"></div><div class="bh">Difficulty</div><div id="briefDiff"></div><div class="bb"><button id="briefBack" class="ghost">Back</button><button id="briefGo">Deploy</button></div></div></div>
 
 <script type="module">
 /*@GAME@*/

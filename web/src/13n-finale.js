@@ -12,7 +12,7 @@ function speakLine(L){if(!SET.voice||typeof speechSynthesis==='undefined'||typeo
     u.pitch=V.p;u.rate=V.r;u.volume=Math.min(1,SET.voice/100);const v=pickVoice();if(v)u.voice=v;u.lang='en-GB';speechSynthesis.speak(u);if(L.force)chantDrone();return u;}catch(e){return null;}}
 if(typeof speechSynthesis!=='undefined'&&speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',()=>{ttsVoice=null;pickVoice();});
 // ---------------- 胜利动画：队友围拢、竖起军旗、镜头环绕后升上战场全景，“MISSION COMPLETE”
-function victoryScene(done){const P=player.pos.clone(),yaw=player.yaw;const body=buildCharacter(cls);body.position.copy(P);body.rotation.y=yaw+Math.PI;scene.add(body);
+function victoryScene(done){const P=player.pos.clone(),yaw=player.yaw;const body=buildCharacter(cls);if(typeof heroPaint==='function')heroPaint(body);body.position.copy(P);body.rotation.y=yaw+Math.PI;scene.add(body);
   const live=allies.filter(a=>a.alive&&!a.vehicle&&!a.parked);live.forEach((a,i)=>{const ang=yaw+(i-(live.length-1)/2)*.34;const r=4.2+(i%2)*1.8;a.hold=P.clone().add(V3(Math.sin(ang)*r,0,Math.cos(ang)*r));a.pos.lerp(a.hold,.6);a.target=null;});
   for(const e of enemies)if(e.alive&&e.g.position.distanceTo(P)>8)e.stun=99;
   // 军旗：旗杆从地里升起，忠诚派的象牙白旗面 + 海绿镶边
