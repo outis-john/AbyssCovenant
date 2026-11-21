@@ -84,6 +84,7 @@ let loadout=loadLoadout();
 let WEAPONS=[],cur=0,ammo=[],reloadT=0,switchT=0,reloadFor=-1;
 function applyLoadout(){const P={...RANGED[loadout.primary]},M={...MELEE[loadout.melee]};upgradeWeapons(P,M);WEAPONS=[P,PISTOL,M];sword=MELEE_GROUP[loadout.melee];
   heat.v=0;heat.over=0;heat.charge=0;
+  if(typeof cockpitApply==='function')cockpitApply();
   ammo=[{mag:WEAPONS[0].magSize,res:WEAPONS[0].res0},{mag:PISTOL.magSize,res:Infinity},{}];cur=0;reloadT=0;switchT=0;reloadFor=-1;}
 applyLoadout();
 function activeGun(){const w=WEAPONS[cur];if(w.melee)return (w.block&&player.ssPistol)?{w:PISTOL,slot:1}:null;return {w,slot:cur};}
