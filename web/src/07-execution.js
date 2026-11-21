@@ -1,15 +1,17 @@
 // ============================================================ 处决：需要充能，动作由手持武器决定，期间无敌，回复等量生命
 const ex={active:false,t:0,dur:1.1,type:'',target:null,fired:{}};
+const exChain={until:0,left:0};
 const canExecute=e=>player.exCharge>=100&&e.alive&&!e.boss&&(!e.elite||e.hp<=e.maxHp*0.5);
 function executeTarget(){if(player.exCharge<100)return null;const fwd=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));let best=null,bd=3.6;
   for(const e of enemies){if(!canExecute(e))continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<bd&&to.normalize().dot(fwd)>0.2){bd=d;best=e;}}return best;}
-function execute(){
-  const t=executeTarget();if(!t||ex.active)return;
+function execute(mode='full'){
+  if(ex.active)return;const chain=gameTime<(exChain.until||0)&&exChain.left>0&&player.exCharge<100;const save=player.exCharge;if(chain)player.exCharge=100;   // 连环处决：窗口内不耗充能
+  const t=executeTarget();if(!t){player.exCharge=save;return;}if(chain){exChain.left--;announce('连环处决！',0.8);}
   const W=WEAPONS[cur];ex.active=true;ex.t=0;ex.target=t;ex.fired={};ex.melee=!!W.melee;ex.type=W.melee?W.id:W.id;
-  ex.dur={saw:1.15,power:1.0,ssword:1.05,bolter:0.9,pistol:0.75,shotgun:0.85,melta:1.05}[ex.type];
+  ex.mode=mode;ex.dur=mode==='quick'?0.45:({saw:1.15,power:1.0,ssword:1.05,bolter:0.9,pistol:0.75,shotgun:0.85,melta:1.05,plasma:1.1,hbolter:1.2,flamer:1.25,needle:0.95,hammer:1.15,fist:1.2,axe:1.2}[ex.type]||1);
   player.exCharge=0;reloadT=0;player.blocking=false;MS.phase='none';
   t.stun=0;t.stagger=99;t.kv.set(0,0,0);if(isClient()&&t.remote)sendNet({t:'stun',id:t.id,dur:ex.dur+0.5});
-  const dir=t.g.position.clone().sub(player.pos).setY(0).normalize();player.pos.copy(t.g.position).addScaledVector(dir,-1.5).setY(0);
+  const dir=t.g.position.clone().sub(player.pos).setY(0).normalize();player.pos.copy(t.g.position).addScaledVector(dir,-(1.7+t.r*1.2+(isMech()?1:0))).setY(0);$('exBars').classList.add('show');
   if(ex.melee)swordOut=ex.dur+0.3;
   play('exStart');hitstop=0.05;
 }
@@ -17,20 +19,24 @@ function exKill(opts={}){
   const t=ex.target;if(!t.alive)return;const dealt=Math.max(1,Math.ceil(t.hp));
   const dir=t.g.position.clone().sub(player.pos).setY(0).normalize();
   damageEnemy(t,dealt+1,'body',dir.clone().multiplyScalar(opts.fling||1),{explode:true,how:opts.how||{}});
-  const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+dealt);
-  announce('处决！回复 '+Math.round(player.hp-before)+' 生命',1.6);
+  const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+dealt*(ex.mode==='quick'?0.5:1));
+  announce((ex.mode==='quick'?'快速处决！':'处决！')+'回复 '+Math.round(player.hp-before)+' 生命',1.6);
+  exChain.until=gameTime+3;if(exChain.left<=0)exChain.left=2;
+  if(ex.mode!=='quick')for(const o of enemies){if(!o.alive||o===t||o.boss)continue;if(o.g.position.distanceTo(t.g.position)<7){o.stun=Math.max(o.stun,1.6);o.lean=1.2;if(isClient()&&o.remote)sendNet({t:'stun',id:o.id,dur:1.6});}}   // 震慑
   hitstop=0.13;player.shake=0.45;player.punch=0.08;splat();showHit(true);play('kill');
 }
 function kf(t,keys){if(t<=keys[0][0])return keys[0][1];for(let i=1;i<keys.length;i++)if(t<=keys[i][0]){const [t0,a]=keys[i-1],[t1,b]=keys[i];const k=(t-t0)/(t1-t0);return a.map((v,j)=>lerp(v,b[j],k));}return keys[keys.length-1][1];}
 function at(name,time,fn){if(ex.t>=time&&!ex.fired[name]){ex.fired[name]=true;fn();}}
 function updateExecution(dt){
-  ex.t+=dt;const t=ex.target,T=ex.t,S=t.g.scale.y,head=t.g.position.clone().setY(1.95*S);
-  const to=head.clone().sub(player.pos.clone().setY(1.6));player.yaw=lerp(player.yaw,Math.atan2(-to.x,-to.z),0.25);player.pitch=lerp(player.pitch,Math.atan2(to.y,Math.hypot(to.x,to.z)),0.25);
+  ex.t+=dt;const t=ex.target,T=ex.t,S=t.g.scale.y,head=t.g.position.clone().setY(1.3*S);   // 看胸口，不看头
+  const eye=player.eye||1.6;const to=head.clone().sub(player.pos.clone().setY(eye));player.yaw=lerp(player.yaw,Math.atan2(-to.x,-to.z),0.25);player.pitch=lerp(player.pitch,Math.atan2(to.y,Math.hypot(to.x,to.z)),0.25);
   if(t.alive){t.stagger=99;t.g.rotation.z=(Math.random()-.5)*0.06;}
   const f=fwdFlat(),rt=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)),up=new THREE.Vector3(0,1,0);
   const bloodAt=n=>{if(t.alive)sprayAlongChain(contactPoint(t),n);};
   const tp=y=>t.g.position.clone().setY(y*S);
-  switch(ex.type){
+  {const back=new THREE.Vector3(Math.sin(player.yaw),0,Math.cos(player.yaw));camera.position.addScaledVector(back,.55).y+=.3;}   // 镜头往后、往上
+  if(ex.mode==='quick'){exQuick(T,t,f,rt,up,bloodAt,tp);}
+  else switch(ex.type){
     case 'saw': // 竖着锯进去，从中间劈成左右两半
       sword.rotation.set(...kf(T,[[0,[0,.3,.1]],[.15,[1.3,0,0]],[.85,[1.35,0,0]],[1.0,[1.5,0,0]]]));
       sword.position.set(...kf(T,[[0,[.3,-.42,-.3]],[.15,[0,.2,-.55]],[.85,[0,-.55,-.6]],[1.0,[0,-.7,-.5]]]));
@@ -64,7 +70,8 @@ function updateExecution(dt){
       const m=melta;m.position.set(...kf(T,[[0,[.32,-.28,-.55]],[.2,[.08,-.2,-.8]],[ex.dur,[.08,-.2,-.8]]]));
       if(T>.25&&T<.85&&t.alive){const k=(T-.25)/.6;t.mat.emissive.setRGB(1,k*0.7,k*0.2);if(Math.random()<.6)heatBeam(camera.position.clone().add(new THREE.Vector3(0,-.2,0)),contactPoint(t),.7);t.g.scale.y=t.s0*(1-k*0.75);t.g.scale.x=t.g.scale.z=t.s0*(1+k*0.3);player.shake=Math.max(player.shake,.1);}
       at('fire',.25,()=>play('melta'));at('kill',.88,()=>{play('melta');play('boom');exKill({how:{melt:true}});});break;}
+    default:exExtra(T,dt,t,f,rt,up,bloodAt,tp);
   }
-  if(T>=ex.dur){ex.active=false;if(t.alive)exKill();shieldG.position.set(-.35,-.35,-.5);}
+  if(T>=ex.dur){ex.active=false;if(t.alive)exKill();shieldG.position.set(-.35,-.35,-.5);$('exBars').classList.remove('show');}
 }
 

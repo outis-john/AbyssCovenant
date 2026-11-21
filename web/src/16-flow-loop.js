@@ -89,9 +89,9 @@ addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
   if(e.code==='KeyE'&&!e.repeat&&WEAPONS[cur].block&&!ex.active){player.blocking=true;player.blockStart=gameTime;play('equip');}
-  if(e.code==='KeyX')execute();if(e.code==='KeyF')interact();if(e.code==='KeyR')startReload();if(e.code==='KeyB')callBeacon();
+  if(e.code==='KeyX'&&!e.repeat){exHold.t=0;exHold.on=true;}if(e.code==='KeyF')interact();if(e.code==='KeyR')startReload();if(e.code==='KeyB')callBeacon();
 });
-addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyE')player.blocking=false;});
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyX'&&exHold.on){exHold.on=false;if(state==='playing')execute('quick');}if(e.code==='KeyE')player.blocking=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseDown=false;});
 
 // ============================================================ 主循环

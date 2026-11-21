@@ -98,7 +98,7 @@ function updatePlasma(dt){for(const b of plasmaBalls){b.life-=dt;const len=40*dt
 // 重型爆弹机枪的转速；狙击镜
 function updateGunExtras(dt){const W=WEAPONS[cur];
   player.spin=Math.max(0,Math.min(1,(player.spin||0)+((mouseDown&&W&&W.spin&&state==='playing')?dt*1.1:-dt*1.5)));
-  const zoom=player.aiming&&W&&W.scope&&cur===0;const f=zoom?26:SET.fov;if(Math.abs(camera.fov-f)>0.1){camera.fov+=(f-camera.fov)*Math.min(1,dt*14);camera.updateProjectionMatrix();}
+  const zoom=player.aiming&&W&&W.scope&&cur===0;const f=zoom?26:SET.fov+(ex.active?12:0);if(Math.abs(camera.fov-f)>0.1){camera.fov+=(f-camera.fov)*Math.min(1,dt*14);camera.updateProjectionMatrix();}
   const on=state==='playing'&&cur===0&&W;
   hbBarrels.rotation.z+=dt*player.spin*48;loopSound('spin',!!(on&&W.spin&&player.spin>0.02),player.spin);
   const ch=on&&W.id==='plasma'&&player.charging&&heat.over<=0;loopSound('charge',!!ch,heat.charge);
