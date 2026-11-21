@@ -96,4 +96,4 @@ $('runeDone').onclick=()=>{$('runes').classList.remove('show');resumeGame();};
 
 // ============================================================ 开始 / 结束
 function updateBossBar(){let b=null;for(const e of enemies)if(e.alive&&e.boss&&e.g.position.distanceTo(player.pos)<32){b=e;break;}
-  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}
+  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b){const bn=$('bossbar').firstChild;if(bn&&bn.nodeType===3)bn.textContent=BOSS_NAME[b.variant]||'深渊领主';}if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}

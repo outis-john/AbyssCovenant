@@ -146,6 +146,7 @@ function clientRecv(m){
   else if(m.t==='fx2'){fxPlay(m.k,m.d);}
   else if(m.t==='fx'&&m.k==='slam'){slamFx(m.x,m.z);}
   else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
+  else if(m.t==='slow'){player.slowT=Math.max(player.slowT||0,m.d);}
   else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}
   else if(m.t==='fx'){if(m.k==='hole')spawnHoleVisual(m.p);else if(m.k==='beacon')beaconVisual(m.p);}
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}

@@ -217,6 +217,9 @@ const CFG={
     hound: {hp:38, speed:8.5,dmg:10,reach:1.5,scale:.85,color:0x3a1a4a},                // 裂隙猎犬：飞快，会扑跳
     bulwark:{hp:200,speed:2.7,dmg:22,reach:1.9,scale:1.25,color:0x7a6a5a,shield:320},  // 骨盾恶魔：正面骨盾挡枪（重击 / 爆炸破盾）
     nest:  {hp:320,speed:0,  dmg:0, reach:0,  scale:1.0,color:0x6a1a2a,static:true},       // 恶魔巢穴（任务目标，会孵小恶魔）
+    tanker:{hp:170,speed:2.6,dmg:6, reach:1.8,scale:1.25,color:0x5a3a22},               // 炼油厂：油罐恶魔（近距离喷火，背后中弹 ×3，死时爆成火海）
+    priest:{hp:120,speed:3.2,dmg:10,reach:1.6,scale:1.05,color:0x3a2040,ranged:false},  // 教堂：堕落祭司（给周围恶魔回血加护）
+    frostling:{hp:85,speed:4.6,dmg:11,reach:1.6,scale:.95,color:0x6a9ac8},              // 冰洞：冰晶恶魔（打中会减速，死时碎成冰渣）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
@@ -245,9 +248,9 @@ const CFG={
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
   // 地图区域：tint 颜色、雾、灯光、各种敌人的出现权重
   biomes:{
-    hive:   {name:'巢都炼油厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1}},
-    sanctum:{name:'地下圣堂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3}},
-    frost:  {name:'蓝冰洞窟',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2}}},
+    hive:   {name:'巢都炼油厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1,tanker:2}},
+    sanctum:{name:'地下圣堂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3,priest:2}},
+    frost:  {name:'蓝冰洞窟',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2,frostling:3}}},
   // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
   threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
   // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物
@@ -515,7 +518,7 @@ function roomLayout(rt,cx,cz){const Q=[[-1,-1],[1,-1],[-1,1],[1,1]];
     const ring=new THREE.Mesh(new THREE.RingGeometry(5.5,6,32),new THREE.MeshBasicMaterial({color:0x6a0a0a,side:2}));ring.rotation.x=-Math.PI/2;ring.position.set(cx,.03,cz);levelGroup.add(ring);}}
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
-const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest'];
+const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
@@ -554,6 +557,7 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
   if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
   if(e.shieldHp>0&&dir&&!opts._noShield)dmg=shieldBlock(e,dmg,dir,opts);
+  if(e.blessT>0)dmg*=0.5;if(e.type==='tanker'&&dir&&dir.clone().setY(0).normalize().dot(new THREE.Vector3(Math.sin(e.g.rotation.y),0,Math.cos(e.g.rotation.y)))>0.3){dmg*=3;hitSparks(e.g.position.clone().setY(1.6*e.g.scale.y),dir,6);}   // 打中背后的油罐
   e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9*res);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
@@ -573,6 +577,7 @@ function killEnemy(e,dir,explode,how={}){
   if(isHost())bcast({t:'kill',id:e.id,dir,how});
   if(e.boss&&!isClient())bossDown(e);
   if(e.type==='bloater')bloaterBurst(e);
+  if(e.type==='tanker')tankerBurst(e);if(e.type==='frostling')iceBurst(e);
   if(e.type==='nest'&&!isClient()){addProgress('nest',1);annTeam('恶魔巢穴被摧毁！',2);}
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);
@@ -672,7 +677,7 @@ let puffs=[],bolts=[],coolMats=[];
 function puff(p,n,color=0x555555,size=1){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.7,depthWrite:false}));
   m.position.copy(p).add(new THREE.Vector3((Math.random()-.5)*.6,(Math.random()-.5)*.6,(Math.random()-.5)*.6));m.scale.setScalar(size*(1+Math.random()));scene.add(m);
   puffs.push({m,v:new THREE.Vector3((Math.random()-.5)*1.5,.8+Math.random(),(Math.random()-.5)*1.5),life:.8+Math.random()*.6,max:1.4});}}
-function updatePuffs(dt){if(typeof biomeTick==='function'&&state!=='hub')biomeTick(dt);while(puffs.length>CFG.perf.puffs){const o=puffs.shift();scene.remove(o.m);}for(const p of puffs){p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.m.scale.multiplyScalar(1+dt*2.5);p.m.material.opacity=Math.max(0,p.life/p.max*.7);if(p.life<=0)scene.remove(p.m);}puffs=puffs.filter(p=>p.life>0);
+function updatePuffs(dt){if(typeof biomeTick==='function'&&state!=='hub'){biomeTick(dt);updateHazards(dt);}while(puffs.length>CFG.perf.puffs){const o=puffs.shift();scene.remove(o.m);}for(const p of puffs){p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.m.scale.multiplyScalar(1+dt*2.5);p.m.material.opacity=Math.max(0,p.life/p.max*.7);if(p.life<=0)scene.remove(p.m);}puffs=puffs.filter(p=>p.life>0);
   for(const c of coolMats){c.t+=dt;const k=Math.min(1,c.t/4);c.mat.color.setRGB(lerp(1,.25,k),lerp(.55,.04,k),lerp(.15,.02,k));}coolMats=coolMats.filter(c=>c.t<4);}
 function embersBlue(p,n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0x60b0ff:0xe0f4ff}));m.position.copy(p);m.scale.setScalar(.5);scene.add(m);
   sparks.push({m,v:new THREE.Vector3((Math.random()-.5)*6,1+Math.random()*4,(Math.random()-.5)*6),life:.3+Math.random()*.3});}}
@@ -1598,7 +1603,7 @@ function hurtPlayer(n,self=false,att=null){
 function updatePlayer(dt){
   updateHold(dt);updateExHold(dt);updateGunExtras(dt);updateClassExtras(dt);
   const sprint=!CLS[cls].noSprint&&keys.ShiftLeft&&player.stamina>0&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);
-  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;sp*=(player.speedMul||1)*(player.stimT>0?1.3:1)*(match&&match.carrier&&match.carrier===net.myId?0.7:1);if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active)sp=0;
+  let sp=(sprint&&!player.blocking)?9.5:6;if(player.blocking)sp*=0.55;if(player.frenzy>0)sp*=1.3;sp*=(player.speedMul||1)*(player.stimT>0?1.3:1)*(match&&match.carrier&&match.carrier===net.myId?0.7:1)*(player.slowT>0?0.55:1);if(mouseDown&&cur===0&&WEAPONS[0].spin)sp*=0.6;if(ex.active)sp=0;
   if(sprint){player.stamina-=28*dt;player.stDelay=0.8;}else{player.stDelay-=dt;if(player.stDelay<=0)player.stamina=Math.min(100,player.stamina+22*dt);}
   const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
@@ -1691,7 +1696,7 @@ function updateEnemies(dt){
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
-      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);}e.cd=1.1;}continue;}
+      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);if(e.type==='frostling'||(e.boss&&e.variant==='frost'))slowTarget(T,1.6);}e.cd=1.1;}continue;}
     e.cd-=dt;
     if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
     if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
@@ -1739,8 +1744,8 @@ function fireSpit(e,T){
   if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});
 }
 function addSpit(o,v,dmg,att,visual){const m=new THREE.Mesh(spitGeo,new THREE.MeshBasicMaterial({color:0x8dff40}));m.position.copy(o);scene.add(m);
-  spits.push({m,v:v.clone(),life:3,dmg,att,visual});}
-function spitPop(s){scene.remove(s.m);s.dead=true;puff(s.m.position,6,0x5aa020,.8);embersGreen(s.m.position);if(s.m.position.distanceTo(player.pos)<20)play('sizzle');}
+  const s={m,v:v.clone(),life:3,dmg,att,visual};spits.push(s);return s;}
+function spitPop(s){scene.remove(s.m);s.dead=true;if(s.fire&&!isClient())addHazard('fire',s.m.position.x,s.m.position.z,4);puff(s.m.position,6,0x5aa020,.8);embersGreen(s.m.position);if(s.m.position.distanceTo(player.pos)<20)play('sizzle');}
 function embersGreen(p){for(let i=0;i<6;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xb0ff60}));m.position.copy(p);scene.add(m);
   sparks.push({m,v:new THREE.Vector3((Math.random()-.5)*6,Math.random()*4,(Math.random()-.5)*6),life:.3+Math.random()*.2});}}
 function updateSpits(dt){
@@ -1769,7 +1774,8 @@ function updateSpits(dt){
 function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>e.maxHp*0.33?2:3;
   if(ph>e.phase){e.phase=ph;annTeam(ph===2?'深渊领主怒吼——瘟火从它掌中涌出！':'深渊领主陷入狂暴！裂隙在它身边撕开……',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
   const aL=e.parts.armL,aR=e.parts.armR;
-  if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy('imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
+  if(bossVariantTick(e,T,ph,dt))return true;
+  if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy(e.variant==='sanctum'?'caster':'imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
   if(e.act){e.act.t-=dt;const A=e.act;
     if(A.k==='slam'){const k=1-A.t/B.slamWind;aL.rotation.x=aR.rotation.x=-2.6*Math.min(1,k*1.3);e.parts.body.rotation.x=-0.3*k;
       if(A.t<=0){aL.rotation.x=aR.rotation.x=0.4;e.parts.body.rotation.x=0.25;const P=e.g.position.clone().addScaledVector(to.clone().normalize(),1.5);slamFx(P.x,P.z);if(isHost())bcast({t:'fx',k:'slam',x:+P.x.toFixed(2),z:+P.z.toFixed(2)});
@@ -1777,7 +1783,7 @@ function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>
         e.act=null;e.cd=B.slamCd;e.stun=Math.min(e.stun,0.6);}}
     else if(A.k==='volley'){aR.rotation.x=-1.6;if(A.t<=0){if(T){const o=e.g.position.clone().setY(3.2);const base=new THREE.Vector3(T.pos.x,(T.pos.y||0)+1.2,T.pos.z).sub(o).normalize();
         for(let i=0;i<B.volley;i++){const ang=(i-(B.volley-1)/2)*0.16,c=Math.cos(ang),sn=Math.sin(ang);const v=new THREE.Vector3(base.x*c-base.z*sn,base.y,base.x*sn+base.z*c).multiplyScalar(CFG.spit.speed);
-          addSpit(o,v,CFG.enemies.caster.dmg*curThreat().dmg,e,false);if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});}play('spit');}
+          const sp=addSpit(o,v,CFG.enemies.caster.dmg*curThreat().dmg,e,false);if(e.variant==='hive'&&sp)sp.fire=true;if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});}play('spit');}
       aR.rotation.x=0;e.act=null;e.vcd=B.volleyCd;}}
     return true;}
   e.vcd=(e.vcd??2)-dt;
@@ -1985,6 +1991,57 @@ ENEMY_BUILD.nest=e=>{for(const k of ['head','armL','armR','legL','legR']){e.part
 ENEMY_AI.nest=(e,T,pp,to,dist,dt)=>{e.parts.body.scale.y=1.3+Math.sin(gameTime*3+e.id)*.08;e.spawnT=(e.spawnT||7)-dt;
   if(e.spawnT<=0&&dist<22){e.spawnT=7;const a=Math.random()*6.28;spawnEnemy('imp',e.g.position.x+Math.cos(a)*1.8,e.g.position.z+Math.sin(a)*1.8);play('growl');puff(e.g.position.clone().setY(.6),6,0x6a1a2a,1);}
   return true;};
+// ============================================================ 区域专属敌人 + 三种 Boss 变体 + 伤害玩家的地面危险（火海 / 冰锥）
+const BOSS_NAME={hive:'熔炉巨像',sanctum:'堕落大主教',frost:'冰霜巨兽'};
+Object.assign(ENEMY_BUILD,{
+  tanker:e=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.9,8),new THREE.MeshLambertMaterial({color:0x8a2a1a,emissive:0x200400}));t.position.set(0,.15,-.42);e.parts.body.add(t);
+    const n=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.5),gunDark);n.position.set(0,-.3,.25);e.parts.armR.add(n);e.tankM=t;e.flameCd=2;},
+  priest:e=>{const h=new THREE.Mesh(new THREE.TorusGeometry(.32,.04,4,14),new THREE.MeshBasicMaterial({color:0xa040ff}));h.rotation.x=Math.PI/2;h.position.y=.55;e.parts.head.add(h);
+    const robe=new THREE.Mesh(new THREE.BoxGeometry(1,1.1,.7),new THREE.MeshLambertMaterial({color:0x2a1830}));robe.position.set(0,-.7,0);e.parts.body.add(robe);e.blessCd=2;},
+  frostling:e=>{for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(.08,.4,4),BM.glow);c.position.set((Math.random()-.5)*.6,.4,(Math.random()-.5)*.4-.2);c.rotation.x=-.4;e.parts.body.add(c);}},
+  lord:e=>{e.variant=curBiome;const col={hive:0x4a2010,sanctum:0x2a1a30,frost:0x4a6a8a}[curBiome];if(col)e.mat.color.setHex(col);
+    if(curBiome==='hive'){const g=new THREE.Mesh(new THREE.BoxGeometry(.6,.3,.3),new THREE.MeshBasicMaterial({color:0xff6020}));g.position.set(0,.2,.32);e.parts.body.add(g);}
+    if(curBiome==='sanctum'){const h=new THREE.Mesh(new THREE.TorusGeometry(.4,.05,4,16),new THREE.MeshBasicMaterial({color:0xc040ff}));h.rotation.x=Math.PI/2;h.position.y=.6;e.parts.head.add(h);}
+    if(curBiome==='frost')for(let i=0;i<8;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(.12,.7,4),BM.ice);c.position.set((Math.random()-.5)*.9,.5,-.3);c.rotation.x=-.5;e.parts.body.add(c);}}});
+Object.assign(ENEMY_AI,{
+  tanker(e,T,pp,to,dist,dt){e.flameCd-=dt;if(e.flaming>0){e.flaming-=dt;e.flTick=(e.flTick||0)-dt;const f=to.clone().normalize();
+      if(e.flTick<=0){e.flTick=.18;const o=e.g.position.clone().setY(1.2*e.g.scale.y).addScaledVector(f,.8);flameBurst(o,f);fxSend('eflame',{x:o.x,y:o.y,z:o.z,dx:f.x,dz:f.z});
+        if(T&&dist<5.5){if(T.remote)sendTo(T.remote.id,{t:'hurt',n:e.dmg,att:e.id});else hurtPlayer(e.dmg,false,e);}}return true;}
+    if(dist<5&&e.flameCd<=0){e.flaming=1;e.flameCd=3.5;play('melta');return true;}return false;},
+  priest(e,T,pp,to,dist,dt){e.blessCd-=dt;if(e.blessCd<=0){e.blessCd=5;let n=0;for(const o of enemies){if(!o.alive||o===e||o.static)continue;if(o.g.position.distanceTo(e.g.position)<9){o.hp=Math.min(o.maxHp,o.hp+40);o.blessT=5;n++;}}
+      if(n){blessFx(e.g.position.x,e.g.position.z);fxSend('bless',{x:e.g.position.x,z:e.g.position.z});play('choir');}}
+    if(dist<9){const away=to.clone().normalize().multiplyScalar(-1);const sd=steer(e,away,dt);e.g.position.addScaledVector(sd,e.speed*.8*dt);collide(e.g.position,e.r);e.walk+=dt*5;e.parts.legL.rotation.x=Math.sin(e.walk)*.6;e.parts.legR.rotation.x=-Math.sin(e.walk)*.6;return true;}
+    return dist<14;}});
+// ---------- 视觉
+function flameBurst(o,f){for(let i=0;i<6;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:[0xff5010,0xff9030,0xffe080][i%3],transparent:true,opacity:.9,depthWrite:false}));m.position.copy(o);m.scale.setScalar(1.6+Math.random());scene.add(m);
+  puffs.push({m,v:f.clone().multiplyScalar(7+Math.random()*3).add(new THREE.Vector3((Math.random()-.5)*2,Math.random()*1.5,(Math.random()-.5)*2)),life:.45,max:.6});}}
+function blessFx(x,z){const m=new THREE.Mesh(new THREE.TorusGeometry(1,.06,4,24),new THREE.MeshBasicMaterial({color:0xa040ff,transparent:true,opacity:.8}));m.rotation.x=Math.PI/2;m.position.set(x,.2,z);scene.add(m);
+  hazFx.push({m,t:0,grow:9});embersBlue(new THREE.Vector3(x,1.5,z),10);}
+function tankerBurst(e){const p=e.g.position;play('boom');play('melta');puff(p.clone().setY(1),12,0x2a1a10,1.6);flameBurst(p.clone().setY(1),new THREE.Vector3(0,1,0));
+  if(!isClient())for(let k=0;k<6;k++){const a=k/6*6.28;addHazard('fire',p.x+Math.cos(a)*1.6,p.z+Math.sin(a)*1.6,5);}
+  if(!isClient())for(const o of enemies)if(o!==e&&o.alive&&o.g.position.distanceTo(p)<3.5)damageEnemy(o,50,'body',o.g.position.clone().sub(p).setY(0).normalize(),{_remote:true,how:{melt:true}});}
+function iceBurst(e){const c=e.g.position.clone().setY(1);for(let i=0;i<10;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.18,.18,.18),BM.ice);m.position.copy(c);scene.add(m);
+  throwGib(m,new THREE.Vector3((Math.random()-.5)*7,2+Math.random()*4,(Math.random()-.5)*7));}play('clang');}
+function slowTarget(T,d){if(!T)return;if(T.remote)sendTo(T.remote.id,{t:'slow',d});else{player.slowT=Math.max(player.slowT||0,d);announce('被冻住了：移动变慢',0.8);}}
+// ---------- 伤害玩家的地面危险（房主判定）
+let hazards=[],hazFx=[];
+function addHazard(kind,x,z,life){hazards.push({kind,x,z,life,tick:0});if(kind==='fire'){addFirePatch(x,z,true);}}
+function iceWarn(x,z){const m=new THREE.Mesh(new THREE.RingGeometry(1.6,1.9,20),new THREE.MeshBasicMaterial({color:0x80d0ff,side:2,transparent:true,opacity:.8}));m.rotation.x=-Math.PI/2;m.position.set(x,.05,z);scene.add(m);hazFx.push({m,t:0,life:1});}
+function iceSpikes(x,z){for(let i=0;i<7;i++){const a=i/7*6.28,r=i?1:0;const c=new THREE.Mesh(new THREE.ConeGeometry(.3,2.2,5),BM.ice);c.position.set(x+Math.cos(a)*r,1.1,z+Math.sin(a)*r);scene.add(c);hazFx.push({m:c,t:0,life:2.5,spike:true});}play('clang');play('boom');}
+function updateHazards(dt){for(const h of hazards){h.life-=dt;h.tick-=dt;if(h.tick>0)continue;h.tick=.5;if(isClient())continue;
+    for(const t of targetsList())if(Math.hypot(t.pos.x-h.x,t.pos.z-h.z)<1.2){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:6,att:null});else hurtPlayer(6,false,null);}}
+  hazards=hazards.filter(h=>h.life>0);
+  for(const f of hazFx){f.t+=dt;if(f.grow){f.m.scale.setScalar(1+f.t*f.grow);f.m.material.opacity=Math.max(0,.8-f.t*1.6);if(f.t>.5){scene.remove(f.m);f.dead=true;}}
+    else if(f.t>f.life){scene.remove(f.m);f.dead=true;}else if(f.spike&&f.t>f.life-.5)f.m.position.y-=dt*4;}
+  hazFx=hazFx.filter(f=>!f.dead);}
+// ---------- Boss 变体行为（在 bossAI 里调用；返回 true 表示这一帧已处理）
+function bossVariantTick(e,T,ph,dt){if(!T||ph<2)return false;
+  if(e.variant==='sanctum'){e.tpCd=(e.tpCd??6)-dt;if(e.tpCd<=0){e.tpCd=9;const b=new THREE.Vector3(Math.sin((T.remote?T.remote.yaw:player.yaw)),0,Math.cos(T.remote?T.remote.yaw:player.yaw));
+      fxSend('tport',{x:e.g.position.x,z:e.g.position.z});embersBlue(e.g.position.clone().setY(1.5),20);e.g.position.set(T.pos.x+b.x*3,0,T.pos.z+b.z*3);collide(e.g.position,e.r);
+      embersBlue(e.g.position.clone().setY(1.5),20);fxSend('tport',{x:e.g.position.x,z:e.g.position.z});play('zap');annTeam('大主教出现在你身后！',1.2);e.cd=0.4;}}
+  if(e.variant==='frost'){e.iceCd=(e.iceCd??4)-dt;if(e.iceCd<=0){e.iceCd=6;const x=T.pos.x,z=T.pos.z;iceWarn(x,z);fxSend('icewarn',{x,z});
+      setTimeout(()=>{if(!e.alive)return;iceSpikes(x,z);fxSend('ice',{x,z});for(const t of targetsList())if(Math.hypot(t.pos.x-x,t.pos.z-z)<2){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:28,att:null});else hurtPlayer(28,false,null);slowTarget(t,2);}},1000);}}
+  return false;}
 // ============================================================ 对局流程
 function updateMatch(dt){
   if(training.on){updateTraining(dt);return;}
@@ -2083,7 +2140,7 @@ $('runeDone').onclick=()=>{$('runes').classList.remove('show');resumeGame();};
 
 // ============================================================ 开始 / 结束
 function updateBossBar(){let b=null;for(const e of enemies)if(e.alive&&e.boss&&e.g.position.distanceTo(player.pos)<32){b=e;break;}
-  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}
+  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b){const bn=$('bossbar').firstChild;if(bn&&bn.nodeType===3)bn.textContent=BOSS_NAME[b.variant]||'深渊领主';}if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}
 // ============================================================ 局外：战舰整备甲板
 const hubScene=new THREE.Scene(), hubCam=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,0.1,300);
 window.__hubCam=hubCam;
@@ -2359,7 +2416,7 @@ function shockwave(P,R,dmg,stun){fxSend('slam',{x:+P.x.toFixed(2),z:+P.z.toFixed
 function auraAt(x,z){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;announce('圣盾领域：受到伤害减半',1.2);}
   const m=new THREE.Mesh(new THREE.CylinderGeometry(7,7,.1,24,1,true),new THREE.MeshBasicMaterial({color:0xffd060,transparent:true,opacity:.35,side:2,depthWrite:false}));m.position.set(x,1,z);m.scale.y=20;scene.add(m);beams.push({m,life:6,fade:true});}
 let grenades=[];
-function updateClassExtras(dt){updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
+function updateClassExtras(dt){player.slowT=Math.max(0,(player.slowT||0)-dt);canvas.style.filter=player.slowT>0?'saturate(.6) hue-rotate(-20deg) brightness(1.1)':(canvas.style.filter.includes('hue-rotate(-20')?'':canvas.style.filter);updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
   for(const g of grenades){g.t-=dt;g.v.y-=18*dt;g.p.addScaledVector(g.v,dt);if(g.p.y<.1){g.p.y=.1;g.v.y*=-.3;g.v.x*=.6;g.v.z*=.6;}g.m.position.copy(g.p);
     if(g.t>0&&enemies.some(e=>e.alive&&e.g.position.distanceTo(g.p.clone().setY(0))<e.r+.8&&g.p.y<2.5*e.g.scale.y))g.t=0;   // 碰到敌人就炸
     if(g.t<=0){g.dead=true;scene.remove(g.m);play('boom');puff(g.p,8,0x444444,1.2);hitSparks(g.p,null,10);shockwave(g.p,3.5,120*player.gunMul,1.2);}}
@@ -2687,6 +2744,7 @@ function clientRecv(m){
   else if(m.t==='fx2'){fxPlay(m.k,m.d);}
   else if(m.t==='fx'&&m.k==='slam'){slamFx(m.x,m.z);}
   else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
+  else if(m.t==='slow'){player.slowT=Math.max(player.slowT||0,m.d);}
   else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}
   else if(m.t==='fx'){if(m.k==='hole')spawnHoleVisual(m.p);else if(m.k==='beacon')beaconVisual(m.p);}
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}
@@ -2774,7 +2832,10 @@ function fxPlay(k,d){
   else if(k==='line'){for(let i=1;i<8;i++)embersBlue(new THREE.Vector3(d.x+d.fx*i,.3,d.z+d.fz*i),3);play('zap');}
   else if(k==='patch')addFirePatch(d.x,d.z,true);
   else if(k==='plasma'){embersBlue(new THREE.Vector3(d.x,d.y,d.z),14);play('boom');}
-  else if(k==='ult'&&typeof ultFx==='function')ultFx(d);}
+  else if(k==='ult'&&typeof ultFx==='function')ultFx(d);
+  else if(k==='eflame')flameBurst(new THREE.Vector3(d.x,d.y,d.z),new THREE.Vector3(d.dx,0,d.dz));
+  else if(k==='bless')blessFx(d.x,d.z);
+  else if(k==='icewarn')iceWarn(d.x,d.z);else if(k==='ice')iceSpikes(d.x,d.z);else if(k==='tport')embersBlue(new THREE.Vector3(d.x,1.5,d.z),20);}
 // 队友模型手里拿一把枪（机甲自带武器，不加）
 function addRemoteGun(model,cls){if(CLS[cls]&&CLS[cls].eye)return;const g=new THREE.Group();
   for(const [w,h,d,x,y,z,m] of [[.16,.2,.8,0,0,0,gunMat],[.08,.08,.5,0,.04,.6,gunDark],[.1,.24,.12,0,-.18,-.15,gunDark]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);g.add(b);}
@@ -2783,7 +2844,7 @@ function addRemoteGun(model,cls){if(CLS[cls]&&CLS[cls].eye)return;const g=new TH
 function prepareMatch(seedArg){
   if(!isClient())pendingThreat=loadout.threat||1;
   seed=seedArg??Math.floor(Math.random()*1e9);rng=mulberry32(seed);enemySeq=0;net.missing=new Map();distCache=new Map();
-  for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const b of plasmaBalls)scene.remove(b.m);plasmaBalls=[];for(const p of firePatches)scene.remove(p.m);firePatches=[];player.spin=0;player.aiming=false;for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
+  for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const b of plasmaBalls)scene.remove(b.m);plasmaBalls=[];for(const p of firePatches)scene.remove(p.m);firePatches=[];hazards=[];for(const f of hazFx)scene.remove(f.m);hazFx=[];player.spin=0;player.aiming=false;for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   if(!isNet())pendingBiome=null;curBiome=pickBiome();buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});

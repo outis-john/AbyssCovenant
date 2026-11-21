@@ -1,6 +1,6 @@
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
-const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest'];
+const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
@@ -39,6 +39,7 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
   if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
   if(e.shieldHp>0&&dir&&!opts._noShield)dmg=shieldBlock(e,dmg,dir,opts);
+  if(e.blessT>0)dmg*=0.5;if(e.type==='tanker'&&dir&&dir.clone().setY(0).normalize().dot(new THREE.Vector3(Math.sin(e.g.rotation.y),0,Math.cos(e.g.rotation.y)))>0.3){dmg*=3;hitSparks(e.g.position.clone().setY(1.6*e.g.scale.y),dir,6);}   // 打中背后的油罐
   e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9*res);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
@@ -58,6 +59,7 @@ function killEnemy(e,dir,explode,how={}){
   if(isHost())bcast({t:'kill',id:e.id,dir,how});
   if(e.boss&&!isClient())bossDown(e);
   if(e.type==='bloater')bloaterBurst(e);
+  if(e.type==='tanker')tankerBurst(e);if(e.type==='frostling')iceBurst(e);
   if(e.type==='nest'&&!isClient()){addProgress('nest',1);annTeam('恶魔巢穴被摧毁！',2);}
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);

@@ -10,6 +10,9 @@ const CFG={
     hound: {hp:38, speed:8.5,dmg:10,reach:1.5,scale:.85,color:0x3a1a4a},                // 裂隙猎犬：飞快，会扑跳
     bulwark:{hp:200,speed:2.7,dmg:22,reach:1.9,scale:1.25,color:0x7a6a5a,shield:320},  // 骨盾恶魔：正面骨盾挡枪（重击 / 爆炸破盾）
     nest:  {hp:320,speed:0,  dmg:0, reach:0,  scale:1.0,color:0x6a1a2a,static:true},       // 恶魔巢穴（任务目标，会孵小恶魔）
+    tanker:{hp:170,speed:2.6,dmg:6, reach:1.8,scale:1.25,color:0x5a3a22},               // 炼油厂：油罐恶魔（近距离喷火，背后中弹 ×3，死时爆成火海）
+    priest:{hp:120,speed:3.2,dmg:10,reach:1.6,scale:1.05,color:0x3a2040,ranged:false},  // 教堂：堕落祭司（给周围恶魔回血加护）
+    frostling:{hp:85,speed:4.6,dmg:11,reach:1.6,scale:.95,color:0x6a9ac8},              // 冰洞：冰晶恶魔（打中会减速，死时碎成冰渣）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
@@ -38,9 +41,9 @@ const CFG={
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
   // 地图区域：tint 颜色、雾、灯光、各种敌人的出现权重
   biomes:{
-    hive:   {name:'巢都炼油厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1}},
-    sanctum:{name:'地下圣堂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3}},
-    frost:  {name:'蓝冰洞窟',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2}}},
+    hive:   {name:'巢都炼油厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1,tanker:2}},
+    sanctum:{name:'地下圣堂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3,priest:2}},
+    frost:  {name:'蓝冰洞窟',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2,frostling:3}}},
   // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
   threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
   // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物

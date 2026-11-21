@@ -47,7 +47,7 @@ function shockwave(P,R,dmg,stun){fxSend('slam',{x:+P.x.toFixed(2),z:+P.z.toFixed
 function auraAt(x,z){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;announce('圣盾领域：受到伤害减半',1.2);}
   const m=new THREE.Mesh(new THREE.CylinderGeometry(7,7,.1,24,1,true),new THREE.MeshBasicMaterial({color:0xffd060,transparent:true,opacity:.35,side:2,depthWrite:false}));m.position.set(x,1,z);m.scale.y=20;scene.add(m);beams.push({m,life:6,fade:true});}
 let grenades=[];
-function updateClassExtras(dt){updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
+function updateClassExtras(dt){player.slowT=Math.max(0,(player.slowT||0)-dt);canvas.style.filter=player.slowT>0?'saturate(.6) hue-rotate(-20deg) brightness(1.1)':(canvas.style.filter.includes('hue-rotate(-20')?'':canvas.style.filter);updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
   for(const g of grenades){g.t-=dt;g.v.y-=18*dt;g.p.addScaledVector(g.v,dt);if(g.p.y<.1){g.p.y=.1;g.v.y*=-.3;g.v.x*=.6;g.v.z*=.6;}g.m.position.copy(g.p);
     if(g.t>0&&enemies.some(e=>e.alive&&e.g.position.distanceTo(g.p.clone().setY(0))<e.r+.8&&g.p.y<2.5*e.g.scale.y))g.t=0;   // 碰到敌人就炸
     if(g.t<=0){g.dead=true;scene.remove(g.m);play('boom');puff(g.p,8,0x444444,1.2);hitSparks(g.p,null,10);shockwave(g.p,3.5,120*player.gunMul,1.2);}}

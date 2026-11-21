@@ -28,7 +28,7 @@ function updateEnemies(dt){
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
-      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);}e.cd=1.1;}continue;}
+      if(e.windup<=0){e.parts.armL.rotation.x=e.parts.armR.rotation.x=0;if(dist<e.reach+0.6){const dA=e.dmg*(e.arms===0?0.4:e.arms===1?0.7:1);if(T&&T.remote)sendTo(T.remote.id,{t:'hurt',n:dA,att:e.id});else hurtPlayer(dA,false,e);if(e.type==='frostling'||(e.boss&&e.variant==='frost'))slowTarget(T,1.6);}e.cd=1.1;}continue;}
     e.cd-=dt;
     if(e.ranged&&casterAI(e,T,pp,to,dist,dt))continue;
     if(e.boss&&bossAI(e,T,pp,to,dist,dt))continue;
@@ -76,8 +76,8 @@ function fireSpit(e,T){
   if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});
 }
 function addSpit(o,v,dmg,att,visual){const m=new THREE.Mesh(spitGeo,new THREE.MeshBasicMaterial({color:0x8dff40}));m.position.copy(o);scene.add(m);
-  spits.push({m,v:v.clone(),life:3,dmg,att,visual});}
-function spitPop(s){scene.remove(s.m);s.dead=true;puff(s.m.position,6,0x5aa020,.8);embersGreen(s.m.position);if(s.m.position.distanceTo(player.pos)<20)play('sizzle');}
+  const s={m,v:v.clone(),life:3,dmg,att,visual};spits.push(s);return s;}
+function spitPop(s){scene.remove(s.m);s.dead=true;if(s.fire&&!isClient())addHazard('fire',s.m.position.x,s.m.position.z,4);puff(s.m.position,6,0x5aa020,.8);embersGreen(s.m.position);if(s.m.position.distanceTo(player.pos)<20)play('sizzle');}
 function embersGreen(p){for(let i=0;i<6;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xb0ff60}));m.position.copy(p);scene.add(m);
   sparks.push({m,v:new THREE.Vector3((Math.random()-.5)*6,Math.random()*4,(Math.random()-.5)*6),life:.3+Math.random()*.2});}}
 function updateSpits(dt){
@@ -106,7 +106,8 @@ function updateSpits(dt){
 function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>e.maxHp*0.33?2:3;
   if(ph>e.phase){e.phase=ph;annTeam(ph===2?'深渊领主怒吼——瘟火从它掌中涌出！':'深渊领主陷入狂暴！裂隙在它身边撕开……',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
   const aL=e.parts.armL,aR=e.parts.armR;
-  if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy('imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
+  if(bossVariantTick(e,T,ph,dt))return true;
+  if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy(e.variant==='sanctum'?'caster':'imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
   if(e.act){e.act.t-=dt;const A=e.act;
     if(A.k==='slam'){const k=1-A.t/B.slamWind;aL.rotation.x=aR.rotation.x=-2.6*Math.min(1,k*1.3);e.parts.body.rotation.x=-0.3*k;
       if(A.t<=0){aL.rotation.x=aR.rotation.x=0.4;e.parts.body.rotation.x=0.25;const P=e.g.position.clone().addScaledVector(to.clone().normalize(),1.5);slamFx(P.x,P.z);if(isHost())bcast({t:'fx',k:'slam',x:+P.x.toFixed(2),z:+P.z.toFixed(2)});
@@ -114,7 +115,7 @@ function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>
         e.act=null;e.cd=B.slamCd;e.stun=Math.min(e.stun,0.6);}}
     else if(A.k==='volley'){aR.rotation.x=-1.6;if(A.t<=0){if(T){const o=e.g.position.clone().setY(3.2);const base=new THREE.Vector3(T.pos.x,(T.pos.y||0)+1.2,T.pos.z).sub(o).normalize();
         for(let i=0;i<B.volley;i++){const ang=(i-(B.volley-1)/2)*0.16,c=Math.cos(ang),sn=Math.sin(ang);const v=new THREE.Vector3(base.x*c-base.z*sn,base.y,base.x*sn+base.z*c).multiplyScalar(CFG.spit.speed);
-          addSpit(o,v,CFG.enemies.caster.dmg*curThreat().dmg,e,false);if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});}play('spit');}
+          const sp=addSpit(o,v,CFG.enemies.caster.dmg*curThreat().dmg,e,false);if(e.variant==='hive'&&sp)sp.fire=true;if(isHost())bcast({t:'spit',p:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],v:[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(2)]});}play('spit');}
       aR.rotation.x=0;e.act=null;e.vcd=B.volleyCd;}}
     return true;}
   e.vcd=(e.vcd??2)-dt;
