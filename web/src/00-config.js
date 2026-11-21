@@ -17,6 +17,12 @@ const CFG={
     ddecay: {hp:240,speed:2.4,dmg:22,reach:2.0,scale:1.35,color:0x6a7a20},              // 邪神仆从：腐朽（臃肿瘟兽）
     dexcess:{hp:60, speed:8.5,dmg:12,reach:1.6,scale:.95,color:0xd050a0},               // 邪神仆从：欲焰（迅捷舞者）
     dchange:{hp:80, speed:3.6,dmg:14,reach:1.6,scale:1.0,color:0x3070e0,ranged:true},   // 邪神仆从：万变（施法者）
+    soh:   {hp:210,speed:3.4,dmg:15,reach:1.9,scale:1.12,color:0x2f5a52},                 // 荷鲁斯之子军团兵（爆弹枪）
+    we:    {hp:250,speed:6.0,dmg:26,reach:2.1,scale:1.12,color:0xdedad0},                 // 吞世者狂战士（链锯斧）
+    ec:    {hp:220,speed:4.6,dmg:22,reach:2.3,scale:1.12,color:0x6a2a7a},                 // 帝皇之子剑士（格挡反击）
+    militia:{hp:48,speed:4.2,dmg:7,reach:1.5,scale:.9,color:0x6a6050},                    // 伊斯塔万叛军民兵（激光枪）
+    warsinger:{hp:120,speed:3.0,dmg:20,reach:1.5,scale:1.0,color:0xd8d0c0},               // 战歌者（灵能尖啸）
+    malk:  {hp:2400,speed:4.6,dmg:30,reach:2.3,scale:1.25,color:0x2f5a52},                // 马尔克中士（第三幕 Boss）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔

@@ -215,7 +215,7 @@
     <div class="scr"><canvas id="ausCv" width="300" height="220"></canvas></div>
     <div class="foot"><i class="grl"></i><i class="led"></i><i class="led g"></i><span>RNG 32M</span></div></div>
 </div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="godab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
-<div id="obj"></div>
+<div id="obj"></div><div id="vox"></div><div id="titleCard"></div><div id="wp"></div><div id="allyTags"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> Pod <span style="color:#60ffb0">●</span> Clue / terminal <span style="color:#ff9a40">●</span> Parts · M to enlarge</div></div>
 <div class="layer" id="splat"></div>
 <div id="announce"></div>
@@ -268,6 +268,37 @@
   #hub .mp{opacity:.85}#hub .mp .nb,#hub #joinCode{padding:6px 10px!important;font-size:12px!important}#hub #joinCode{width:90px}
   #hub .hint{position:absolute;left:0;right:0;bottom:-18px;text-align:center;font-size:11px;margin:0;color:#5e554a}
 </style>
+<style>
+  /* ---- 战役：无线电字幕、标题卡、航点、队友名牌、战役面板、简报 ---- */
+  #vox{position:fixed;left:50%;bottom:23%;transform:translateX(-50%) translateY(8px);max-width:min(760px,80vw);padding:9px 16px 10px;background:linear-gradient(90deg,rgba(8,10,9,0),rgba(8,10,9,.82) 12%,rgba(8,10,9,.82) 88%,rgba(8,10,9,0));
+    font:500 16px 'Barlow Condensed',sans-serif;letter-spacing:.4px;color:#e6e2d6;text-align:center;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:30;text-shadow:0 1px 2px #000}
+  #vox.show{opacity:1;transform:translateX(-50%)}#vox b{display:block;font:600 12px Oswald,sans-serif;letter-spacing:3px;text-transform:uppercase;margin-bottom:2px}
+  body.inhub #vox,body.inhub #wp,body.inhub #allyTags{display:none}
+  #titleCard{position:fixed;left:0;right:0;top:34%;text-align:center;pointer-events:none;z-index:40;opacity:0}
+  #titleCard .tb{font:600 44px Oswald,sans-serif;letter-spacing:14px;color:#e8dcc0;text-shadow:0 0 18px #000}#titleCard .ts{margin-top:8px;font:400 18px 'Barlow Condensed',sans-serif;letter-spacing:6px;color:#b8a888;text-transform:uppercase}
+  #titleCard.go{animation:tcard var(--d,3.2s) ease forwards}@keyframes tcard{0%{opacity:0;letter-spacing:22px}15%{opacity:1}80%{opacity:1}100%{opacity:0}}
+  #wp{position:fixed;transform:translate(-50%,-50%);display:none;pointer-events:none;z-index:12;text-align:center;font:600 11px Oswald,sans-serif;letter-spacing:2px;color:#f0d890;text-shadow:0 1px 2px #000}
+  #wp i{display:block;width:12px;height:12px;margin:0 auto 3px;border:2px solid #f0d890;transform:rotate(45deg);box-shadow:0 0 6px rgba(240,216,144,.6)}#wp span{display:block;font:500 11px 'Barlow Condensed',sans-serif;color:#c8b888}
+  #allyTags{position:fixed;inset:0;pointer-events:none;z-index:11}.atag{position:absolute;transform:translate(-50%,-100%);text-align:center;font:600 11px 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#bff0cf;text-shadow:0 1px 2px #000;white-space:nowrap}
+  .atag i{display:block;width:46px;height:3px;margin:2px auto 0;background:rgba(0,0,0,.6)}.atag s{display:block;height:100%;background:#70e090;text-decoration:none}.atag.low{color:#ffd080}.atag.low s{background:#ffb040}
+  body.incamp #squad{position:fixed;left:18px;top:30%;width:200px}body.incamp #squad .sq{margin-top:5px;align-items:center}body.incamp #squad .pf{width:26px;height:28px;font-size:10px}body.incamp #squad .nm{font-size:12px}
+  body.inscene #cross,body.inscene #zab,body.inscene #godab,body.inscene #obj,body.inscene #mapWrap,body.inscene #hud-bl,body.inscene #weapons,body.inscene #wp,body.inscene #allyTags,body.inscene #bossbar,body.inscene #progress,body.inscene #announce,body.inscene #prompt{visibility:hidden}
+  #squad .sq.dead{opacity:.45}#squad .sq i{display:block;height:3px;background:rgba(0,0,0,.5);margin-top:3px;width:120px}#squad .sq i b{display:block;height:100%;background:#70e090}
+  #campBtn{pointer-events:auto;margin:0;padding:8px 0;font:500 14px Oswald,sans-serif;letter-spacing:5px;text-transform:uppercase;background:rgba(20,24,22,.9);border-color:#8a7a5a;color:#e8dcc0}#campBtn:hover{border-color:#d8a657}
+  #campaign,#brief{position:fixed;inset:0;z-index:60;display:none;background:radial-gradient(ellipse at 30% 20%,rgba(40,30,20,.96),rgba(6,5,4,.98));color:#e0d6c0;overflow:auto}
+  #campaign.show,#brief.show{display:block}
+  #campaign .ch{display:flex;justify-content:space-between;align-items:flex-start;padding:30px 40px 10px}#campaign .ct{font:600 30px Oswald,sans-serif;letter-spacing:12px;color:#d8a657}#campaign .cs{font:400 14px 'Barlow Condensed',sans-serif;letter-spacing:3px;color:#8a7e6a;margin-top:4px}
+  #campActs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding:16px 40px 40px}
+  .cact{border:1px solid #2e261c;background:rgba(0,0,0,.35);padding:14px 14px 10px;opacity:.55}.cact.live{opacity:1;border-color:#8a6a3a;box-shadow:inset 0 2px 0 #d8a657}
+  .cact .an{font:500 11px Oswald,sans-serif;letter-spacing:4px;color:#8a7e6a}.cact .at{font:600 19px Oswald,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 10px;color:#efe4cc}
+  .clv{display:flex;align-items:baseline;gap:8px;padding:8px 8px;border-left:2px solid transparent;font:500 15px 'Barlow Condensed',sans-serif;cursor:pointer}.clv span{font:500 11px Oswald,sans-serif;color:#7a6e5a;width:26px}
+  .clv em{margin-left:auto;font-style:normal;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7a6e5a}.clv:hover{background:rgba(216,166,87,.08);border-left-color:#d8a657}
+  .clv.done em{color:#8fd08f}.clv.locked{cursor:default;color:#6a6050}.clv.locked:hover{background:none;border-left-color:transparent}
+  #brief .bi{max-width:760px;margin:7vh auto;padding:0 30px}#briefAct{font:500 13px Oswald,sans-serif;letter-spacing:6px;color:#d8a657}#briefTitle{font:600 46px Oswald,sans-serif;letter-spacing:4px;text-transform:uppercase;color:#f2e8d2;margin-top:4px}
+  #briefPlace{font:400 15px 'Barlow Condensed',sans-serif;letter-spacing:3px;color:#8a7e6a;text-transform:uppercase}#brief .bh{margin:24px 0 8px;font:500 11px Oswald,sans-serif;letter-spacing:4px;color:#8a7e6a;text-transform:uppercase;border-bottom:1px solid #2e261c;padding-bottom:5px}
+  #briefObj div{font:500 16px 'Barlow Condensed',sans-serif;margin:3px 0}#briefLog{min-height:150px}.bl{margin:10px 0;font:400 17px 'Barlow Condensed',sans-serif;line-height:1.4}.bl b{display:block;font:600 11px Oswald,sans-serif;letter-spacing:3px;text-transform:uppercase;margin-bottom:1px}
+  #brief .bb{display:flex;gap:12px;justify-content:flex-end;margin-top:28px}#briefGo{margin:0;padding:12px 46px;font:600 18px Oswald,sans-serif;letter-spacing:8px;text-transform:uppercase;background:#6a2214;border-color:#d8a657;color:#fff0d8}
+</style>
 <div id="hub" class="show">
   <header class="hbar">
     <div><div class="title">ABYSS COVENANT</div><div class="sub">Warship “Eternal Night Oath” · Armoury Deck</div></div>
@@ -284,7 +315,7 @@
   <div class="bottom">
     <div class="deploy pnl">
       <div id="deployOpts"></div>
-      <div class="drow"><button id="goBtn">Deploy</button>
+      <div class="drow"><button id="campBtn">Campaign</button><button id="goBtn">Deploy</button>
         <div class="mp"><button id="hostBtn" class="nb">Create Room</button><input id="joinCode" maxlength="6" placeholder="Code"><button id="joinBtn" class="nb">Join</button></div></div>
       <div class="hint">Extraction unknown · death loses everything you carry · H for controls</div>
     </div>
@@ -312,7 +343,9 @@
   <button id="runeDone">done</button>
 </div></div>
 
-<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="backBtn">Return to Ship</button></div></div>
+<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="campNext" style="display:none">Next Mission</button><button id="campRetry" style="display:none">Retry Mission</button><button id="backBtn">Return to Ship</button></div></div>
+<div id="campaign"><div class="ch"><div><div class="ct">CAMPAIGN</div><div class="cs">The Horus Heresy · as witnessed by Sergeant Kaedric Vorne</div></div><button id="campClose" class="ghost">Back</button></div><div id="campActs"></div></div>
+<div id="brief"><div class="bi"><div id="briefAct"></div><div id="briefTitle"></div><div id="briefPlace"></div><div class="bh">Objectives</div><div id="briefObj"></div><div class="bh">Transmission log</div><div id="briefLog"></div><div class="bb"><button id="briefBack" class="ghost">Back</button><button id="briefGo">Deploy</button></div></div></div>
 
 <script type="module">
 /*@GAME@*/

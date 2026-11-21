@@ -45,7 +45,7 @@ function confuseFx(x,z){ufxAdd((()=>{const m=new THREE.Mesh(new THREE.RingGeomet
 function eyeMark(e){if(e.eye)return;const g=new THREE.Group();addM(new THREE.SphereGeometry(.16,10,8),new THREE.MeshBasicMaterial({color:0xe8f0ff}),g);addM(new THREE.SphereGeometry(.08,8,6),new THREE.MeshBasicMaterial({color:0x2040ff}),g,0,0,.12);
   const r=addM(new THREE.TorusGeometry(.32,.03,4,20),new THREE.MeshBasicMaterial({color:0xd060ff}),g);g.userData.r=r;const sc=1/(e.g.scale.y||1);g.scale.setScalar(sc);g.position.y=2.7;e.g.add(g);e.eye=g;}
 // 敌人攻击命中：幻影 / 被诱骗去打的同类；返回 true 表示已处理（不伤玩家）
-function hitTarget(T,n,e){if(!T)return false;if(T.decoy){popDecoy(T.decoy);return true;}
+function hitTarget(T,n,e){if(!T)return false;if(T.ally){allyHurt(T.ally,n,e);return true;}if(T.decoy){popDecoy(T.decoy);return true;}
   if(T.foe){if(T.foe.alive){damageEnemy(T.foe,n*2.5,'body',T.foe.g.position.clone().sub(e.g.position).setY(0).normalize(),{_remote:true,knock:.8,stagger:.4});sparkAt(T.foe);}return true;}return false;}
 function sparkAt(e){embersBlue(e.g.position.clone().setY(1.5),5);}
 // ---- 血祭收割的残影和刀光

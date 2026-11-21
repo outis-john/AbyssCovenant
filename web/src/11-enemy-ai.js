@@ -4,7 +4,7 @@ function updateEnemies(dt){
   const TL=targetsList();
   for(const e of enemies){
     if(!e.alive)continue;
-    let T=null,td=1e9;for(const t of (e.confusedT>0?confusedTargets(e):TL.concat(decoyTargets()))){const d=(t.pos.x-e.g.position.x)**2+(t.pos.z-e.g.position.z)**2;if(d<td){td=d;T=t;}}const pp=T?T.pos:player.pos;
+    let T=null,td=1e9;for(const t of (e.confusedT>0?confusedTargets(e):TL.concat(decoyTargets(),allyTargets()))){const d=(t.pos.x-e.g.position.x)**2+(t.pos.z-e.g.position.z)**2;if(d<td){td=d;T=t;}}const pp=T?T.pos:player.pos;
     if(e.kv.lengthSq()>0.001){e.g.position.addScaledVector(e.kv,dt);e.kv.multiplyScalar(Math.max(0,1-dt*9));collide(e.g.position,e.r);}
     e.lean=Math.max(0,e.lean-dt*4);e.headSnap=Math.max(0,e.headSnap-dt*5);
     e.parts.body.rotation.x=-e.lean*0.45;e.parts.head.rotation.z=Math.sin(gameTime*40)*0.1*e.headSnap;

@@ -3,6 +3,7 @@ function prepareMatch(seedArg){
   if(!isClient())pendingThreat=loadout.threat||1;
   seed=seedArg??Math.floor(Math.random()*1e9);rng=mulberry32(seed);enemySeq=0;net.missing=new Map();distCache=new Map();
   for(const e of enemies)scene.remove(e.g);for(const g of gibs)scene.remove(g.m);for(const b of bloods)scene.remove(b.m);for(const p of projectiles)scene.remove(p.m);for(const b of bolts)scene.remove(b.m);bolts=[];for(const b of plasmaBalls)scene.remove(b.m);plasmaBalls=[];for(const p of firePatches)scene.remove(p.m);firePatches=[];hazards=[];for(const f of hazFx)scene.remove(f.m);hazFx=[];for(const c of clouds)scene.remove(c.m);clouds=[];reap=null;for(const f of ufx)scene.remove(f.m);ufx=[];player.spin=0;player.aiming=false;for(const q of spits)scene.remove(q.m);spits=[];for(const p of puffs)scene.remove(p.m);puffs=[];for(const w of wisps)scene.remove(w.m);for(const b of beams)scene.remove(b.m);
+  if(typeof CAMP!=='undefined'&&CAMP.on)exitCampaign();clearAllies();clearEbolts();
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   if(!isNet())pendingBiome=null;curBiome=pickBiome();buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
@@ -35,6 +36,7 @@ function updateDeath(dt){
     else endMatch(false);}
 }
 function endMatch(win){
+  if(CAMP.on){campEnd(win);return;}
   if(state==='result')return;if(isHost()&&net.inMatch)bcast({t:'end',win});net.inMatch=false;for(const r of net.remotes.values()){if(r.model)scene.remove(r.model);r.model=null;r.inMatch=false;r.dead=false;}
   const diedButWon=win&&player.hp<=0;state='result';document.exitPointerLock?.();setProgress(-1);view.visible=true;
   const v=loadVault();v.runs++;
@@ -61,9 +63,9 @@ function resumeGame(){state='playing';$('pause').classList.remove('show');canvas
 $('backBtn').onclick=enterHub;
 $('resume').onclick=resumeGame;
 $('quit').onclick=()=>{$('pause').classList.remove('show');if(training.on)exitTraining();else endMatch(false);};
-document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&state==='playing'){state='paused';$('pause').classList.add('show');}});
+document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&state==='playing'&&!(typeof SC!=='undefined'&&performance.now()-(SC.endAt||0)<800)){state='paused';$('pause').classList.add('show');}});
 canvas.addEventListener('click',()=>{if(state==='playing'&&!document.pointerLockElement)canvas.requestPointerLock?.();});
-$('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene();});
+$('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene();else if(state==='scene')endScene(true);});
 
 // ============================================================ 输入
 let mouseDown=false;
@@ -82,6 +84,7 @@ addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET
   if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}
   if(e.code==='Tab'){e.preventDefault();if(state==='playing')castGodSkill();return;}
   if(state==='cutscene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endCutscene();return;}
+  if(state==='scene'&&(e.code==='Space'||e.code==='Escape'||e.code==='Enter')){endScene(true);return;}
   keys[e.code]=true;if(state!=='playing')return;
   if(e.code==='Space'&&player.onGround&&!CLS[cls].noJump){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
@@ -108,10 +111,11 @@ function frame(now){
     gameTime+=dt;
     if(mouseDown&&(document.pointerLockElement||pad.active))tryFire(false);
     const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt*(player.bless==='change'?2:player.bless==='excess'?1.5:1));
-    updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updateSpits(dt*ws);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
+    updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updateSpits(dt*ws);updateEbolts(dt*ws);updateAllies(dt*ws);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
   } else if(state==='dying'){updateDeath(dt);if(isNet())simWorld(dt);else updateDebris(dt*0.4);}
   else if(state==='spectate'){gameTime+=dt;simWorld(dt);spectateCam(dt);updateHUD(dt);}
   else if(state==='cutscene')updateCutscene(dt);
+  else if(state==='scene')updateScene(dt);
   renderer.render(scene,camera);
 }
 buildHub();enterHub();

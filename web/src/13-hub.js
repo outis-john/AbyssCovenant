@@ -124,6 +124,7 @@ function renderLoadout(){
 }
 function enterHub(){
   if(typeof stopAllLoops==='function')stopAllLoops();
+  if(typeof CAMP!=='undefined'&&CAMP.on)exitCampaign();$('brief')&&$('brief').classList&&$('brief').classList.remove('show');
   state='hub';document.body.classList.add('inhub');document.exitPointerLock?.();
   $('hub').classList.add('show');$('matching').classList.remove('show');$('result').classList.remove('show');$('ready').classList.remove('show');$('pause').classList.remove('show');
   $('hurt').style.opacity=0;$('warp').style.opacity=0;canvas.style.filter='';setProgress(-1);$('announce').style.opacity=0;
