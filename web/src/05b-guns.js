@@ -106,7 +106,7 @@ function updateGunExtras(dt){const W=WEAPONS[cur];
   if(plasmaCells[0])for(const c of plasmaCells.slice(0,2))c.material.color.setHSL(0.55-0.05*heat.charge,1,0.55+heat.charge*0.35);
   pilotO.scale.set(1+Math.random()*.3,0.8+Math.random()*.7,1);pilot.scale.y=0.8+Math.random()*.4;
   player.flameT=Math.max(0,(player.flameT||0)-dt);loopSound('flame',!!(on&&player.flameT>0));
-  updatePlasma(dt);updateFirePatches(dt);}
+  updatePlasma(dt);updateFirePatches(dt);updateBarrels(dt);}
 // ---------- 地面燃烧：喷火器在落点留下一段时间的火，烧到走进去的敌人
 let firePatches=[];const patchGeo=new THREE.PlaneGeometry(1.4,1.4);
 function addFirePatch(x,z,visual=false){if(!visual)fxSend('patch',{x:+x.toFixed(2),z:+z.toFixed(2)});if(firePatches.length>45){const o=firePatches.shift();scene.remove(o.m);}
@@ -121,3 +121,16 @@ function updateFirePatches(dt){for(const p of firePatches){p.life-=dt;p.m.materi
 function muzzleOf(w){const f=w&&w.flash;if(!f)return null;camera.updateMatrixWorld(true);const p=new THREE.Vector3();f.getWorldPosition(p);return p;}
 function aimPoint(o,d,far=80){const h=castRay(o,d,far);return h?h.point:o.clone().addScaledVector(d,far);}
 function fromMuzzle(w,spread=0){const {o,d}=aimRay(spread);const m=muzzleOf(w);if(!m)return {o,d};const t=aimPoint(o,d);const dd=t.clone().sub(m);if(dd.length()<1.5)return {o,d};return {o:m,d:dd.normalize(),muzzle:true};}
+
+// ---------- 枪口余烟 + 枪管过热发红：每把枪自己记热量，连射越久越红，停火后冒烟慢慢散
+const barrel=new Map();   // 武器 id → {heat, smoke, glow}
+function barrelOf(w){let b=barrel.get(w.id);if(!b){b={heat:0,smoke:0,glow:null};barrel.set(w.id,b);}
+  if(w.flash&&(!b.glow||b.glow.parent!==w.flash.parent)){if(b.glow&&b.glow.parent)b.glow.parent.remove(b.glow);const g=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0,depthWrite:false}));
+    g.position.copy(w.flash.position);g.position.z+=.1;w.flash.parent.add(g);b.glow=g;}return b;}
+function barrelShot(w){if(!w||w.melee)return;const b=barrelOf(w);b.heat=Math.min(1,b.heat+(w.spin?0.012:w.flame?0.008:w.rate<2?0.18:0.06));b.smoke=Math.min(2.2,b.smoke+(w.spin?0.05:0.35));}
+function updateBarrels(dt){const W=WEAPONS[cur];
+  for(const [id,b] of barrel){b.heat=Math.max(0,b.heat-dt*(id==='hbolter'?0.18:0.3));if(b.glow){const k=b.heat;b.glow.material.opacity=Math.min(.9,k*1.2);b.glow.material.color.setRGB(.5+k*.5,.08+k*.45,k*k*.15);b.glow.visible=k>0.03;}}
+  if(!W||W.melee||state!=='playing')return;const b=barrel.get(W.id);if(!b||b.smoke<=0)return;b.smoke-=dt;
+  b.st=(b.st||0)-dt;if(b.st<=0&&!(mouseDown&&W.auto)){b.st=0.07;const p=muzzleOf(W);if(p){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x9a9690,transparent:true,opacity:.35,depthWrite:false}));
+    m.position.copy(p).add(new THREE.Vector3((Math.random()-.5)*.03,.02,(Math.random()-.5)*.03));m.scale.setScalar(.35+b.heat*.4);scene.add(m);
+    puffs.push({m,v:new THREE.Vector3((Math.random()-.5)*.15,.35+Math.random()*.25,(Math.random()-.5)*.15),life:.9,max:1.6});}}}

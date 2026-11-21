@@ -63,6 +63,14 @@
       repeating-linear-gradient(to bottom,rgba(255,180,80,.035) 0 2px,transparent 2px 4px),radial-gradient(ellipse at center,transparent 55%,rgba(20,10,0,.55) 100%)}
   #ckFrame::after{content:'';position:absolute;left:50%;top:50%;width:140px;height:80px;margin:-40px 0 0 -70px;border:1px solid rgba(255,190,90,.35);border-left:0;border-right:0}
   body.cockpit:not(.inhub) #ckFrame{display:block}
+  body[data-mech=walker] #ckFrame{background:radial-gradient(ellipse 62% 58% at center,transparent 96%,#1a1408 97%),linear-gradient(to bottom,#1a1408 0 3%,transparent 3.5% 95%,#1a1408 95.5%),
+    repeating-linear-gradient(to bottom,rgba(120,220,255,.03) 0 2px,transparent 2px 4px),radial-gradient(ellipse at center,transparent 60%,rgba(10,20,30,.5) 100%)}
+  body[data-mech=walker] #ckFrame::after{width:96px;height:96px;margin:-48px 0 0 -48px;border:1px solid rgba(200,170,90,.45);border-radius:50%}
+  body[data-mech=walker] #ckFrame::before{content:'';position:absolute;left:50%;top:3.5%;width:220px;height:16px;margin-left:-110px;border:1px solid rgba(200,170,90,.5);border-top:0;border-radius:0 0 10px 10px}
+  body[data-mech=redeemer] #ckFrame{background:linear-gradient(135deg,#141c26 0 12%,transparent 12.2%),linear-gradient(225deg,#141c26 0 12%,transparent 12.2%),linear-gradient(45deg,#141c26 0 7%,transparent 7.2%),linear-gradient(315deg,#141c26 0 7%,transparent 7.2%),
+    linear-gradient(to bottom,#141c26 0 6%,transparent 6.5% 90%,#141c26 90.5%),repeating-linear-gradient(to bottom,rgba(255,140,60,.035) 0 2px,transparent 2px 4px),radial-gradient(ellipse at center,transparent 50%,rgba(30,10,0,.55) 100%)}
+  body[data-mech=redeemer] #ckFrame::after{width:180px;height:60px;margin:-30px 0 0 -90px;border:2px solid rgba(255,140,60,.4);border-top:0;border-bottom:0}
+  body[data-mech=redeemer] #ckFrame::before{content:'';position:absolute;left:0;right:0;bottom:9.5%;height:10px;background:repeating-linear-gradient(45deg,rgba(216,160,32,.6) 0 10px,rgba(20,16,12,.6) 10px 20px)}
   #mapWrap{position:fixed;right:24px;top:20px;text-align:right}
   #minimap{width:180px;height:180px;image-rendering:pixelated;border:1px solid #5a4a3a;display:block}
   #mapWrap.big #minimap{width:400px;height:400px}
@@ -844,7 +852,7 @@ function tryFire(pressed){if(ex.active)return;const G=activeGun();
 }
 function fire(w,slot=cur){
   player.fireCd=1/(w.rate*(w.spin?0.23+0.77*(player.spin||0):1));if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
-  play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
+  barrelShot(w);play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
   player.recoil+=0.06*w.kick*(w.spin?0.35:1);gunKick=w.kick*(w.spin?0.55+Math.random()*0.6:1);gunRoll=(Math.random()-.5)*0.25*w.kick*(w.spin?1.6:1);if(w.spin){player.shake=Math.max(player.shake,0.06+player.spin*0.07);player.yaw+=(Math.random()-.5)*0.004;}player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
   if(w.kick>=2){player.shake=Math.max(player.shake,0.22);player.punch=Math.max(player.punch||0,0.035);}
   let anyHit=false,anyKill=false,head=false;
@@ -979,7 +987,7 @@ function updateGunExtras(dt){const W=WEAPONS[cur];
   if(plasmaCells[0])for(const c of plasmaCells.slice(0,2))c.material.color.setHSL(0.55-0.05*heat.charge,1,0.55+heat.charge*0.35);
   pilotO.scale.set(1+Math.random()*.3,0.8+Math.random()*.7,1);pilot.scale.y=0.8+Math.random()*.4;
   player.flameT=Math.max(0,(player.flameT||0)-dt);loopSound('flame',!!(on&&player.flameT>0));
-  updatePlasma(dt);updateFirePatches(dt);}
+  updatePlasma(dt);updateFirePatches(dt);updateBarrels(dt);}
 // ---------- 地面燃烧：喷火器在落点留下一段时间的火，烧到走进去的敌人
 let firePatches=[];const patchGeo=new THREE.PlaneGeometry(1.4,1.4);
 function addFirePatch(x,z,visual=false){if(!visual)fxSend('patch',{x:+x.toFixed(2),z:+z.toFixed(2)});if(firePatches.length>45){const o=firePatches.shift();scene.remove(o.m);}
@@ -994,6 +1002,19 @@ function updateFirePatches(dt){for(const p of firePatches){p.life-=dt;p.m.materi
 function muzzleOf(w){const f=w&&w.flash;if(!f)return null;camera.updateMatrixWorld(true);const p=new THREE.Vector3();f.getWorldPosition(p);return p;}
 function aimPoint(o,d,far=80){const h=castRay(o,d,far);return h?h.point:o.clone().addScaledVector(d,far);}
 function fromMuzzle(w,spread=0){const {o,d}=aimRay(spread);const m=muzzleOf(w);if(!m)return {o,d};const t=aimPoint(o,d);const dd=t.clone().sub(m);if(dd.length()<1.5)return {o,d};return {o:m,d:dd.normalize(),muzzle:true};}
+
+// ---------- 枪口余烟 + 枪管过热发红：每把枪自己记热量，连射越久越红，停火后冒烟慢慢散
+const barrel=new Map();   // 武器 id → {heat, smoke, glow}
+function barrelOf(w){let b=barrel.get(w.id);if(!b){b={heat:0,smoke:0,glow:null};barrel.set(w.id,b);}
+  if(w.flash&&(!b.glow||b.glow.parent!==w.flash.parent)){if(b.glow&&b.glow.parent)b.glow.parent.remove(b.glow);const g=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0,depthWrite:false}));
+    g.position.copy(w.flash.position);g.position.z+=.1;w.flash.parent.add(g);b.glow=g;}return b;}
+function barrelShot(w){if(!w||w.melee)return;const b=barrelOf(w);b.heat=Math.min(1,b.heat+(w.spin?0.012:w.flame?0.008:w.rate<2?0.18:0.06));b.smoke=Math.min(2.2,b.smoke+(w.spin?0.05:0.35));}
+function updateBarrels(dt){const W=WEAPONS[cur];
+  for(const [id,b] of barrel){b.heat=Math.max(0,b.heat-dt*(id==='hbolter'?0.18:0.3));if(b.glow){const k=b.heat;b.glow.material.opacity=Math.min(.9,k*1.2);b.glow.material.color.setRGB(.5+k*.5,.08+k*.45,k*k*.15);b.glow.visible=k>0.03;}}
+  if(!W||W.melee||state!=='playing')return;const b=barrel.get(W.id);if(!b||b.smoke<=0)return;b.smoke-=dt;
+  b.st=(b.st||0)-dt;if(b.st<=0&&!(mouseDown&&W.auto)){b.st=0.07;const p=muzzleOf(W);if(p){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x9a9690,transparent:true,opacity:.35,depthWrite:false}));
+    m.position.copy(p).add(new THREE.Vector3((Math.random()-.5)*.03,.02,(Math.random()-.5)*.03));m.scale.setScalar(.35+b.heat*.4);scene.add(m);
+    puffs.push({m,v:new THREE.Vector3((Math.random()-.5)*.15,.35+Math.random()*.25,(Math.random()-.5)*.15),life:.9,max:1.6});}}}
 // ============================================================ 近战（三种近战武器共用挥砍框架）
 const MS={phase:'none',t:0,dir:1,combo:0,s:0,target:null,tick:0,hitDone:false};
 const SWING=0.6;let swing=0,swordOut=0;
@@ -2376,7 +2397,7 @@ function buildCockpit(){const mk=(w,h,d,m,x,y,z,par)=>{const b=new THREE.Mesh(ne
   CK={gun,flash,barrels,fist};}
 function isMech(){return !!(CLS[cls]&&CLS[cls].eye);}
 // 在 applyLoadout 之后调用：机甲换成驾驶舱武器模型
-function cockpitApply(){if(!CK||!WEAPONS[0])return;const mech=isMech();document.body.classList.toggle('cockpit',mech);
+function cockpitApply(){if(!CK||!WEAPONS[0])return;const mech=isMech();document.body.classList.toggle('cockpit',mech);document.body.dataset.mech=mech?cls:'';
   if(!mech)return;const P=WEAPONS[0];P.model=CK.gun;P.flash=CK.flash;
   CK.barrels.spin.visible=!!P.spin;CK.barrels.flame.visible=!!P.flame;CK.barrels.cannon.visible=!P.spin&&!P.flame;sword=CK.fist;}
 function updateCockpit(dt){if(!CK||!isMech())return;CK.barrels.spin.rotation.z+=dt*(player.spin||0)*40;

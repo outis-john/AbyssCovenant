@@ -22,7 +22,7 @@ function buildCockpit(){const mk=(w,h,d,m,x,y,z,par)=>{const b=new THREE.Mesh(ne
   CK={gun,flash,barrels,fist};}
 function isMech(){return !!(CLS[cls]&&CLS[cls].eye);}
 // 在 applyLoadout 之后调用：机甲换成驾驶舱武器模型
-function cockpitApply(){if(!CK||!WEAPONS[0])return;const mech=isMech();document.body.classList.toggle('cockpit',mech);
+function cockpitApply(){if(!CK||!WEAPONS[0])return;const mech=isMech();document.body.classList.toggle('cockpit',mech);document.body.dataset.mech=mech?cls:'';
   if(!mech)return;const P=WEAPONS[0];P.model=CK.gun;P.flash=CK.flash;
   CK.barrels.spin.visible=!!P.spin;CK.barrels.flame.visible=!!P.flame;CK.barrels.cannon.visible=!P.spin&&!P.flame;sword=CK.fist;}
 function updateCockpit(dt){if(!CK||!isMech())return;CK.barrels.spin.rotation.z+=dt*(player.spin||0)*40;

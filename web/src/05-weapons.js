@@ -103,7 +103,7 @@ function tryFire(pressed){if(ex.active)return;const G=activeGun();
 }
 function fire(w,slot=cur){
   player.fireCd=1/(w.rate*(w.spin?0.23+0.77*(player.spin||0):1));if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
-  play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
+  barrelShot(w);play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
   player.recoil+=0.06*w.kick*(w.spin?0.35:1);gunKick=w.kick*(w.spin?0.55+Math.random()*0.6:1);gunRoll=(Math.random()-.5)*0.25*w.kick*(w.spin?1.6:1);if(w.spin){player.shake=Math.max(player.shake,0.06+player.spin*0.07);player.yaw+=(Math.random()-.5)*0.004;}player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
   if(w.kick>=2){player.shake=Math.max(player.shake,0.22);player.punch=Math.max(player.punch||0,0.035);}
   let anyHit=false,anyKill=false,head=false;

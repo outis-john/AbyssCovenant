@@ -63,6 +63,14 @@
       repeating-linear-gradient(to bottom,rgba(255,180,80,.035) 0 2px,transparent 2px 4px),radial-gradient(ellipse at center,transparent 55%,rgba(20,10,0,.55) 100%)}
   #ckFrame::after{content:'';position:absolute;left:50%;top:50%;width:140px;height:80px;margin:-40px 0 0 -70px;border:1px solid rgba(255,190,90,.35);border-left:0;border-right:0}
   body.cockpit:not(.inhub) #ckFrame{display:block}
+  body[data-mech=walker] #ckFrame{background:radial-gradient(ellipse 62% 58% at center,transparent 96%,#1a1408 97%),linear-gradient(to bottom,#1a1408 0 3%,transparent 3.5% 95%,#1a1408 95.5%),
+    repeating-linear-gradient(to bottom,rgba(120,220,255,.03) 0 2px,transparent 2px 4px),radial-gradient(ellipse at center,transparent 60%,rgba(10,20,30,.5) 100%)}
+  body[data-mech=walker] #ckFrame::after{width:96px;height:96px;margin:-48px 0 0 -48px;border:1px solid rgba(200,170,90,.45);border-radius:50%}
+  body[data-mech=walker] #ckFrame::before{content:'';position:absolute;left:50%;top:3.5%;width:220px;height:16px;margin-left:-110px;border:1px solid rgba(200,170,90,.5);border-top:0;border-radius:0 0 10px 10px}
+  body[data-mech=redeemer] #ckFrame{background:linear-gradient(135deg,#141c26 0 12%,transparent 12.2%),linear-gradient(225deg,#141c26 0 12%,transparent 12.2%),linear-gradient(45deg,#141c26 0 7%,transparent 7.2%),linear-gradient(315deg,#141c26 0 7%,transparent 7.2%),
+    linear-gradient(to bottom,#141c26 0 6%,transparent 6.5% 90%,#141c26 90.5%),repeating-linear-gradient(to bottom,rgba(255,140,60,.035) 0 2px,transparent 2px 4px),radial-gradient(ellipse at center,transparent 50%,rgba(30,10,0,.55) 100%)}
+  body[data-mech=redeemer] #ckFrame::after{width:180px;height:60px;margin:-30px 0 0 -90px;border:2px solid rgba(255,140,60,.4);border-top:0;border-bottom:0}
+  body[data-mech=redeemer] #ckFrame::before{content:'';position:absolute;left:0;right:0;bottom:9.5%;height:10px;background:repeating-linear-gradient(45deg,rgba(216,160,32,.6) 0 10px,rgba(20,16,12,.6) 10px 20px)}
   #mapWrap{position:fixed;right:24px;top:20px;text-align:right}
   #minimap{width:180px;height:180px;image-rendering:pixelated;border:1px solid #5a4a3a;display:block}
   #mapWrap.big #minimap{width:400px;height:400px}
