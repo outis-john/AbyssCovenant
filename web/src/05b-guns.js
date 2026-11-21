@@ -90,7 +90,7 @@ function fireSpecial(w,mScale){
     heatBeam(o.clone().add(new THREE.Vector3(0,-.15,0)),o.clone().addScaledVector(d,30),.25);if(any){play(head?'head':'hit');showHit(kill);}return true;}
   return false;}
 function updatePlasma(dt){for(const b of plasmaBalls){b.life-=dt;const len=40*dt;const h=castRay(b.m.position,b.d,len+.15);
-    if(h||b.life<=0){const P=h?h.point:b.m.position.clone();b.dead=true;scene.remove(b.m);embersBlue(P,14);play('boom');let kill=false;
+    if(h||b.life<=0){const P=h?h.point:b.m.position.clone();b.dead=true;scene.remove(b.m);embersBlue(P,14);play('boom');fxSend('plasma',{x:P.x,y:P.y,z:P.z});let kill=false;
       for(const e of enemies){if(!e.alive)continue;const c=e.g.position.clone().setY(1.2*e.g.scale.y);const dd=c.distanceTo(P);if(dd>b.r+e.r)continue;
         const dir=c.clone().sub(P).normalize();kill=damageEnemy(e,b.dmg*(1-dd/(b.r*2+e.r)),dd<1?'body':'body',dir,{knock:.8,stagger:.4,point:c,how:{burst:{p:P,dir}}})||kill;}
       showHit(kill);continue;}
@@ -109,12 +109,12 @@ function updateGunExtras(dt){const W=WEAPONS[cur];
   updatePlasma(dt);updateFirePatches(dt);}
 // ---------- 地面燃烧：喷火器在落点留下一段时间的火，烧到走进去的敌人
 let firePatches=[];const patchGeo=new THREE.PlaneGeometry(1.4,1.4);
-function addFirePatch(x,z){if(firePatches.length>45){const o=firePatches.shift();scene.remove(o.m);}
+function addFirePatch(x,z,visual=false){if(!visual)fxSend('patch',{x:+x.toFixed(2),z:+z.toFixed(2)});if(firePatches.length>45){const o=firePatches.shift();scene.remove(o.m);}
   const m=new THREE.Mesh(patchGeo,new THREE.MeshBasicMaterial({color:0xff6a20,transparent:true,opacity:.8,depthWrite:false}));m.rotation.x=-Math.PI/2;m.rotation.z=Math.random()*3;m.position.set(x,.04,z);scene.add(m);
-  firePatches.push({m,x,z,life:4.5,tick:0});}
+  firePatches.push({m,x,z,life:4.5,tick:0,visual});}
 function updateFirePatches(dt){for(const p of firePatches){p.life-=dt;p.m.material.opacity=Math.min(.8,p.life/1.5)*(0.7+Math.random()*.3);p.m.material.color.setHSL(0.05+Math.random()*.05,1,.5);
     if(Math.random()<dt*10){const q=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:Math.random()<.5?0xff8030:0xffd060}));q.position.set(p.x+(Math.random()-.5),.1,p.z+(Math.random()-.5));q.scale.setScalar(1.6);scene.add(q);sparks.push({m:q,v:new THREE.Vector3(0,2+Math.random()*2,0),life:.35});}
-    p.tick-=dt;if(p.tick<=0){p.tick=0.3;for(const e of enemies)if(e.alive&&!e.boss&&Math.hypot(e.g.position.x-p.x,e.g.position.z-p.z)<0.9+e.r)damageEnemy(e,7,'body',null,{stagger:0,_noShield:true});}
+    p.tick-=dt;if(p.tick<=0&&!p.visual){p.tick=0.3;for(const e of enemies)if(e.alive&&!e.boss&&Math.hypot(e.g.position.x-p.x,e.g.position.z-p.z)<0.9+e.r)damageEnemy(e,7,'body',null,{stagger:0,_noShield:true});}
     if(p.life<=0)scene.remove(p.m);}firePatches=firePatches.filter(p=>p.life>0);}
 
 // ---------- 枪口：子弹 / 火焰 / 等离子都从当前枪模型的枪口发出，飞向准星指着的点（机甲视线高，也对得上）

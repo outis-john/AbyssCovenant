@@ -49,6 +49,9 @@ log('client sees caster type',ctype,'| client sees spit',sawSpit>0,'| client hp'
 A.ev('enemies.forEach(e=>{if(e.alive){e.alive=false;scene.remove(e.g);}})');tick(4);
 A.ev("{const e=spawnEnemy('lord',40,37);e.cd=0;}");B.ev('player.hp=100;player.pos.set(40,0,40)');tick(90);
 log('client sees boss',B.ev("enemies.some(e=>e.alive&&e.boss)"),'| client hp after slam',Math.round(B.ev('player.hp')));
+// 4d 队友的特效同步到房主：地面火、冲击波
+const fp0=A.ev('firePatches.length');B.ev('addFirePatch(10,10)');tick(3);
+log('fx sync: host sees client fire patch',A.ev('firePatches.length')>fp0,'| visual only',A.ev('firePatches[firePatches.length-1].visual'));
 // 5 队友拾取线索、遗物 -> 房主结算 -> 同步回队友
 const ci=B.ev("interactables.find(i=>i.type==='clue'&&!i.used).idx");B.ev(`interact(interactables[${ci}])`);flush();
 B.ev("interact(interactables.find(i=>i.type==='relic'&&!i.used))");flush();tick(8);

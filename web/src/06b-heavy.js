@@ -63,12 +63,12 @@ function doHeavy(M,st){const fwd=fwdFlat(),right=new THREE.Vector3(Math.cos(play
   if(st.k==='spin'){for(const e of near(3.4)){const p=contactPoint(e);kill=damageEnemy(e,base,'body',e.g.position.clone().sub(player.pos).setY(0).normalize(),{stagger:.8,knock:2,point:p,how:{cut:{p:p.clone().setY(1.05*e.g.scale.y),n:new THREE.Vector3(0,1,0),imp:6}}})||kill;sprayAlongChain(p,14);hit++;}play('grind');play('rip');}
   else if(st.k==='line'){for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const a=to.dot(fwd),lat=Math.abs(to.dot(right));
       if(a>0&&a<8&&lat<1.3+e.r){const p=contactPoint(e);kill=damageEnemy(e,base*(1-a/16),'body',fwd,{stagger:.9,knock:1,point:p,how:{cut:{p,n:right.clone(),imp:5}}})||kill;hit++;}}
-    for(let i=1;i<8;i++)embersBlue(player.pos.clone().addScaledVector(fwd,i).setY(.3),3);play('zap');play('boom');}
+    for(let i=1;i<8;i++)embersBlue(player.pos.clone().addScaledVector(fwd,i).setY(.3),3);play('zap');play('boom');fxSend('line',{x:player.pos.x,z:player.pos.z,fx:fwd.x,fz:fwd.z});}
   else if(st.k==='bash'){for(const e of front(3.2,0.3)){damageEnemy(e,base,'body',fwd,{stagger:1,knock:3.5,point:contactPoint(e)});stunE(e,1.6);hit++;}play('clang');}
   else if(st.k==='quake'){const P=player.pos.clone().addScaledVector(fwd,2);
     for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.g.position.x-P.x,e.g.position.z-P.z);if(d>4.8)continue;
       const dir=e.g.position.clone().sub(P).setY(0).normalize();kill=damageEnemy(e,base*(1-d/9.6),'body',dir,{stagger:1,knock:3,point:contactPoint(e),how:{burst:{p:contactPoint(e),dir}}})||kill;if(e.alive)stunE(e,1.3);hit++;}
-    slamFx(P.x,P.z);embersBlue(P.clone().setY(.4),20);play('zap');}
+    slamFx(P.x,P.z);embersBlue(P.clone().setY(.4),20);play('zap');fxSend('slam',{x:P.x,z:P.z});}
   else if(st.k==='crush'){const e=front(2.8,0.5)[0];if(e){const p=contactPoint(e);const can=!e.boss&&(!e.elite||e.hp<=e.maxHp*0.5);
       kill=damageEnemy(e,can?99999:base,'body',fwd,{stagger:1,knock:.5,point:p,how:{burst:{p,dir:fwd}}});spawnBlood(p,fwd,40);hit++;play('rip');}}
   else if(st.k==='behead'){for(const e of front(3.2,0.4)){const p=e.g.position.clone().setY(1.95*e.g.scale.y);
