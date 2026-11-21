@@ -9,6 +9,7 @@ const CFG={
     bloater:{hp:70, speed:3.2,dmg:34,reach:2.2,scale:1.05,color:0x6a7a2a},              // 腐爆者：靠近自爆，死亡也爆炸
     hound: {hp:38, speed:8.5,dmg:10,reach:1.5,scale:.85,color:0x3a1a4a},                // 裂隙猎犬：飞快，会扑跳
     bulwark:{hp:200,speed:2.7,dmg:22,reach:1.9,scale:1.25,color:0x7a6a5a,shield:320},  // 骨盾恶魔：正面骨盾挡枪（重击 / 爆炸破盾）
+    nest:  {hp:320,speed:0,  dmg:0, reach:0,  scale:1.0,color:0x6a1a2a,static:true},       // 恶魔巢穴（任务目标，会孵小恶魔）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔

@@ -1,7 +1,8 @@
 // ============================================================ 撤离、拾取物
 const COND_INFO={
   kill:{name:'击杀恶魔',target:25},elite:{name:'击杀精英恶魔',target:1},hack:{name:'破解黄金时代终端',target:1},
-  ritual:{name:'在仪式法阵中坚守',target:1},cores:{name:'收集能源核心',target:3}};
+  ritual:{name:'在仪式法阵中坚守',target:1},cores:{name:'收集能源核心',target:3},
+  defend:{name:'坚守信标 45 秒',target:1},nest:{name:'摧毁恶魔巢穴',target:3},carry:{name:'把圣物棺带回逃生舱',target:1}};
 const PART_NAME={thruster:'推进器',fuel:'燃料罐',hull:'舱体零件'};
 const PART_NEED={thruster:2,fuel:3,hull:1};
 function addProgress(type,n){const c=match.conds.find(c=>c.type===type);if(c&&c.prog<c.target){c.prog=Math.min(c.target,c.prog+n);if(c.prog>=c.target&&c.revealed)announce('撤离条件完成：'+COND_INFO[type].name,2.5);}}
@@ -9,7 +10,7 @@ function randomCell(exclude=[]){for(let k=0;k<50;k++){const c=[Math.floor(rng()*
 function cellPos(c,jit=6){return [c[0]*C+(rng()-.5)*jit*2,c[1]*C+(rng()-.5)*jit*2];}
 function netDrop(type,x,z){spawnPickup(type,x,z);if(isHost())bcast({t:'drop',type,x,z});}
 function spawnPickup(type,x,z,extra={}){
-  const look={ammo:[0x9aa060,'ammo'],clue:[0x60ffb0,'box'],thruster:[0xff9a40,'cyl'],fuel:[0x40c0ff,'cyl'],hull:[0xc0c0c0,'box'],core:[0xffe060,'oct'],relic:[0xd8a657,'oct'],rare:[0xd040ff,'oct'],terminal:[0x60ffb0,'term'],ritual:[0xb02020,'ring'],pod:[0xd8a657,'pod']}[type];
+  const look={ammo:[0x9aa060,'ammo'],clue:[0x60ffb0,'box'],thruster:[0xff9a40,'cyl'],fuel:[0x40c0ff,'cyl'],hull:[0xc0c0c0,'box'],core:[0xffe060,'oct'],relic:[0xd8a657,'oct'],rare:[0xd040ff,'oct'],defend:[0x60c0ff,'term'],reliquary:[0xd8a657,'cyl'],terminal:[0x60ffb0,'term'],ritual:[0xb02020,'ring'],pod:[0xd8a657,'pod']}[type];
   let m;
   if(look[1]==='cyl')m=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.6,6),new THREE.MeshLambertMaterial({color:look[0],emissive:look[0],emissiveIntensity:.4}));
   else if(look[1]==='ammo'){m=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(.55,.3,.35),new THREE.MeshLambertMaterial({color:0x4a5a2a}));m.add(b);const st=new THREE.Mesh(new THREE.BoxGeometry(.56,.06,.36),new THREE.MeshBasicMaterial({color:0xd8a657}));st.position.y=.1;m.add(st);}
@@ -20,12 +21,13 @@ function spawnPickup(type,x,z,extra={}){
   else m=new THREE.Mesh(new THREE.BoxGeometry(.5,.08,.35),new THREE.MeshBasicMaterial({color:look[0]}));
   m.position.set(x,look[1]==='ring'?0.03:(['term','pod'].includes(look[1])?0:0.8),z);scene.add(m);
   const it={type,m,x,z,used:false,idx:interactables.length,...extra};interactables.push(it);
-  if(type==='terminal'||type==='pod'){colliders.push({minX:x-.8,maxX:x+.8,minZ:z-.8,maxZ:z+.8});}
+  if(type==='reliquary'){m.scale.set(2.2,1.6,2.2);}
+  if(type==='terminal'||type==='pod'||type==='defend'){colliders.push({minX:x-.8,maxX:x+.8,minZ:z-.8,maxZ:z+.8});}
   return it;
 }
 function setupMatch(){
   for(const it of interactables)scene.remove(it.m);interactables=[];
-  const pool=['kill','elite','hack','ritual','cores'];for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  const pool=['kill','elite','hack','ritual','cores','defend','nest','carry'];for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
   const n=rng()<0.5?1:2;
   match={threat:pendingThreat,conds:pool.slice(0,n).map(type=>({type,prog:0,target:COND_INFO[type].target,revealed:false})),parts:{thruster:0,fuel:0,hull:0},carried:{thruster:0,fuel:0,hull:0},loot:0,safeLoot:0,rare:false,beacons:2,kills:0,elites:0,explored:new Set(['0,0']),launching:-1,hack:-1,ritual:-1};
   const used=[[0,0],podCell];
@@ -38,6 +40,7 @@ function setupMatch(){
   const types=match.conds.map(c=>c.type);
   if(types.includes('hack')){const c=randomCell(used);used.push(c);spawnPickup('terminal',c[0]*C-3,c[1]*C);}
   if(types.includes('ritual')){const c=randomCell(used);used.push(c);spawnPickup('ritual',c[0]*C,c[1]*C);}
+  missionSetup(types,used);
   if(types.includes('cores'))for(let k=0;k<3;k++)spawnPickup('core',...cellPos(randomCell([[0,0]])));
   // 初始恶魔（只有房主 / 单人生成，队友从快照里拿）
   if(!isClient())for(let i=0;i<G;i++)for(let j=0;j<G;j++){if(i+j<=1)continue;const k=1+Math.floor(rng()*2)+curThreat().extra*(Math.random()<0.6?1:0);for(let q=0;q<k;q++)spawnEnemy(i+j>=2?pickEnemy(true):'imp',...cellPos([i,j],5));}
@@ -46,7 +49,7 @@ function setupMatch(){
 }
 function nearestInteractable(){let best=null,bd=2.6;for(const it of interactables){if(it.used||it.type==='ritual'||it.type==='ammo')continue;const d=Math.hypot(it.x-player.pos.x,it.z-player.pos.z)-((it.type==='pod'||it.type==='terminal')?1.2:0);if(d<bd){bd=d;best=it;}}return best;}
 function promptFor(it){
-  if(!it)return'';
+  if(!it)return'';{const mp=missionPrompt(it);if(mp)return mp;}
   if(it.type==='clue')return'按 F 读取数据板（线索）';
   if(PART_NAME[it.type])return'按 F 拾取'+PART_NAME[it.type];
   if(it.type==='core')return'按 F 拾取能源核心';
@@ -62,6 +65,7 @@ const podReady=()=>podAssembled()&&condsDone();
 function podStatus(){if(!podAssembled())return'零件不足';if(!condsDone())return'撤离条件未完成';return'就绪';}
 function interact(it=interactTarget,by=null){
   if(!it)return;if(isClient()){sendNet({t:'interact',idx:it.idx});return;}
+  if(missionInteract(it,by))return;
   if(it.type==='clue'){it.used=true;scene.remove(it.m);play('pickup');const c=match.conds.find(c=>!c.revealed);
     if(c){c.revealed=true;annTeam('线索：撤离条件是「'+COND_INFO[c.type].name+'」',3.5);}else annTeam('数据板上只剩下逃生舱坐标',2.5);return;}
   if(PART_NAME[it.type]){it.used=true;scene.remove(it.m);match.carried[it.type]++;play('pickup');annTeam('拾取 '+PART_NAME[it.type]+'，带回逃生舱安装',2);return;}
