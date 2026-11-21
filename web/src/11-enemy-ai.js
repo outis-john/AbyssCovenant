@@ -19,12 +19,13 @@ function updateEnemies(dt){
     if(dist>40){continue;} // 太远：休眠
     // 寻路：同一房间直接冲，否则走向更靠近玩家的相邻房间的门
     let target=new THREE.Vector3(pp.x,0,pp.z);
-    const [ei,ej]=cellOf(e.g.position),[pi,pj]=cellOf(pp);
-    const cellDist=distFor(pi,pj);if(!OPEN.on&&(ei!==pi||ej!==pj)){let best=null,bd=cellDist[ei][ej];
+    const [ei,ej]=cellOf(e.g.position),[pi,pj]=cellOf(pp);const nw=NAV.ok&&!e.static?navWaypoint(e,e.g.position,target,1):null;
+    if(nw){target=nw.p.clone();if(nw.direct)target=tacticTarget(e,target,pp,dist);}
+    else{const cellDist=distFor(pi,pj);if(!OPEN.on&&(ei!==pi||ej!==pj)){let best=null,bd=cellDist[ei][ej];
       for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=ei+a,nj=ej+b;if(ni<0||nj<0||ni>=G||nj>=G||!connected(ei,ej,ni,nj))continue;if(cellDist[ni][nj]<bd){bd=cellDist[ni][nj];best=[ni,nj];}}
       if(best){const door=new THREE.Vector3((ei+best[0])/2*C,0,(ej+best[1])/2*C);
         const dd=door.distanceTo(e.g.position);target=dd<1.5?new THREE.Vector3(best[0]*C,0,best[1]*C):door;}}
-    if(ei===pi&&ej===pj)target=tacticTarget(e,target,pp,dist);
+    if(ei===pi&&ej===pj)target=tacticTarget(e,target,pp,dist);}
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
@@ -134,7 +135,7 @@ function blockedAt(x,z,r){for(const b of colliders)if(x>b.minX-r&&x<b.maxX+r&&z>
 const _sd=new THREE.Vector3();
 function steer(e,dir,dt){const p=e.g.position;
   e.stuckT=(e.stuckT||0)+dt;if(e.stuckT>0.8){const moved=e.lastP?Math.hypot(p.x-e.lastP.x,p.z-e.lastP.z):1;e.lastP={x:p.x,z:p.z};e.stuckT=0;
-    if(moved<0.25*e.speed*0.8/3){e.unstick=0.7;e.side=-(e.side||1);}}
+    if(moved<0.25*e.speed*0.8/3){e.unstick=0.7;e.side=-(e.side||1);e.stuckNav=2;}}
   if(e.unstick>0){e.unstick-=dt;return _sd.set(-dir.z*e.side,0,dir.x*e.side).addScaledVector(dir,.3).normalize();}
   const look=1.1+e.r,r=e.r*0.8;if(!blockedAt(p.x+dir.x*look,p.z+dir.z*look,r))return dir;
   const s0=e.side||(Math.random()<.5?1:-1);

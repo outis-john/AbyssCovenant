@@ -30,7 +30,7 @@ Object.assign(ENEMY_BUILD,{
 // 坦克 AI：车体慢慢转向、保持 14–26 米、炮塔独立追踪；主炮开花弹、侧面激光炮
 function tankAI(e,T,pp,to,dist,dt){const want=Math.atan2(to.x,to.z);e.turYaw+=wrapA(want-e.hullYaw-e.turYaw)*Math.min(1,dt*2.2);e.parts.head.rotation.y=e.turYaw;
   let mv=0;if(dist>26)mv=1;else if(dist<12)mv=-.6;const see=hasLOS(e,pp);if(!see&&dist>10)mv=1;
-  if(mv){const r=driveVehicle(e,e.g.position,e.hullYaw,want,mv,e.speed,dt);e.hullYaw=r;
+  if(mv){const r=driveVehicle(e,e.g.position,e.hullYaw,want,mv,e.speed,dt,pp);e.hullYaw=r;
     if(Math.random()<dt*3)puff(e.g.position.clone().add(new THREE.Vector3(Math.sin(e.hullYaw+Math.PI)*2.4,1.6,Math.cos(e.hullYaw+Math.PI)*2.4)),1,0x2a2a2a,1.2);}
   e.g.rotation.set(0,e.hullYaw,0);e.parts.body.position.y=1.35+Math.sin(gameTime*30)*.01*(mv?1:0);
   if(!see||dist>48)return true;
@@ -67,9 +67,9 @@ function spawnAllyTank(id,name,x,z,yaw=0){const root=new THREE.Group();root.posi
 function updateAllyVehicle(a,dt){a.scanT-=dt;if(a.scanT<=0){a.scanT=.5;let best=null,bd=48;for(const e of enemies){if(!e.alive)continue;const d=e.g.position.distanceTo(a.pos)-(e.vehicle||e.heavy?12:0);if(d<bd&&allyLOS(a,e)){bd=d;best=e;}}a.target=best;}
   const E=a.target&&a.target.alive?a.target:null;
   // 跟在玩家侧前方开路，或者开到指定坚守点
-  const goal=a.hold?a.hold.clone():player.pos.clone().add(new THREE.Vector3(-Math.sin(player.yaw)*6+Math.cos(player.yaw)*(a.side||7),0,-Math.cos(player.yaw)*6-Math.sin(player.yaw)*(a.side||7)));
-  const to=goal.sub(a.pos).setY(0),d=to.length();let mv=d>4?1:0;const want=Math.atan2(to.x,to.z);
-  if(mv){a.yaw=driveVehicle(a,a.pos,a.yaw,want,1,3.4*(d>15?1.3:1),dt);
+  const goal0=a.hold?a.hold.clone():player.pos.clone().add(new THREE.Vector3(-Math.sin(player.yaw)*6+Math.cos(player.yaw)*(a.side||7),0,-Math.cos(player.yaw)*6-Math.sin(player.yaw)*(a.side||7)));
+  const goal=goal0.clone();const to=goal.sub(a.pos).setY(0),d=to.length();let mv=d>4?1:0;const want=Math.atan2(to.x,to.z);
+  if(mv){a.yaw=driveVehicle(a,a.pos,a.yaw,want,1,3.4*(d>15?1.3:1),dt,a.hold?a.hold:goal0);
     if(Math.random()<dt*3)puff(a.pos.clone().add(new THREE.Vector3(Math.sin(a.yaw+Math.PI)*2.4,1.6,Math.cos(a.yaw+Math.PI)*2.4)),1,0x2a2a2a,1.2);}
   a.root.rotation.y=a.yaw;a.P.hull.position.y=1.35+Math.sin(gameTime*30)*.01*mv;
   const tw=E?wrapA(Math.atan2(E.g.position.x-a.pos.x,E.g.position.z-a.pos.z)-a.yaw):0;a.turYaw+=wrapA(tw-a.turYaw)*Math.min(1,dt*2.5);a.P.tur.rotation.y=a.turYaw;a.P.tur.position.z=lerp(a.P.tur.position.z,-.3,Math.min(1,dt*4));
@@ -122,7 +122,7 @@ function titanFire(T){let P=null;
 function tankArmour(e,dmg,dir,opts){const w=WEAPONS[cur];const heavy=opts._remote||(opts.how&&(opts.how.melt||opts.how.burst||opts.how.hole))||(w&&['melta','plasma','hbolter','needle','flamer'].includes(w.id))||(opts.stagger||0)>=.8;
   if(!heavy&&Math.random()<.3){hitSparks(opts.point||e.g.position.clone().setY(1.5),dir?dir.clone().negate():new THREE.Vector3(0,1,0),3);play('clang');}return heavy?dmg:dmg*.4;}
 // 载具驾驶：前方 7 米探测废墟，挡住就找最近的空方向绕；1.5 秒没挪动就倒车转向（以前会顶着墙一直卡住）
-function driveVehicle(o,pos,yaw,want,mv,speed,dt){const probe=(y)=>{const o3=pos.clone();o3.y=1.2;const d=new THREE.Vector3(Math.sin(y),0,Math.cos(y));const h=castRayWalls(o3,d,7);if(h)return false;
+function driveVehicle(o,pos,yaw,want,mv,speed,dt,goal){if(goal&&mv>0&&NAV.ok){const nw=navWaypoint(o,pos,goal,2);if(nw)want=Math.atan2(nw.p.x-pos.x,nw.p.z-pos.z);}const probe=(y)=>{const o3=pos.clone();o3.y=1.2;const d=new THREE.Vector3(Math.sin(y),0,Math.cos(y));const h=castRayWalls(o3,d,7);if(h)return false;
     const p2=pos.clone().addScaledVector(d,5);return !colliders.some(b=>p2.x>b.minX-2&&p2.x<b.maxX+2&&p2.z>b.minZ-2&&p2.z<b.maxZ+2&&!(pos.x>b.minX-2.4&&pos.x<b.maxX+2.4&&pos.z>b.minZ-2.4&&pos.z<b.maxZ+2.4));};
   o.avoidT=Math.max(0,(o.avoidT||0)-dt);let target=want;
   if(o.revT>0){o.revT-=dt;yaw+=dt*.9*(o.revSide||1);pos.addScaledVector(new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)),-speed*.7*dt);collide(pos,o.r||2.3);return yaw;}

@@ -91,7 +91,7 @@ function buildOpenField(theme){if(levelGroup)scene.remove(levelGroup);levelGroup
   for(let i=0;i<5;i++){const x=oRand(-R+8,R-8),z=oRand(-R+8,R-8);if(free(x,z,4)){OPEN.keep.push([x,z,4]);wreck(x,z,rng()*Math.PI);}}
   for(let i=0;i<9;i++){const x=oRand(-R+6,R-6),z=oRand(-R+6,R-6);if(free(x,z,3))sandbags(x,z,oRand(3,6),rng()*Math.PI);}
   for(let i=0;i<10;i++){const x=oRand(-R+4,R-4),z=oRand(-R+4,R-4);if(free(x,z,1))addFire(x,.1,z,oRand(.8,1.6));}
-  OPEN.war=warLayer();podCell=[G-1,G-1];
+  OPEN.war=warLayer();podCell=[G-1,G-1];navBuild();
   applyBiome();scene.fog.density=ash?.012:.0075;scene.fog.color.setHex(ash?0x3a3632:0x6a4228);scene.background.setHex(ash?0x2a2622:0x5a3420);
   if(ash){for(let i=0;i<60;i++){const x=oRand(-R+3,R-3),z=oRand(-R+3,R-3);const b=new THREE.Mesh(B3(.5,.3,1.6),new THREE.MeshLambertMaterial({color:0x2a2622}));b.position.set(x,.15,z);b.rotation.y=rng()*3;levelGroup.add(b);}}}
 // 地标：唱诗之城的 Sirenhold 大教堂（关卡脚本按需调用）

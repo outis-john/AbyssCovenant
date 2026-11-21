@@ -67,7 +67,7 @@ const ALLY_LINES={
   lost:['# is down!','We’ve lost #!','Brother #... rest now.']};
 function bark(a,k,force){const L=ALLY_LINES[k];if(!L||!a)return;vox(a.id,L[Math.floor(Math.random()*L.length)],force);}
 // 跨房间寻路：和敌人用同一套门洞 BFS
-function navStep(pos,goal){if(OPEN.on)return goal.clone();const [ei,ej]=cellOf(pos),[gi,gj]=cellOf(goal);if(ei===gi&&ej===gj)return goal.clone();
+function navStep(pos,goal,o){if(NAV.ok&&o){const w=navWaypoint(o,pos,goal,1);if(w)return w.p.clone();}if(OPEN.on)return goal.clone();const [ei,ej]=cellOf(pos),[gi,gj]=cellOf(goal);if(ei===gi&&ej===gj)return goal.clone();
   const d=distFor(gi,gj);let best=null,bd=d[ei][ej];for(const [x,y] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=ei+x,nj=ej+y;if(ni<0||nj<0||ni>=G||nj>=G||!connected(ei,ej,ni,nj))continue;if(d[ni][nj]<bd){bd=d[ni][nj];best=[ni,nj];}}
   if(!best)return goal.clone();const door=new THREE.Vector3((ei+best[0])/2*C,0,(ej+best[1])/2*C);return door.distanceTo(pos)<1.6?new THREE.Vector3(best[0]*C,0,best[1]*C):door;}
 function allyLOS(a,e){const o=a.pos.clone();o.y+=a.big?3:2.1;const t=e.g.position.clone();t.y+=1.3*e.g.scale.y;const d=t.clone().sub(o);const L=d.length();return !castRayWalls(o,d.divideScalar(L),L);}
@@ -98,7 +98,7 @@ function updateAllies(dt){
     if(a.hold)goal=a.hold.clone();
     else if(E&&(a.role==='melee'||a.role==='blade')&&E.g.position.distanceTo(a.pos)<16)goal=E.g.position.clone();
     else{const rr=3.4+row*2.4;goal=player.pos.clone().add(new THREE.Vector3(Math.sin(ang)*rr,0,Math.cos(ang)*rr));collide(goal,a.r);}
-    const way=navStep(a.pos,goal);const to=way.sub(a.pos).setY(0);const dd=goal.distanceTo(a.pos);
+    const way=navStep(a.pos,goal,a);const to=way.sub(a.pos).setY(0);const dd=goal.distanceTo(a.pos);
     const near=E&&(a.role==='melee'||a.role==='blade')&&E.g.position.distanceTo(a.pos)<E.r+1.7;
     const firing=a.burst>0||(a.reloadT||0)>0;
     // 平滑加减速（不再瞬间起停）

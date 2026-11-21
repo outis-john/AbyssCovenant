@@ -663,7 +663,7 @@ function buildLevel(){
   // 单元格之间的距离（找最远的房间放逃生舱）
   const d=bfs(0,0);let best=[0,0],bd=-1;for(let i=0;i<G;i++)for(let j=0;j<G;j++)if(d[i][j]>bd){bd=d[i][j];best=[i,j];}
   podCell=best;
-  biomeProps();applyBiome();
+  biomeProps();applyBiome();navBuild();
 }
 function bfs(si,sj){const d=[...Array(G)].map(()=>Array(G).fill(1e9));d[si][sj]=0;const q=[[si,sj]];
   while(q.length){const [i,j]=q.shift();for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=i+a,nj=j+b;if(ni<0||nj<0||ni>=G||nj>=G||!connected(i,j,ni,nj))continue;if(d[ni][nj]>d[i][j]+1){d[ni][nj]=d[i][j]+1;q.push([ni,nj]);}}}return d;}
@@ -782,7 +782,7 @@ function buildOpenField(theme){if(levelGroup)scene.remove(levelGroup);levelGroup
   for(let i=0;i<5;i++){const x=oRand(-R+8,R-8),z=oRand(-R+8,R-8);if(free(x,z,4)){OPEN.keep.push([x,z,4]);wreck(x,z,rng()*Math.PI);}}
   for(let i=0;i<9;i++){const x=oRand(-R+6,R-6),z=oRand(-R+6,R-6);if(free(x,z,3))sandbags(x,z,oRand(3,6),rng()*Math.PI);}
   for(let i=0;i<10;i++){const x=oRand(-R+4,R-4),z=oRand(-R+4,R-4);if(free(x,z,1))addFire(x,.1,z,oRand(.8,1.6));}
-  OPEN.war=warLayer();podCell=[G-1,G-1];
+  OPEN.war=warLayer();podCell=[G-1,G-1];navBuild();
   applyBiome();scene.fog.density=ash?.012:.0075;scene.fog.color.setHex(ash?0x3a3632:0x6a4228);scene.background.setHex(ash?0x2a2622:0x5a3420);
   if(ash){for(let i=0;i<60;i++){const x=oRand(-R+3,R-3),z=oRand(-R+3,R-3);const b=new THREE.Mesh(B3(.5,.3,1.6),new THREE.MeshLambertMaterial({color:0x2a2622}));b.position.set(x,.15,z);b.rotation.y=rng()*3;levelGroup.add(b);}}}
 // 地标：唱诗之城的 Sirenhold 大教堂（关卡脚本按需调用）
@@ -798,6 +798,42 @@ function bunkerGate(cx,cz){openBox(cx-5,cz,2,6,0,4.5,matDark);openBox(cx+5,cz,2,
 function palaceRing(cx,cz){const r=13;for(let k=0;k<8;k++){const a0=k/8*Math.PI*2,a1=(k+1)/8*Math.PI*2;if(k%2===1)continue;ruinWall(cx+Math.cos(a0)*r,cz+Math.sin(a0)*r,cx+Math.cos(a1)*r,cz+Math.sin(a1)*r,oRand(5,9));}
   for(let k=0;k<8;k++){const a=(k+.5)/8*Math.PI*2;sandbags(cx+Math.cos(a)*7,cz+Math.sin(a)*7,4,-a+Math.PI/2);}
   for(const [x,z] of [[-4,-4],[4,4],[-4,4],[4,-4]])openBox(cx+x,cz+z,1.4,1.4,0,6,matBrick);addFire(cx,.1,cz,1);}
+// ============================================================ 导航网格 + A* 寻路（敌人、队友、坦克共用）
+// 地图建好后把所有碰撞盒栅格化（1.5 米一格），再算“离障碍物有几格”的净空图；步兵要求净空 ≥1，坦克 ≥2。
+// 新增的碰撞盒（空降舱、残骸、地标）会增量标记，净空图每 0.5 秒最多重算一次。
+const NAV={ok:false,cs:1.5,x0:0,z0:0,w:0,h:0,blk:null,clr:null,nCol:0,dirty:false,t:0,budget:0};
+function navBuild(){let x0,z0,x1,z1;if(OPEN.on){x0=z0=-OPEN.R-3;x1=z1=OPEN.R+3;}else{x0=z0=-HALF-1;x1=z1=(G-1)*C+HALF+1;}
+  const cs=NAV.cs;Object.assign(NAV,{x0,z0,w:Math.ceil((x1-x0)/cs),h:Math.ceil((z1-z0)/cs),nCol:0,dirty:true,t:0,ok:true});NAV.blk=new Uint8Array(NAV.w*NAV.h);NAV.clr=new Uint8Array(NAV.w*NAV.h);navMark();navClearance();}
+function navMark(){const {cs,x0,z0,w,h}=NAV;for(let k=NAV.nCol;k<colliders.length;k++){const b=colliders[k];const i0=Math.max(0,Math.floor((b.minX-.3-x0)/cs)),i1=Math.min(w-1,Math.floor((b.maxX+.3-x0)/cs)),j0=Math.max(0,Math.floor((b.minZ-.3-z0)/cs)),j1=Math.min(h-1,Math.floor((b.maxZ+.3-z0)/cs));
+    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)NAV.blk[j*w+i]=1;}NAV.nCol=colliders.length;}
+function navClearance(){const {w,h,blk,clr}=NAV;const q=new Int32Array(w*h);let qh=0,qt=0;
+  for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=j*w+i;if(blk[k]||i===0||j===0||i===w-1||j===h-1){clr[k]=0;q[qt++]=k;}else clr[k]=255;}
+  while(qh<qt){const k=q[qh++],i=k%w,j=(k/w)|0,c=clr[k]+1;if(c>4)continue;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=i+a,nj=j+b;if(ni<0||nj<0||ni>=w||nj>=h)continue;const n=nj*w+ni;if(clr[n]>c){clr[n]=c;q[qt++]=n;}}}NAV.dirty=false;}
+function navUpdate(dt){if(!NAV.ok)return;if(colliders.length<NAV.nCol){navBuild();return;}if(colliders.length>NAV.nCol){navMark();NAV.dirty=true;}NAV.t-=dt;if(NAV.dirty&&NAV.t<=0){navClearance();NAV.t=.5;}NAV.budget=5;}
+const navI=x=>Math.floor((x-NAV.x0)/NAV.cs),navJ=z=>Math.floor((z-NAV.z0)/NAV.cs);
+function navFree(i,j,need){return i>=0&&j>=0&&i<NAV.w&&j<NAV.h&&NAV.clr[j*NAV.w+i]>=need;}
+// 直线能不能走（按半格采样）
+function navLine(ax,az,bx,bz,need){const L=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.ceil(L/(NAV.cs*.5)));for(let s=1;s<=n;s++){const t=s/n;if(!navFree(navI(ax+(bx-ax)*t),navJ(az+(bz-az)*t),need))return false;}return true;}
+function navSnap(i,j,need){if(navFree(i,j,need))return [i,j];for(let r=1;r<7;r++)for(let a=-r;a<=r;a++)for(const [x,y] of [[i+a,j-r],[i+a,j+r],[i-r,j+a],[i+r,j+a]])if(navFree(x,y,need))return [x,y];return null;}
+// A*（8 方向，八方向距离启发；最多展开 6000 个格子）
+function navPath(ax,az,bx,bz,need){const w=NAV.w;const s=navSnap(navI(ax),navJ(az),need),g=navSnap(navI(bx),navJ(bz),need);if(!s||!g)return null;
+  const S=s[1]*w+s[0],Gk=g[1]*w+g[0];if(S===Gk)return [new THREE.Vector3(bx,0,bz)];
+  const gs=new Map([[S,0]]),from=new Map(),open=[[0,S]],closed=new Set();const hh=k=>{const dx=Math.abs(k%w-g[0]),dz=Math.abs(((k/w)|0)-g[1]);return Math.max(dx,dz)+.414*Math.min(dx,dz);};
+  const push=(f,k)=>{open.push([f,k]);let c=open.length-1;while(c>0){const p=(c-1)>>1;if(open[p][0]<=open[c][0])break;[open[p],open[c]]=[open[c],open[p]];c=p;}};
+  const pop=()=>{const top=open[0],last=open.pop();if(open.length){open[0]=last;let c=0;for(;;){const l=c*2+1,r=l+1;let m=c;if(l<open.length&&open[l][0]<open[m][0])m=l;if(r<open.length&&open[r][0]<open[m][0])m=r;if(m===c)break;[open[m],open[c]]=[open[c],open[m]];c=m;}}return top;};
+  let n=0;while(open.length&&n++<6000){const [,k]=pop();if(k===Gk)break;if(closed.has(k))continue;closed.add(k);const i=k%w,j=(k/w)|0,gk=gs.get(k);
+    for(const [a,b,c] of [[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]]){const ni=i+a,nj=j+b;if(!navFree(ni,nj,need))continue;if(a&&b&&(!navFree(i+a,j,need)||!navFree(i,j+b,need)))continue;
+      const nk=nj*w+ni,ng=gk+c+(NAV.clr[nk]<need+1?.6:0);if(ng<(gs.get(nk)??1e9)){gs.set(nk,ng);from.set(nk,k);push(ng+hh(nk),nk);}}}
+  if(!from.has(Gk))return null;const pts=[];let k=Gk;while(k!==S){pts.push(new THREE.Vector3(NAV.x0+(k%w+.5)*NAV.cs,0,NAV.z0+(((k/w)|0)+.5)*NAV.cs));k=from.get(k);}pts.reverse();pts[pts.length-1]=new THREE.Vector3(bx,0,bz);return pts;}
+// 给一个单位（敌人/队友/坦克）返回下一个要走向的点；能直线走就直走，否则沿缓存的路径走，并尽量跳过可以直达的拐点
+function navWaypoint(o,pos,goal,need=1){if(!NAV.ok)return null;
+  if(navLine(pos.x,pos.z,goal.x,goal.z,need)){o.nav=null;return {p:goal,direct:true};}
+  let N=o.nav;const age=N?gameTime-N.at:99;
+  if((!N||age>2.5||(age>.7&&Math.hypot(N.gx-goal.x,N.gz-goal.z)>3)||(o.stuckNav>1.2))&&NAV.budget>0){NAV.budget--;o.stuckNav=0;const path=navPath(pos.x,pos.z,goal.x,goal.z,need);N=o.nav=path?{path,i:0,at:gameTime,gx:goal.x,gz:goal.z,chk:0}:{path:null,at:gameTime,gx:goal.x,gz:goal.z};}
+  if(!N||!N.path)return null;const P=N.path;
+  while(N.i<P.length-1&&Math.hypot(P[N.i].x-pos.x,P[N.i].z-pos.z)<1.1)N.i++;
+  if(gameTime-N.chk>.25){N.chk=gameTime;for(let k=Math.min(N.i+4,P.length-1);k>N.i;k--)if(navLine(pos.x,pos.z,P[k].x,P[k].z,need)){N.i=k;break;}}
+  return {p:P[N.i],direct:false};}
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
 const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling','dblood','ddecay','dexcess','dchange','soh','we','ec','militia','warsinger','malk','tpred','rtank','tdread','pylon'];
@@ -1993,12 +2029,13 @@ function updateEnemies(dt){
     if(dist>40){continue;} // 太远：休眠
     // 寻路：同一房间直接冲，否则走向更靠近玩家的相邻房间的门
     let target=new THREE.Vector3(pp.x,0,pp.z);
-    const [ei,ej]=cellOf(e.g.position),[pi,pj]=cellOf(pp);
-    const cellDist=distFor(pi,pj);if(!OPEN.on&&(ei!==pi||ej!==pj)){let best=null,bd=cellDist[ei][ej];
+    const [ei,ej]=cellOf(e.g.position),[pi,pj]=cellOf(pp);const nw=NAV.ok&&!e.static?navWaypoint(e,e.g.position,target,1):null;
+    if(nw){target=nw.p.clone();if(nw.direct)target=tacticTarget(e,target,pp,dist);}
+    else{const cellDist=distFor(pi,pj);if(!OPEN.on&&(ei!==pi||ej!==pj)){let best=null,bd=cellDist[ei][ej];
       for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=ei+a,nj=ej+b;if(ni<0||nj<0||ni>=G||nj>=G||!connected(ei,ej,ni,nj))continue;if(cellDist[ni][nj]<bd){bd=cellDist[ni][nj];best=[ni,nj];}}
       if(best){const door=new THREE.Vector3((ei+best[0])/2*C,0,(ej+best[1])/2*C);
         const dd=door.distanceTo(e.g.position);target=dd<1.5?new THREE.Vector3(best[0]*C,0,best[1]*C):door;}}
-    if(ei===pi&&ej===pj)target=tacticTarget(e,target,pp,dist);
+    if(ei===pi&&ej===pj)target=tacticTarget(e,target,pp,dist);}
     const dir=target.sub(e.g.position).setY(0);const dl=dir.length();if(dl>0.01)dir.divideScalar(dl);
     e.g.rotation.set(0,Math.atan2(to.x,to.z),0);
     if(e.windup>0){e.windup-=dt;e.parts.armL.rotation.x=e.parts.armR.rotation.x=-2.2*(1-e.windup/0.35);
@@ -2108,7 +2145,7 @@ function blockedAt(x,z,r){for(const b of colliders)if(x>b.minX-r&&x<b.maxX+r&&z>
 const _sd=new THREE.Vector3();
 function steer(e,dir,dt){const p=e.g.position;
   e.stuckT=(e.stuckT||0)+dt;if(e.stuckT>0.8){const moved=e.lastP?Math.hypot(p.x-e.lastP.x,p.z-e.lastP.z):1;e.lastP={x:p.x,z:p.z};e.stuckT=0;
-    if(moved<0.25*e.speed*0.8/3){e.unstick=0.7;e.side=-(e.side||1);}}
+    if(moved<0.25*e.speed*0.8/3){e.unstick=0.7;e.side=-(e.side||1);e.stuckNav=2;}}
   if(e.unstick>0){e.unstick-=dt;return _sd.set(-dir.z*e.side,0,dir.x*e.side).addScaledVector(dir,.3).normalize();}
   const look=1.1+e.r,r=e.r*0.8;if(!blockedAt(p.x+dir.x*look,p.z+dir.z*look,r))return dir;
   const s0=e.side||(Math.random()<.5?1:-1);
@@ -2785,7 +2822,7 @@ const ALLY_LINES={
   lost:['# is down!','We’ve lost #!','Brother #... rest now.']};
 function bark(a,k,force){const L=ALLY_LINES[k];if(!L||!a)return;vox(a.id,L[Math.floor(Math.random()*L.length)],force);}
 // 跨房间寻路：和敌人用同一套门洞 BFS
-function navStep(pos,goal){if(OPEN.on)return goal.clone();const [ei,ej]=cellOf(pos),[gi,gj]=cellOf(goal);if(ei===gi&&ej===gj)return goal.clone();
+function navStep(pos,goal,o){if(NAV.ok&&o){const w=navWaypoint(o,pos,goal,1);if(w)return w.p.clone();}if(OPEN.on)return goal.clone();const [ei,ej]=cellOf(pos),[gi,gj]=cellOf(goal);if(ei===gi&&ej===gj)return goal.clone();
   const d=distFor(gi,gj);let best=null,bd=d[ei][ej];for(const [x,y] of [[1,0],[-1,0],[0,1],[0,-1]]){const ni=ei+x,nj=ej+y;if(ni<0||nj<0||ni>=G||nj>=G||!connected(ei,ej,ni,nj))continue;if(d[ni][nj]<bd){bd=d[ni][nj];best=[ni,nj];}}
   if(!best)return goal.clone();const door=new THREE.Vector3((ei+best[0])/2*C,0,(ej+best[1])/2*C);return door.distanceTo(pos)<1.6?new THREE.Vector3(best[0]*C,0,best[1]*C):door;}
 function allyLOS(a,e){const o=a.pos.clone();o.y+=a.big?3:2.1;const t=e.g.position.clone();t.y+=1.3*e.g.scale.y;const d=t.clone().sub(o);const L=d.length();return !castRayWalls(o,d.divideScalar(L),L);}
@@ -2816,7 +2853,7 @@ function updateAllies(dt){
     if(a.hold)goal=a.hold.clone();
     else if(E&&(a.role==='melee'||a.role==='blade')&&E.g.position.distanceTo(a.pos)<16)goal=E.g.position.clone();
     else{const rr=3.4+row*2.4;goal=player.pos.clone().add(new THREE.Vector3(Math.sin(ang)*rr,0,Math.cos(ang)*rr));collide(goal,a.r);}
-    const way=navStep(a.pos,goal);const to=way.sub(a.pos).setY(0);const dd=goal.distanceTo(a.pos);
+    const way=navStep(a.pos,goal,a);const to=way.sub(a.pos).setY(0);const dd=goal.distanceTo(a.pos);
     const near=E&&(a.role==='melee'||a.role==='blade')&&E.g.position.distanceTo(a.pos)<E.r+1.7;
     const firing=a.burst>0||(a.reloadT||0)>0;
     // 平滑加减速（不再瞬间起停）
@@ -2905,7 +2942,7 @@ Object.assign(ENEMY_BUILD,{
 // 坦克 AI：车体慢慢转向、保持 14–26 米、炮塔独立追踪；主炮开花弹、侧面激光炮
 function tankAI(e,T,pp,to,dist,dt){const want=Math.atan2(to.x,to.z);e.turYaw+=wrapA(want-e.hullYaw-e.turYaw)*Math.min(1,dt*2.2);e.parts.head.rotation.y=e.turYaw;
   let mv=0;if(dist>26)mv=1;else if(dist<12)mv=-.6;const see=hasLOS(e,pp);if(!see&&dist>10)mv=1;
-  if(mv){const r=driveVehicle(e,e.g.position,e.hullYaw,want,mv,e.speed,dt);e.hullYaw=r;
+  if(mv){const r=driveVehicle(e,e.g.position,e.hullYaw,want,mv,e.speed,dt,pp);e.hullYaw=r;
     if(Math.random()<dt*3)puff(e.g.position.clone().add(new THREE.Vector3(Math.sin(e.hullYaw+Math.PI)*2.4,1.6,Math.cos(e.hullYaw+Math.PI)*2.4)),1,0x2a2a2a,1.2);}
   e.g.rotation.set(0,e.hullYaw,0);e.parts.body.position.y=1.35+Math.sin(gameTime*30)*.01*(mv?1:0);
   if(!see||dist>48)return true;
@@ -2942,9 +2979,9 @@ function spawnAllyTank(id,name,x,z,yaw=0){const root=new THREE.Group();root.posi
 function updateAllyVehicle(a,dt){a.scanT-=dt;if(a.scanT<=0){a.scanT=.5;let best=null,bd=48;for(const e of enemies){if(!e.alive)continue;const d=e.g.position.distanceTo(a.pos)-(e.vehicle||e.heavy?12:0);if(d<bd&&allyLOS(a,e)){bd=d;best=e;}}a.target=best;}
   const E=a.target&&a.target.alive?a.target:null;
   // 跟在玩家侧前方开路，或者开到指定坚守点
-  const goal=a.hold?a.hold.clone():player.pos.clone().add(new THREE.Vector3(-Math.sin(player.yaw)*6+Math.cos(player.yaw)*(a.side||7),0,-Math.cos(player.yaw)*6-Math.sin(player.yaw)*(a.side||7)));
-  const to=goal.sub(a.pos).setY(0),d=to.length();let mv=d>4?1:0;const want=Math.atan2(to.x,to.z);
-  if(mv){a.yaw=driveVehicle(a,a.pos,a.yaw,want,1,3.4*(d>15?1.3:1),dt);
+  const goal0=a.hold?a.hold.clone():player.pos.clone().add(new THREE.Vector3(-Math.sin(player.yaw)*6+Math.cos(player.yaw)*(a.side||7),0,-Math.cos(player.yaw)*6-Math.sin(player.yaw)*(a.side||7)));
+  const goal=goal0.clone();const to=goal.sub(a.pos).setY(0),d=to.length();let mv=d>4?1:0;const want=Math.atan2(to.x,to.z);
+  if(mv){a.yaw=driveVehicle(a,a.pos,a.yaw,want,1,3.4*(d>15?1.3:1),dt,a.hold?a.hold:goal0);
     if(Math.random()<dt*3)puff(a.pos.clone().add(new THREE.Vector3(Math.sin(a.yaw+Math.PI)*2.4,1.6,Math.cos(a.yaw+Math.PI)*2.4)),1,0x2a2a2a,1.2);}
   a.root.rotation.y=a.yaw;a.P.hull.position.y=1.35+Math.sin(gameTime*30)*.01*mv;
   const tw=E?wrapA(Math.atan2(E.g.position.x-a.pos.x,E.g.position.z-a.pos.z)-a.yaw):0;a.turYaw+=wrapA(tw-a.turYaw)*Math.min(1,dt*2.5);a.P.tur.rotation.y=a.turYaw;a.P.tur.position.z=lerp(a.P.tur.position.z,-.3,Math.min(1,dt*4));
@@ -2997,7 +3034,7 @@ function titanFire(T){let P=null;
 function tankArmour(e,dmg,dir,opts){const w=WEAPONS[cur];const heavy=opts._remote||(opts.how&&(opts.how.melt||opts.how.burst||opts.how.hole))||(w&&['melta','plasma','hbolter','needle','flamer'].includes(w.id))||(opts.stagger||0)>=.8;
   if(!heavy&&Math.random()<.3){hitSparks(opts.point||e.g.position.clone().setY(1.5),dir?dir.clone().negate():new THREE.Vector3(0,1,0),3);play('clang');}return heavy?dmg:dmg*.4;}
 // 载具驾驶：前方 7 米探测废墟，挡住就找最近的空方向绕；1.5 秒没挪动就倒车转向（以前会顶着墙一直卡住）
-function driveVehicle(o,pos,yaw,want,mv,speed,dt){const probe=(y)=>{const o3=pos.clone();o3.y=1.2;const d=new THREE.Vector3(Math.sin(y),0,Math.cos(y));const h=castRayWalls(o3,d,7);if(h)return false;
+function driveVehicle(o,pos,yaw,want,mv,speed,dt,goal){if(goal&&mv>0&&NAV.ok){const nw=navWaypoint(o,pos,goal,2);if(nw)want=Math.atan2(nw.p.x-pos.x,nw.p.z-pos.z);}const probe=(y)=>{const o3=pos.clone();o3.y=1.2;const d=new THREE.Vector3(Math.sin(y),0,Math.cos(y));const h=castRayWalls(o3,d,7);if(h)return false;
     const p2=pos.clone().addScaledVector(d,5);return !colliders.some(b=>p2.x>b.minX-2&&p2.x<b.maxX+2&&p2.z>b.minZ-2&&p2.z<b.maxZ+2&&!(pos.x>b.minX-2.4&&pos.x<b.maxX+2.4&&pos.z>b.minZ-2.4&&pos.z<b.maxZ+2.4));};
   o.avoidT=Math.max(0,(o.avoidT||0)-dt);let target=want;
   if(o.revT>0){o.revT-=dt;yaw+=dt*.9*(o.revSide||1);pos.addScaledVector(new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)),-speed*.7*dt);collide(pos,o.r||2.3);return yaw;}
@@ -3776,7 +3813,7 @@ function updateScene(dt){if(CAMP.trans){updateTransition(dt);updateVox(dt);retur
   if(S.from){const A=camKey(S.from),Bk=camKey(S.to||S.from);const p=A.p.clone().lerp(Bk.p,e),l=A.l.clone().lerp(Bk.l,e);const sh=player.shake*player.shake;player.shake=Math.max(0,player.shake-dt*1.2);
     if(!OPEN.on){p.x=clamp(p.x,-HALF+.6,(G-1)*C+HALF-.6);p.z=clamp(p.z,-HALF+.6,(G-1)*C+HALF-.6);p.y=Math.min(p.y,H-.4);}
     camera.position.copy(p).add(new THREE.Vector3((Math.random()-.5)*sh,(Math.random()-.5)*sh,(Math.random()-.5)*sh));camera.lookAt(l);}
-  if(SC.sim){gameTime+=dt;updateEnemies(dt);updateEbolts(dt);updateSpits(dt);updateBleeders(dt);}updateRigs(dt);
+  navUpdate(dt);if(SC.sim){gameTime+=dt;updateEnemies(dt);updateEbolts(dt);updateSpits(dt);updateBleeders(dt);}updateRigs(dt);
   updateAllies(dt);updateOpenField(dt);updatePods(dt);updateDebris(dt);updateUfx(dt);updatePuffs(dt);updateSparks(dt);updateVox(dt);campFx(dt);
   if(SC.t>=(S.d||0))nextShot();}
 function endScene(skip){if(!SC.on)return;if(skip){for(let i=SC.i+1;i<SC.shots.length;i++){const S=SC.shots[i];if(S.act)S.act();if(S.tick)S.tick(0,1);}}
@@ -4772,7 +4809,7 @@ function frame(now){
     gameTime+=dt;
     if(mouseDown&&(document.pointerLockElement||pad.active))tryFire(false);
     const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt*(player.bless==='change'?2:player.bless==='excess'?1.5:1));
-    updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updateSpits(dt*ws);updateEbolts(dt*ws);updateAllies(dt*ws);updateRigs(dt*ws);updateOpenField(dt);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
+    updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);navUpdate(dt);updateSpits(dt*ws);updateEbolts(dt*ws);updateAllies(dt*ws);updateRigs(dt*ws);updateOpenField(dt);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
   } else if(state==='dying'){updateDeath(dt);if(isNet())simWorld(dt);else updateDebris(dt*0.4);}
   else if(state==='spectate'){gameTime+=dt;simWorld(dt);spectateCam(dt);updateHUD(dt);}
   else if(state==='cutscene')updateCutscene(dt);
