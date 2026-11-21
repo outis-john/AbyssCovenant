@@ -111,6 +111,7 @@ function renderLobby(){
 // ---------- 房主收到消息
 function hostRecv(id,m){
   let r=net.remotes.get(id);
+  if(m.t==='daemons'){spawnDaemons(m.type,m.n,m.x,m.z);return;}
   if(m.t==='fx2'){fxPlay(m.k,m.d);bcast(m,id);return;}
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,paint:m.paint||0,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
@@ -147,7 +148,7 @@ function clientRecv(m){
   else if(m.t==='fx'&&m.k==='slam'){slamFx(m.x,m.z);}
   else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
   else if(m.t==='slow'){player.slowT=Math.max(player.slowT||0,m.d);}
-  else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}
+  else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);if(m.psy)addTaint(CFG.taint.psyHit,'change');}
   else if(m.t==='fx'){if(m.k==='hole')spawnHoleVisual(m.p);else if(m.k==='beacon')beaconVisual(m.p);}
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}
 }

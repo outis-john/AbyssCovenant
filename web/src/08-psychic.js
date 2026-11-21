@@ -78,7 +78,7 @@ const ELEM_COLOR={fire:0xff6a20,lightning:0x8fd0ff,void:0xa040ff,mind:0x60ffb0};
 const ELEM_MUL={fire:1,lightning:.9,void:1.3,mind:.6};
 const spellCost=s=>({bolt:15,blast:30,shield:20,summon:40}[s.form])+10*s.mods.length;
 const spellSlots=s=>2+s.mods.length;
-const spellName=s=>ELEMS[s.elem]+FORMS[s.form]+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
+const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'焚灭火柱':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
 function castSpell(i){
   const s=spells[i];if(!s||spellSlots(s)>player.slots)return;
   const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;
@@ -99,6 +99,7 @@ function applyElement(e,s,dir){
 function nearestEnemyFrom(src,maxD){let best=null,bd=maxD;for(const e of enemies){if(!e.alive||e===src)continue;const d=e.g.position.distanceTo(src.g.position);if(d<bd){bd=d;best=e;}}return best;}
 function execSpell(s,o,d,scale){
   const col=ELEM_COLOR[s.elem], mul=ELEM_MUL[s.elem]*scale;
+  if(s.form==='bolt'&&s.elem==='fire'){startPyreBeam(mul);return;}
   if(s.form==='bolt'){
     if(s.mods.includes('homing')){const t=nearestEnemy(o,40,d);if(t)d=t.g.position.clone().setY(1.5).sub(o).normalize();}
     const h=castRay(o,d,60);const end=h?h.point:o.clone().addScaledVector(d,60);
@@ -123,7 +124,8 @@ function beam(a,b,col){const g=new THREE.BufferGeometry().setFromPoints([a,b]);c
 function backlash(){
   const over=player.ovl-player.maxOvl;player.ovl=player.maxOvl*0.5;
   if(Math.random()<player.ignoreChance){announce('你压制住了深渊的反噬',2);return;}
-  play('backlash');player.warp=2.5;player.shake=0.5;
+  if(player.bless==='change'){hurtPlayer(5,true);announce('万变赐福吞下了反噬',1.2);return;}
+  addTaint(CFG.taint.backlash,'change');play('backlash');player.warp=2.5;player.shake=0.5;
   if(over>=35){announce('重度反噬——裂隙撕开了！',3);hurtPlayer(20,true);
     for(let k=0;k<3;k++){const a=Math.random()*6.28;spawnEnemy('imp',player.pos.x+Math.cos(a)*4,player.pos.z+Math.sin(a)*4);}}
   else if(over>=15){announce('中度反噬——灵能爆发！',2);hurtPlayer(30,true);

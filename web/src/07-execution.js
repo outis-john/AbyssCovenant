@@ -21,7 +21,7 @@ function exKill(opts={}){
   damageEnemy(t,dealt+1,'body',dir.clone().multiplyScalar(opts.fling||1),{explode:true,how:opts.how||{}});
   const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+dealt*(ex.mode==='quick'?0.5:1));
   announce((ex.mode==='quick'?'快速处决！':'处决！')+'回复 '+Math.round(player.hp-before)+' 生命',1.6);
-  exChain.until=gameTime+3;if(exChain.left<=0)exChain.left=2;
+  taintAffinity('excess',3);exChain.until=gameTime+3;if(exChain.left<=0)exChain.left=2;
   if(ex.mode!=='quick')for(const o of enemies){if(!o.alive||o===t||o.boss)continue;if(o.g.position.distanceTo(t.g.position)<7){o.stun=Math.max(o.stun,1.6);o.lean=1.2;if(isClient()&&o.remote)sendNet({t:'stun',id:o.id,dur:1.6});}}   // 震慑
   hitstop=0.13;player.shake=0.45;player.punch=0.08;splat();showHit(true);play('kill');
 }

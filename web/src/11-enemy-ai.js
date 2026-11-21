@@ -96,7 +96,7 @@ function updateSpits(dt){
         const back=s.att&&s.att.alive?s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize():s.v.clone().negate().normalize();
         s.v.copy(back.multiplyScalar(20));s.reflected=true;s.life=2;s.m.material.color.setHex(0xfff080);play('clang');play('parry');hitstop=0.08;announce('弹反！',0.8);
         $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);break;}
-      if(!s.visual){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:s.dmg,att:s.att&&s.att.id});else hurtPlayer(s.dmg,false,s.att&&s.att.alive?s.att:null);}
+      if(!s.visual){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:s.dmg,att:s.att&&s.att.id,psy:1});else{hurtPlayer(s.dmg,false,s.att&&s.att.alive?s.att:null);addTaint(CFG.taint.psyHit,'change');}}
       spitPop(s);break;}}}
   spits=spits.filter(s=>!s.dead);
 }

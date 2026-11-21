@@ -8,6 +8,7 @@ function fxPlay(k,d){
   else if(k==='patch')addFirePatch(d.x,d.z,true);
   else if(k==='plasma'){embersBlue(new THREE.Vector3(d.x,d.y,d.z),14);play('boom');}
   else if(k==='ult'&&typeof ultFx==='function')ultFx(d);
+  else if(k==='pbeam')pbeamFx(d);
   else if(k==='eflame')flameBurst(new THREE.Vector3(d.x,d.y,d.z),new THREE.Vector3(d.dx,0,d.dz));
   else if(k==='bless')blessFx(d.x,d.z);
   else if(k==='icewarn')iceWarn(d.x,d.z);else if(k==='ice')iceSpikes(d.x,d.z);else if(k==='tport')embersBlue(new THREE.Vector3(d.x,1.5,d.z),20);}

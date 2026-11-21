@@ -1,0 +1,59 @@
+// ============================================================ 深渊侵蚀 → 被拖入深渊彼岸 → 邪神赐福（四位原创邪神）
+const GODS={
+  blood: {name:'血怒之王',realm:'血怒王座',color:0xc01010,css:'#ff3030',daemon:'dblood', fog:0x2a0404,bg:0x180202,lamp:0xff2010,whisper:'鲜血……为王座献上更多鲜血……',
+    bless:'血怒赐福',desc:'近战伤害 +40%，近战命中吸血 10%；枪械伤害 -20%'},
+  decay: {name:'腐朽之母',realm:'腐朽花园',color:0x6a8a20,css:'#a0d040',daemon:'ddecay', fog:0x1a2206,bg:0x0e1404,lamp:0x90c030,whisper:'别怕，孩子……腐烂就是永生……',
+    bless:'腐朽赐福',desc:'最大生命 +50%，每秒回复 2 生命，受伤 -15%；移速 -15%'},
+  excess:{name:'欲焰之主',realm:'欲焰宫殿',color:0xd040a0,css:'#ff60c0',daemon:'dexcess',fog:0x240616,bg:0x14040e,lamp:0xff50c0,whisper:'更快……更多……再来一次……',
+    bless:'欲焰赐福',desc:'移速 +25%，攻击速度 +25%；受伤 +15%'},
+  change:{name:'万变之眼',realm:'万变迷宫',color:0x3080ff,css:'#60a0ff',daemon:'dchange',fog:0x061430,bg:0x040a1c,lamp:0x4080ff,whisper:'一切皆可改变……包括你……',
+    bless:'万变赐福',desc:'灵能冷却 -50%，灵能回复 ×2，过载不再反噬（只灼烧 5 生命）；最大生命 -20%'}};
+const HELL={on:false,t:0,god:null,wave:0,aff:{blood:0,decay:0,excess:0,change:0}};
+function taintAffinity(g,n){HELL.aff[g]=(HELL.aff[g]||0)+n;}
+function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.min(100,(player.taint||0)+n);if(g)taintAffinity(g,n/4);}
+function pickGod(){return Object.entries(HELL.aff).sort((a,b)=>b[1]-a[1])[0][0];}
+function updateAbyss(dt){if(!match)return;
+  // 过载偏高时持续侵蚀；灵能使用记入万变
+  const r=player.ovl/player.maxOvl;if(r>0.6&&!HELL.on)addTaint(dt*(r-0.6)*CFG.taint.ovlRate,'change');
+  if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
+  if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
+  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'深渊彼岸');
+    HELL.waveT-=dt;if(HELL.waveT<=0&&HELL.t>2){HELL.waveT=CFG.taint.wave;spawnDaemons(G.daemon,CFG.taint.waveN);}
+    $('hellTint').style.opacity=.5+Math.sin(gameTime*3)*.15;player.warp=Math.max(player.warp||0,.3);
+    if(Math.random()<dt*.25)announce(G.whisper,1.6);
+    if(HELL.t<=0)exitHell();}
+  $('taint').firstElementChild.style.width=(player.taint||0)+'%';$('taintTxt').textContent=Math.round(player.taint||0)+'%';
+  const B=player.bless&&GODS[player.bless];$('blessTag').innerHTML=B?`<span style="color:${B.css}">◆ ${B.bless}</span>`:'';}
+function realmVisual(G){scene.fog.color.setHex(G.fog);scene.fog.density=.055;scene.background.setHex(G.bg);for(const l of candleLights)l.color.setHex(G.lamp);
+  matBrick.color.setHex(G.color).lerp(new THREE.Color(0xffffff),.45);
+  $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
+function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.waveT=1.2;const G=GODS[god];
+  realmVisual(G);play('backlash');play('hole');player.shake=.6;
+  ultBanner(G.realm,{color:G.css,sub:`你被拖入深渊彼岸——${G.name}在注视你。活过 ${CFG.taint.hell} 秒！`});
+  announce(G.whisper,3);}
+function exitHell(){HELL.on=false;player.taint=0;applyBiome();$('hellTint').style.opacity=0;setProgress(-1);
+  const G=GODS[HELL.god];grantBless(HELL.god);for(const k in HELL.aff)HELL.aff[k]=0;
+  // 仆从消散
+  if(!isClient())for(const e of enemies)if(e.alive&&e.daemon){e.alive=false;scene.remove(e.g);puff(e.g.position.clone().setY(1),6,G.color,1.2);}
+  ultBanner(G.bless,{color:G.css,sub:G.desc});play('choir');}
+function grantBless(god){const old=player.bless;if(old===god)return;
+  if(old)revertBless(old);player.bless=god;
+  if(god==='blood'){player.gunMul*=.8;WEAPONS[2].dmg*=1.4;}
+  if(god==='decay'){player.maxHp=Math.round(player.maxHp*1.5);player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.3);player.dmgTaken*=.85;player.speedMul=(player.speedMul||1)*.85;}
+  if(god==='excess'){player.speedMul=(player.speedMul||1)*1.25;player.atkSpd=1.25;player.dmgTaken*=1.15;}
+  if(god==='change'){player.maxHp=Math.round(player.maxHp*.8);player.hp=Math.min(player.hp,player.maxHp);}}
+function revertBless(god){if(god==='blood'){player.gunMul/=.8;WEAPONS[2].dmg/=1.4;}
+  if(god==='decay'){player.maxHp=Math.round(player.maxHp/1.5);player.hp=Math.min(player.hp,player.maxHp);player.dmgTaken/=.85;player.speedMul/=.85;}
+  if(god==='excess'){player.speedMul/=1.25;player.atkSpd=1;player.dmgTaken/=1.15;}
+  if(god==='change'){player.maxHp=Math.round(player.maxHp/.8);}}
+// 仆从由房主生成（队友发请求）
+function spawnDaemons(type,n,x=player.pos.x,z=player.pos.z){if(isClient()){sendNet({t:'daemons',type,n,x,z});return;}
+  for(let k=0;k<n;k++){const a=Math.random()*6.28;const e=spawnEnemy(type,x+Math.cos(a)*7,z+Math.sin(a)*7);e.daemon=true;embersBlue(e.g.position.clone().setY(1),8);}play('growl');}
+function resetAbyss(){HELL.on=false;HELL.god=null;for(const k in HELL.aff)HELL.aff[k]=0;player.taint=0;player.bless=null;player.atkSpd=1;$('hellTint').style.opacity=0;}
+// 仆从外观：在基础恶魔上换形
+Object.assign(ENEMY_BUILD,{
+  dblood:e=>{ENEMY_BUILD.hound(e);for(const s of [-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.1,.6,4),new THREE.MeshLambertMaterial({color:0x2a0a0a}));h.position.set(s*.25,.45,.1);h.rotation.z=-s*.5;e.parts.head.add(h);}e.daemon=true;},
+  ddecay:e=>{ENEMY_BUILD.bloater(e);e.fuse=-1;e.daemon=true;},
+  dexcess:e=>{e.parts.body.scale.set(.75,1.1,.7);for(const s of ['armL','armR']){const c=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.5),new THREE.MeshLambertMaterial({color:0xf0c0e0}));c.position.set(0,-.5,.25);e.parts[s].add(c);}e.daemon=true;},
+  dchange:e=>{const h=new THREE.Mesh(new THREE.TorusGeometry(.3,.05,4,12),new THREE.MeshBasicMaterial({color:0x60c0ff}));h.rotation.x=Math.PI/2;h.position.y=.5;e.parts.head.add(h);e.daemon=true;}});
+ENEMY_AI.dblood=(...a)=>ENEMY_AI.hound(...a);

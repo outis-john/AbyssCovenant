@@ -1,7 +1,7 @@
 // ============================================================ 玩家
 function hurtPlayer(n,self=false,att=null){
   if(state!=='playing'||ex.active)return;
-  if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;
+  if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;if(!self)taintAffinity('decay',n/10);
   if(!self&&player.blocking){
     if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
       play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;if(isClient()&&att.remote)sendNet({t:'stun',id:att.id,dur:1.4});att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
@@ -74,6 +74,6 @@ function updatePlayer(dt){
   player.fireCd-=dt;player.meleeCd-=dt;
   if(MS.queued&&player.meleeCd<=0&&MS.phase!=='bite'&&cur===2&&!activeGun()&&!ex.active)melee();
   // 灵能恢复与过载衰减
-  player.mana=Math.min(player.maxMana,player.mana+8*dt);player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
+  player.mana=Math.min(player.maxMana,player.mana+8*dt*(player.bless==='change'?2:1));player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
 }
 

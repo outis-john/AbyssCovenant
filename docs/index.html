@@ -61,6 +61,8 @@
   body.inhub #weapons,body.inhub #zab{display:none}
   body.nopsy #hud-br{display:none}
   #exBars{position:fixed;inset:0;pointer-events:none;z-index:6;background:linear-gradient(#000 0 9%,transparent 9% 91%,#000 91%);opacity:0;transition:opacity .15s}#exBars.show{opacity:1}
+  #hellTint{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity 1s;mix-blend-mode:screen}
+  #blessTag{margin-top:4px;font-size:12px;font-weight:bold;text-shadow:0 0 6px currentColor}
   #ultTint,#ultFlash{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0}
   #ultBanner{position:fixed;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:30;opacity:0}#ultBanner.go{animation:ub 1.4s ease-out}
   #ultBanner .un{font-size:44px;letter-spacing:12px;font-weight:bold;text-shadow:0 0 18px currentColor,0 2px 0 #000}#ultBanner .us{font-size:15px;color:#f0dcb8;letter-spacing:4px;text-shadow:0 0 6px #000;margin-top:4px}
@@ -144,7 +146,7 @@
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
 <div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
-<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="ultTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
 <div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
 <div class="layer" id="splat"></div>
@@ -159,6 +161,8 @@
   <div>生命 <span id="hpTxt"></span></div><div class="bar" id="hp"><div></div></div>
   <div>体力</div><div class="bar" id="st"><div></div></div>
   <div>处决 <span id="exTxt"></span></div><div class="bar" id="exb"><div></div></div>
+  <div>深渊侵蚀 <span id="taintTxt"></span></div><div class="bar" id="taint"><div style="background:#9030c0"></div></div>
+  <div id="blessTag"></div>
 </div>
 <div id="hud-br">
   <div>灵能 <span id="manaTxt"></span></div><div class="bar" id="mana"><div></div></div>
@@ -232,6 +236,10 @@ const CFG={
     tanker:{hp:170,speed:2.6,dmg:6, reach:1.8,scale:1.25,color:0x5a3a22},               // 炼油厂：油罐恶魔（近距离喷火，背后中弹 ×3，死时爆成火海）
     priest:{hp:120,speed:3.2,dmg:10,reach:1.6,scale:1.05,color:0x3a2040,ranged:false},  // 教堂：堕落祭司（给周围恶魔回血加护）
     frostling:{hp:85,speed:4.6,dmg:11,reach:1.6,scale:.95,color:0x6a9ac8},              // 冰洞：冰晶恶魔（打中会减速，死时碎成冰渣）
+    dblood: {hp:90, speed:7.5,dmg:16,reach:1.7,scale:1.05,color:0xb01010},              // 邪神仆从：血怒（扑杀猎手）
+    ddecay: {hp:240,speed:2.4,dmg:22,reach:2.0,scale:1.35,color:0x6a7a20},              // 邪神仆从：腐朽（臃肿瘟兽）
+    dexcess:{hp:60, speed:8.5,dmg:12,reach:1.6,scale:.95,color:0xd050a0},               // 邪神仆从：欲焰（迅捷舞者）
+    dchange:{hp:80, speed:3.6,dmg:14,reach:1.6,scale:1.0,color:0x3070e0,ranged:true},   // 邪神仆从：万变（施法者）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
@@ -254,6 +262,8 @@ const CFG={
     fist:  {dmg:50,windup:.1, slash:.11},   // 破甲巨拳
     axe:   {dmg:54,windup:.16,slash:.16},   // 链锯战斧
   },
+  // 深渊侵蚀：过载偏高 / 反噬 / 被灵能攻击打中会涨；满了被拖入深渊彼岸 hell 秒，活下来获得邪神赐福
+  taint:{ovlRate:22,backlash:30,psyHit:8,hell:20,wave:5,waveN:3},
   heavyHold:0.28,   // 按住左键多少秒算重击
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间
@@ -534,7 +544,7 @@ function roomLayout(rt,cx,cz){const Q=[[-1,-1],[1,-1],[-1,1],[1,1]];
     const ring=new THREE.Mesh(new THREE.RingGeometry(5.5,6,32),new THREE.MeshBasicMaterial({color:0x6a0a0a,side:2}));ring.rotation.x=-Math.PI/2;ring.position.set(cx,.03,cz);levelGroup.add(ring);}}
 // ============================================================ 恶魔
 const ENEMY=CFG.enemies;
-const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling'];
+const ETYPES=['imp','brute','caster','lord','bloater','hound','bulwark','nest','tanker','priest','frostling','dblood','ddecay','dexcess','dchange'];
 function makePart(geo,mat,x,y,z,parent,name){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.userData.part=name;parent.add(m);return m;}
 function spawnEnemy(type,x,z,elite=false){
   const T=ENEMY[type], s=T.scale*(elite?1.15:1);
@@ -573,14 +583,15 @@ function damageEnemy(e,dmg,part,dir,opts={}){
   if(bt.t>0&&state==='playing'&&!opts._remote)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,Math.max(0,e.hp))*0.3);
   if(state==='playing'&&!ex.active&&!opts._remote)player.exCharge=Math.min(100,(player.exCharge||0)+Math.min(dmg,e.hp)*0.12*(player.exRate||1));
   if(e.shieldHp>0&&dir&&!opts._noShield)dmg=shieldBlock(e,dmg,dir,opts);
-  if(e.blessT>0)dmg*=0.5;if(e.type==='tanker'&&dir&&dir.clone().setY(0).normalize().dot(new THREE.Vector3(Math.sin(e.g.rotation.y),0,Math.cos(e.g.rotation.y)))>0.3){dmg*=3;hitSparks(e.g.position.clone().setY(1.6*e.g.scale.y),dir,6);}   // 打中背后的油罐
+  if(e.blessT>0)dmg*=0.5;
+  if(player.bless==='blood'&&!opts._remote&&state==='playing'&&WEAPONS[cur]&&WEAPONS[cur].melee)player.hp=Math.min(player.maxHp,player.hp+Math.min(dmg,e.hp)*0.1);   // 血怒：近战吸血if(e.type==='tanker'&&dir&&dir.clone().setY(0).normalize().dot(new THREE.Vector3(Math.sin(e.g.rotation.y),0,Math.cos(e.g.rotation.y)))>0.3){dmg*=3;hitSparks(e.g.position.clone().setY(1.6*e.g.scale.y),dir,6);}   // 打中背后的油罐
   e.hp-=dmg;e.flash=0.08;const res=e.boss?0.12:1;e.stagger=Math.max(e.stagger,(opts.stagger??0.12)*res);
   if(dir){e.kv.addScaledVector(dir.clone().setY(0),(opts.knock??0.15)*9*res);}
   e.lean=Math.min(1.2,e.lean+(head?1:0.6));e.headSnap=head?1:e.headSnap;
   spawnBlood(opts.point||e.g.position.clone().setY(1.4),dir,head?10:5);
   // 部位破坏：打断手臂
   if((part==='armL'||part==='armR')&&e.parts[part].parent===e.g){e.armHp[part]-=dmg*(opts.limbMul||1);if(e.armHp[part]<=0){detach(e,part,dir);e.arms--;}}
-  if(e.hp<=0){if(!opts._remote&&!ex.active)masteryKill();killEnemy(e,dir,opts.explode,opts.how||{});return true;}
+  if(e.hp<=0){if(!opts._remote&&!ex.active){masteryKill();taintAffinity(WEAPONS[cur]&&WEAPONS[cur].melee?'blood':'excess',WEAPONS[cur]&&WEAPONS[cur].melee?1:.5);}killEnemy(e,dir,opts.explode,opts.how||{});return true;}
   return false;
 }
 function detach(e,part,dir){const m=e.parts[part];const wp=new THREE.Vector3();m.getWorldPosition(wp);const wq=new THREE.Quaternion();m.getWorldQuaternion(wq);const ws=new THREE.Vector3();m.getWorldScale(ws);
@@ -891,7 +902,7 @@ function tryFire(pressed){if(ex.active)return;const G=activeGun();
   fire(w,slot);
 }
 function fire(w,slot=cur){
-  player.fireCd=1/(w.rate*(w.spin?0.23+0.77*(player.spin||0):1));if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
+  player.fireCd=1/(w.rate*(w.spin?0.23+0.77*(player.spin||0):1)*(player.atkSpd||1));if(!w.heat)ammo[slot].mag--;const mScale=w.heat?0.35+0.65*heat.charge:1;
   barrelShot(w);play(w.snd);const fl=w.flash;fl.visible=true;muzzleLight.intensity=w.id==='melta'?70:w.id==='shotgun'?55:30;muzzleLight.color.setHex(w.id==='melta'?0xffa060:0xffb060);setTimeout(()=>{fl.visible=false;muzzleLight.intensity=0;},w.id==='melta'?120:50);
   player.recoil+=0.06*w.kick*(w.spin?0.35:1);gunKick=w.kick*(w.spin?0.55+Math.random()*0.6:1);gunRoll=(Math.random()-.5)*0.25*w.kick*(w.spin?1.6:1);if(w.spin){player.shake=Math.max(player.shake,0.06+player.spin*0.07);player.yaw+=(Math.random()-.5)*0.004;}player.pitch=clamp(player.pitch+w.climb,-1.5,1.5);player.yaw+=(Math.random()-.5)*0.006*w.kick;
   if(w.kick>=2){player.shake=Math.max(player.shake,0.22);player.punch=Math.max(player.punch||0,0.035);}
@@ -1076,7 +1087,7 @@ const COMBOS={
   saw:[{p:'a',dm:1,name:'斜劈'},{p:'h',dm:1,name:'横斩'},{p:'t',dm:1,thrust:true,bite:true,biteDur:.62,name:'突刺锯入'},{p:'u',dm:2.2,fin:true,name:'切开'}],
   ssword:[{p:'a',dm:1},{p:'b',dm:1}]};
 const frenzyMul=()=>player.frenzy>0?0.62:1;
-const LITANIES=['以圣约之名，斩断深渊的低语。','斥退亚空间之地狱，此身即是壁垒。','我的剑即是誓言，誓言永不熄灭。','血肉终将腐朽，信仰不会。',
+const LITANIES=['以圣约之名，斩断深渊的低语。','斥退深渊彼岸的地狱，此身即是壁垒。','我的剑即是誓言，誓言永不熄灭。','血肉终将腐朽，信仰不会。',
   '不洁之物，回到你们来的黑暗里去。','退去吧，地狱的造物——此地仍有人守望。','每一次挥剑，都是一次祷告。','沉睡者在注视着我，我不会令祂失望。',
   '恐惧是叛徒，怜悯是破绽。','以钢铁与圣火，净化此地。','我不求胜利，只求无愧。','黑暗终有尽头，而我便是那尽头。'];
 let litIdx=0,litT=0;
@@ -1089,7 +1100,7 @@ function melee(){
   if(MS.phase==='none'&&gameTime-(MS.lastEnd??-9)>1.0)MS.combo=0;
   MS.step=list[MS.combo%list.length];MS.combo++;MS.dir=stepDir();MS.counter=false;
   MS.phase='windup';MS.t=0;MS.s=0;MS.target=null;MS.hitDone=false;
-  const fm=frenzyMul();player.meleeCd=(M.windup+M.slash*(MS.step.thrust?1.2:1))*fm+0.14*fm;swordOut=1.4;swing=1;
+  const fm=frenzyMul()/(player.atkSpd||1);player.meleeCd=(M.windup+M.slash*(MS.step.thrust?1.2:1))*fm+0.14*fm;swordOut=1.4;swing=1;
 }
 function poseSet(){return MS.step?POSE[MS.step.p]:POSE.a;}
 function stepDir(){const P=poseSet();return P.pe[0]<P.ps[0]?1:-1;}
@@ -1256,7 +1267,7 @@ function exKill(opts={}){
   damageEnemy(t,dealt+1,'body',dir.clone().multiplyScalar(opts.fling||1),{explode:true,how:opts.how||{}});
   const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+dealt*(ex.mode==='quick'?0.5:1));
   announce((ex.mode==='quick'?'快速处决！':'处决！')+'回复 '+Math.round(player.hp-before)+' 生命',1.6);
-  exChain.until=gameTime+3;if(exChain.left<=0)exChain.left=2;
+  taintAffinity('excess',3);exChain.until=gameTime+3;if(exChain.left<=0)exChain.left=2;
   if(ex.mode!=='quick')for(const o of enemies){if(!o.alive||o===t||o.boss)continue;if(o.g.position.distanceTo(t.g.position)<7){o.stun=Math.max(o.stun,1.6);o.lean=1.2;if(isClient()&&o.remote)sendNet({t:'stun',id:o.id,dur:1.6});}}   // 震慑
   hitstop=0.13;player.shake=0.45;player.punch=0.08;splat();showHit(true);play('kill');
 }
@@ -1434,7 +1445,7 @@ const ELEM_COLOR={fire:0xff6a20,lightning:0x8fd0ff,void:0xa040ff,mind:0x60ffb0};
 const ELEM_MUL={fire:1,lightning:.9,void:1.3,mind:.6};
 const spellCost=s=>({bolt:15,blast:30,shield:20,summon:40}[s.form])+10*s.mods.length;
 const spellSlots=s=>2+s.mods.length;
-const spellName=s=>ELEMS[s.elem]+FORMS[s.form]+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
+const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'焚灭火柱':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
 function castSpell(i){
   const s=spells[i];if(!s||spellSlots(s)>player.slots)return;
   const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;
@@ -1455,6 +1466,7 @@ function applyElement(e,s,dir){
 function nearestEnemyFrom(src,maxD){let best=null,bd=maxD;for(const e of enemies){if(!e.alive||e===src)continue;const d=e.g.position.distanceTo(src.g.position);if(d<bd){bd=d;best=e;}}return best;}
 function execSpell(s,o,d,scale){
   const col=ELEM_COLOR[s.elem], mul=ELEM_MUL[s.elem]*scale;
+  if(s.form==='bolt'&&s.elem==='fire'){startPyreBeam(mul);return;}
   if(s.form==='bolt'){
     if(s.mods.includes('homing')){const t=nearestEnemy(o,40,d);if(t)d=t.g.position.clone().setY(1.5).sub(o).normalize();}
     const h=castRay(o,d,60);const end=h?h.point:o.clone().addScaledVector(d,60);
@@ -1479,7 +1491,8 @@ function beam(a,b,col){const g=new THREE.BufferGeometry().setFromPoints([a,b]);c
 function backlash(){
   const over=player.ovl-player.maxOvl;player.ovl=player.maxOvl*0.5;
   if(Math.random()<player.ignoreChance){announce('你压制住了深渊的反噬',2);return;}
-  play('backlash');player.warp=2.5;player.shake=0.5;
+  if(player.bless==='change'){hurtPlayer(5,true);announce('万变赐福吞下了反噬',1.2);return;}
+  addTaint(CFG.taint.backlash,'change');play('backlash');player.warp=2.5;player.shake=0.5;
   if(over>=35){announce('重度反噬——裂隙撕开了！',3);hurtPlayer(20,true);
     for(let k=0;k<3;k++){const a=Math.random()*6.28;spawnEnemy('imp',player.pos.x+Math.cos(a)*4,player.pos.z+Math.sin(a)*4);}}
   else if(over>=15){announce('中度反噬——灵能爆发！',2);hurtPlayer(30,true);
@@ -1606,7 +1619,7 @@ function spawnWave(n,near){
 // ============================================================ 玩家
 function hurtPlayer(n,self=false,att=null){
   if(state!=='playing'||ex.active)return;
-  if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;
+  if(!self&&player.shield>0)n*=0.3;if(!self&&player.auraT>0)n*=0.5;if(!self)taintAffinity('decay',n/10);
   if(!self&&player.blocking){
     if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
       play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;if(isClient()&&att.remote)sendNet({t:'stun',id:att.id,dur:1.4});att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
@@ -1679,7 +1692,7 @@ function updatePlayer(dt){
   player.fireCd-=dt;player.meleeCd-=dt;
   if(MS.queued&&player.meleeCd<=0&&MS.phase!=='bite'&&cur===2&&!activeGun()&&!ex.active)melee();
   // 灵能恢复与过载衰减
-  player.mana=Math.min(player.maxMana,player.mana+8*dt);player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
+  player.mana=Math.min(player.maxMana,player.mana+8*dt*(player.bless==='change'?2:1));player.ovl=Math.max(0,player.ovl-4*dt);player.shield-=dt;player.warp-=dt;
 }
 
 // ============================================================ 敌人 AI
@@ -1780,7 +1793,7 @@ function updateSpits(dt){
         const back=s.att&&s.att.alive?s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize():s.v.clone().negate().normalize();
         s.v.copy(back.multiplyScalar(20));s.reflected=true;s.life=2;s.m.material.color.setHex(0xfff080);play('clang');play('parry');hitstop=0.08;announce('弹反！',0.8);
         $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);break;}
-      if(!s.visual){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:s.dmg,att:s.att&&s.att.id});else hurtPlayer(s.dmg,false,s.att&&s.att.alive?s.att:null);}
+      if(!s.visual){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:s.dmg,att:s.att&&s.att.id,psy:1});else{hurtPlayer(s.dmg,false,s.att&&s.att.alive?s.att:null);addTaint(CFG.taint.psyHit,'change');}}
       spitPop(s);break;}}}
   spits=spits.filter(s=>!s.dead);
 }
@@ -2058,6 +2071,94 @@ function bossVariantTick(e,T,ph,dt){if(!T||ph<2)return false;
   if(e.variant==='frost'){e.iceCd=(e.iceCd??4)-dt;if(e.iceCd<=0){e.iceCd=6;const x=T.pos.x,z=T.pos.z;iceWarn(x,z);fxSend('icewarn',{x,z});
       setTimeout(()=>{if(!e.alive)return;iceSpikes(x,z);fxSend('ice',{x,z});for(const t of targetsList())if(Math.hypot(t.pos.x-x,t.pos.z-z)<2){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:28,att:null});else hurtPlayer(28,false,null);slowTarget(t,2);}},1000);}}
   return false;}
+// ============================================================ 深渊侵蚀 → 被拖入深渊彼岸 → 邪神赐福（四位原创邪神）
+const GODS={
+  blood: {name:'血怒之王',realm:'血怒王座',color:0xc01010,css:'#ff3030',daemon:'dblood', fog:0x2a0404,bg:0x180202,lamp:0xff2010,whisper:'鲜血……为王座献上更多鲜血……',
+    bless:'血怒赐福',desc:'近战伤害 +40%，近战命中吸血 10%；枪械伤害 -20%'},
+  decay: {name:'腐朽之母',realm:'腐朽花园',color:0x6a8a20,css:'#a0d040',daemon:'ddecay', fog:0x1a2206,bg:0x0e1404,lamp:0x90c030,whisper:'别怕，孩子……腐烂就是永生……',
+    bless:'腐朽赐福',desc:'最大生命 +50%，每秒回复 2 生命，受伤 -15%；移速 -15%'},
+  excess:{name:'欲焰之主',realm:'欲焰宫殿',color:0xd040a0,css:'#ff60c0',daemon:'dexcess',fog:0x240616,bg:0x14040e,lamp:0xff50c0,whisper:'更快……更多……再来一次……',
+    bless:'欲焰赐福',desc:'移速 +25%，攻击速度 +25%；受伤 +15%'},
+  change:{name:'万变之眼',realm:'万变迷宫',color:0x3080ff,css:'#60a0ff',daemon:'dchange',fog:0x061430,bg:0x040a1c,lamp:0x4080ff,whisper:'一切皆可改变……包括你……',
+    bless:'万变赐福',desc:'灵能冷却 -50%，灵能回复 ×2，过载不再反噬（只灼烧 5 生命）；最大生命 -20%'}};
+const HELL={on:false,t:0,god:null,wave:0,aff:{blood:0,decay:0,excess:0,change:0}};
+function taintAffinity(g,n){HELL.aff[g]=(HELL.aff[g]||0)+n;}
+function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.min(100,(player.taint||0)+n);if(g)taintAffinity(g,n/4);}
+function pickGod(){return Object.entries(HELL.aff).sort((a,b)=>b[1]-a[1])[0][0];}
+function updateAbyss(dt){if(!match)return;
+  // 过载偏高时持续侵蚀；灵能使用记入万变
+  const r=player.ovl/player.maxOvl;if(r>0.6&&!HELL.on)addTaint(dt*(r-0.6)*CFG.taint.ovlRate,'change');
+  if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
+  if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
+  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'深渊彼岸');
+    HELL.waveT-=dt;if(HELL.waveT<=0&&HELL.t>2){HELL.waveT=CFG.taint.wave;spawnDaemons(G.daemon,CFG.taint.waveN);}
+    $('hellTint').style.opacity=.5+Math.sin(gameTime*3)*.15;player.warp=Math.max(player.warp||0,.3);
+    if(Math.random()<dt*.25)announce(G.whisper,1.6);
+    if(HELL.t<=0)exitHell();}
+  $('taint').firstElementChild.style.width=(player.taint||0)+'%';$('taintTxt').textContent=Math.round(player.taint||0)+'%';
+  const B=player.bless&&GODS[player.bless];$('blessTag').innerHTML=B?`<span style="color:${B.css}">◆ ${B.bless}</span>`:'';}
+function realmVisual(G){scene.fog.color.setHex(G.fog);scene.fog.density=.055;scene.background.setHex(G.bg);for(const l of candleLights)l.color.setHex(G.lamp);
+  matBrick.color.setHex(G.color).lerp(new THREE.Color(0xffffff),.45);
+  $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
+function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.waveT=1.2;const G=GODS[god];
+  realmVisual(G);play('backlash');play('hole');player.shake=.6;
+  ultBanner(G.realm,{color:G.css,sub:`你被拖入深渊彼岸——${G.name}在注视你。活过 ${CFG.taint.hell} 秒！`});
+  announce(G.whisper,3);}
+function exitHell(){HELL.on=false;player.taint=0;applyBiome();$('hellTint').style.opacity=0;setProgress(-1);
+  const G=GODS[HELL.god];grantBless(HELL.god);for(const k in HELL.aff)HELL.aff[k]=0;
+  // 仆从消散
+  if(!isClient())for(const e of enemies)if(e.alive&&e.daemon){e.alive=false;scene.remove(e.g);puff(e.g.position.clone().setY(1),6,G.color,1.2);}
+  ultBanner(G.bless,{color:G.css,sub:G.desc});play('choir');}
+function grantBless(god){const old=player.bless;if(old===god)return;
+  if(old)revertBless(old);player.bless=god;
+  if(god==='blood'){player.gunMul*=.8;WEAPONS[2].dmg*=1.4;}
+  if(god==='decay'){player.maxHp=Math.round(player.maxHp*1.5);player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.3);player.dmgTaken*=.85;player.speedMul=(player.speedMul||1)*.85;}
+  if(god==='excess'){player.speedMul=(player.speedMul||1)*1.25;player.atkSpd=1.25;player.dmgTaken*=1.15;}
+  if(god==='change'){player.maxHp=Math.round(player.maxHp*.8);player.hp=Math.min(player.hp,player.maxHp);}}
+function revertBless(god){if(god==='blood'){player.gunMul/=.8;WEAPONS[2].dmg/=1.4;}
+  if(god==='decay'){player.maxHp=Math.round(player.maxHp/1.5);player.hp=Math.min(player.hp,player.maxHp);player.dmgTaken/=.85;player.speedMul/=.85;}
+  if(god==='excess'){player.speedMul/=1.25;player.atkSpd=1;player.dmgTaken/=1.15;}
+  if(god==='change'){player.maxHp=Math.round(player.maxHp/.8);}}
+// 仆从由房主生成（队友发请求）
+function spawnDaemons(type,n,x=player.pos.x,z=player.pos.z){if(isClient()){sendNet({t:'daemons',type,n,x,z});return;}
+  for(let k=0;k<n;k++){const a=Math.random()*6.28;const e=spawnEnemy(type,x+Math.cos(a)*7,z+Math.sin(a)*7);e.daemon=true;embersBlue(e.g.position.clone().setY(1),8);}play('growl');}
+function resetAbyss(){HELL.on=false;HELL.god=null;for(const k in HELL.aff)HELL.aff[k]=0;player.taint=0;player.bless=null;player.atkSpd=1;$('hellTint').style.opacity=0;}
+// 仆从外观：在基础恶魔上换形
+Object.assign(ENEMY_BUILD,{
+  dblood:e=>{ENEMY_BUILD.hound(e);for(const s of [-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.1,.6,4),new THREE.MeshLambertMaterial({color:0x2a0a0a}));h.position.set(s*.25,.45,.1);h.rotation.z=-s*.5;e.parts.head.add(h);}e.daemon=true;},
+  ddecay:e=>{ENEMY_BUILD.bloater(e);e.fuse=-1;e.daemon=true;},
+  dexcess:e=>{e.parts.body.scale.set(.75,1.1,.7);for(const s of ['armL','armR']){const c=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.5),new THREE.MeshLambertMaterial({color:0xf0c0e0}));c.position.set(0,-.5,.25);e.parts[s].add(c);}e.daemon=true;},
+  dchange:e=>{const h=new THREE.Mesh(new THREE.TorusGeometry(.3,.05,4,12),new THREE.MeshBasicMaterial({color:0x60c0ff}));h.rotation.x=Math.PI/2;h.position.y=.5;e.parts.head.add(h);e.daemon=true;}});
+ENEMY_AI.dblood=(...a)=>ENEMY_AI.hound(...a);
+// ============================================================ 唤潮者的火射线 → 焚灭火柱：按 C 引导 1.6 秒的粗火柱，跟随准星，穿透并点燃路上所有敌人，烧出火痕，结束时终点爆炸
+const PB={on:false,t:0,dur:1.6,mul:1,tick:0,grp:null,core:null,outer:null,sp:[],end:null};
+function startPyreBeam(mul){if(PB.on)return;PB.on=true;PB.t=0;PB.mul=mul;PB.tick=0;player.channelT=PB.dur;
+  const g=new THREE.Group();scene.add(g);PB.grp=g;
+  PB.core=new THREE.Mesh(new THREE.CylinderGeometry(.14,.04,1,8,1,true),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.95,depthWrite:false}));
+  PB.outer=new THREE.Mesh(new THREE.CylinderGeometry(.45,.08,1,10,1,true),new THREE.MeshBasicMaterial({color:0xff6a10,transparent:true,opacity:.45,depthWrite:false,side:2}));
+  PB.glow=new THREE.Mesh(new THREE.CylinderGeometry(.8,.12,1,10,1,true),new THREE.MeshBasicMaterial({color:0xff3000,transparent:true,opacity:.15,depthWrite:false,side:2}));
+  g.add(PB.core,PB.outer,PB.glow);PB.sp=[];for(let i=0;i<18;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.1),new THREE.MeshBasicMaterial({color:i%2?0xffd060:0xff7020}));g.add(m);PB.sp.push(m);}
+  play('melta');play('spell',300);loopSound('flame',true);announce('焚灭火柱',.8);}
+function updatePyreBeam(dt){if(!PB.on)return;PB.t+=dt;const k=Math.min(1,PB.t/.25),fade=PB.t>PB.dur-.2?(PB.dur-PB.t)/.2:1;
+  const {o,d}=aimRay(0);const a=o.clone().add(new THREE.Vector3(0,-.22,0)).addScaledVector(new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)),.12).addScaledVector(d,.5);
+  const h=castRay(o,d,40);const wall=castRayWalls(o,d,40);const b=wall?wall.point:o.clone().addScaledVector(d,40);PB.end=b;
+  const L=a.distanceTo(b),mid=a.clone().lerp(b,.5);PB.grp.position.copy(mid);PB.grp.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());
+  const w=(.6+.4*k)*fade*(1+Math.sin(PB.t*40)*.08);for(const m of [PB.core,PB.outer,PB.glow])m.scale.set(w,L,w);
+  PB.sp.forEach((m,i)=>{const ang=PB.t*14+i*.7,y=((i/PB.sp.length+PB.t*1.8)%1-.5)*L;m.position.set(Math.cos(ang)*.45*w,y,Math.sin(ang)*.45*w);});
+  player.shake=Math.max(player.shake,.12);loopSound('flame',true);player.flameT=.15;
+  PB.tick-=dt;if(PB.tick<=0){PB.tick=.1;let kill=false,any=false;
+    for(const e of enemies){if(!e.alive)continue;const c=e.g.position.clone().setY(1.2*e.g.scale.y);const t=c.clone().sub(a).dot(d);if(t<0||t>L)continue;
+      const off=c.distanceTo(a.clone().addScaledVector(d,t));if(off>.9+e.r)continue;kill=damageEnemy(e,11*PB.mul,'body',d,{stagger:.15,knock:.2,how:{melt:true},_noShield:true})||kill;if(!isClient())e.burn=Math.max(e.burn,3);any=true;}
+    if(any)showHit(kill);if(wall&&Math.random()<.7){const p=wall.point;addFirePatch(p.x-d.x*.6,p.z-d.z*.6);}
+    embers(b.clone(),3);fxSend('pbeam',{ax:a.x,ay:a.y,az:a.z,bx:b.x,by:b.y,bz:b.z});}
+  if(PB.t>=PB.dur){PB.on=false;scene.remove(PB.grp);loopSound('flame',false);const P=b.clone();play('boom');play('melta');
+    const d2={k:'pyre',x:P.x,z:P.z};ultFx(d2);fxSend('ult',d2);
+    for(const e of enemies){if(!e.alive)continue;const dd=e.g.position.distanceTo(P.clone().setY(0));if(dd<3+e.r)damageEnemy(e,40*PB.mul,'body',e.g.position.clone().sub(P).setY(0).normalize(),{knock:1.5,stagger:.5,how:{melt:true}});}}}
+function castRayWalls(o,d,far){ray.set(o,d);ray.far=far;const h=ray.intersectObjects(wallMeshes,false);return h[0]||null;}
+// 队友那边：画一道短暂的火柱
+function pbeamFx(d){const a=new THREE.Vector3(d.ax,d.ay,d.az),b=new THREE.Vector3(d.bx,d.by,d.bz);const L=a.distanceTo(b);
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(.35,.25,L,8,1,true),new THREE.MeshBasicMaterial({color:0xff7020,transparent:true,opacity:.6,depthWrite:false,side:2}));
+  m.position.copy(a).lerp(b,.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());ufxAdd(m,.12,{op:.6});}
 // ============================================================ 对局流程
 function updateMatch(dt){
   if(training.on){updateTraining(dt);return;}
@@ -2431,7 +2532,7 @@ function shockwave(P,R,dmg,stun){fxSend('slam',{x:+P.x.toFixed(2),z:+P.z.toFixed
   const dir=e.g.position.clone().sub(P).setY(0).normalize();damageEnemy(e,dmg*(1-d/(R*2)),'body',dir,{knock:2,stagger:.6,point:contactPoint(e)});if(e.alive)stunE2(e,stun);}slamFx(P.x,P.z);}
 function auraAt(x,z,self=false){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;if(!self)announce('圣盾领域：受到伤害减半',1.2);}if(!self)ultFx({k:'aegis',x,z});}
 let grenades=[];
-function updateClassExtras(dt){player.slowT=Math.max(0,(player.slowT||0)-dt);canvas.style.filter=player.slowT>0?'saturate(.6) hue-rotate(-20deg) brightness(1.1)':(canvas.style.filter.includes('hue-rotate(-20')?'':canvas.style.filter);updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
+function updateClassExtras(dt){updateAbyss(dt);updatePyreBeam(dt);player.slowT=Math.max(0,(player.slowT||0)-dt);canvas.style.filter=player.slowT>0?'saturate(.6) hue-rotate(-20deg) brightness(1.1)':(canvas.style.filter.includes('hue-rotate(-20')?'':canvas.style.filter);updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
   for(const g of grenades){g.t-=dt;g.v.y-=18*dt;g.p.addScaledVector(g.v,dt);if(g.p.y<.1){g.p.y=.1;g.v.y*=-.3;g.v.x*=.6;g.v.z*=.6;}g.m.position.copy(g.p);g.m.rotation.x+=dt*12;if(g.m.userData.led)g.m.userData.led.visible=Math.sin(gameTime*30)>0;if(Math.random()<.5)puff(g.p.clone(),1,0x707070,.4);
     if(g.t>0&&enemies.some(e=>e.alive&&e.g.position.distanceTo(g.p.clone().setY(0))<e.r+.8&&g.p.y<2.5*e.g.scale.y))g.t=0;   // 碰到敌人就炸
     if(g.t<=0){g.dead=true;scene.remove(g.m);const d={k:'grenade',x:g.p.x,z:g.p.z};ultFx(d);fxSend('ult',d);hitSparks(g.p,null,10);shockwave(g.p,3.5,120*player.gunMul,1.2);}}
@@ -2867,6 +2968,7 @@ function renderLobby(){
 // ---------- 房主收到消息
 function hostRecv(id,m){
   let r=net.remotes.get(id);
+  if(m.t==='daemons'){spawnDaemons(m.type,m.n,m.x,m.z);return;}
   if(m.t==='fx2'){fxPlay(m.k,m.d);bcast(m,id);return;}
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,paint:m.paint||0,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
@@ -2903,7 +3005,7 @@ function clientRecv(m){
   else if(m.t==='fx'&&m.k==='slam'){slamFx(m.x,m.z);}
   else if(m.t==='spit'){addSpit(new THREE.Vector3(...m.p),new THREE.Vector3(...m.v),0,null,true);play('spit');}
   else if(m.t==='slow'){player.slowT=Math.max(player.slowT||0,m.d);}
-  else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);}
+  else if(m.t==='hurt'){hurtPlayer(m.n,false,enemyById(m.att)||null);if(m.psy)addTaint(CFG.taint.psyHit,'change');}
   else if(m.t==='fx'){if(m.k==='hole')spawnHoleVisual(m.p);else if(m.k==='beacon')beaconVisual(m.p);}
   else if(m.t==='end'){if(state!=='result'&&state!=='hub')endMatch(m.win);}
 }
@@ -2991,6 +3093,7 @@ function fxPlay(k,d){
   else if(k==='patch')addFirePatch(d.x,d.z,true);
   else if(k==='plasma'){embersBlue(new THREE.Vector3(d.x,d.y,d.z),14);play('boom');}
   else if(k==='ult'&&typeof ultFx==='function')ultFx(d);
+  else if(k==='pbeam')pbeamFx(d);
   else if(k==='eflame')flameBurst(new THREE.Vector3(d.x,d.y,d.z),new THREE.Vector3(d.dx,0,d.dz));
   else if(k==='bless')blessFx(d.x,d.z);
   else if(k==='icewarn')iceWarn(d.x,d.z);else if(k==='ice')iceSpikes(d.x,d.z);else if(k==='tport')embersBlue(new THREE.Vector3(d.x,1.5,d.z),20);}
@@ -3006,7 +3109,7 @@ function prepareMatch(seedArg){
   enemies=[];gibs=[];bloods=[];projectiles=[];wisps=[];beams=[];
   if(!isNet())pendingBiome=null;curBiome=pickBiome();buildLevel();
   Object.assign(player,{hp:100,maxHp:100,stamina:100,mana:100,ovl:0,maxOvl:100,slots:3,ignoreChance:0,gunMul:1,dmgTaken:1,shield:0,warp:0,recoil:0,shake:0,yaw:Math.PI*0.75,pitch:0,vy:0});
-  applyClassStats();fixLoadoutForClass();
+  applyClassStats();fixLoadoutForClass();resetAbyss();
   player.pos.set(0,0,0);
   spells=[{form:'bolt',elem:'fire',mods:[]}];for(const k in PSY)PSY[k].cd=0;bt.t=0;lifts=[];for(const H of holes)scene.remove(H.g);holes=[];bleeders=[];puddles=[];player.channelT=0;
   applyProgress();applyLoadout();swordOut=0;player.ssPistol=false;player.revving=false;player.frenzy=0;player.field=0;player.fieldCd=0;MS.combo=0;MS.step=null;ex.active=false;player.exCharge=0;player.blocking=false;shieldG.position.set(-.35,-.35,-.5);
@@ -3106,7 +3209,7 @@ function frame(now){
     if(hitstop>0){hitstop-=dt;dt*=0.05;}   // 顿帧
     gameTime+=dt;
     if(mouseDown&&(document.pointerLockElement||pad.active))tryFire(false);
-    const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt);
+    const ws=bt.t>0?0.25:(ex.active?0.35:1);bt.t=Math.max(0,bt.t-dt);for(const k in PSY)PSY[k].cd=Math.max(0,PSY[k].cd-dt*(player.bless==='change'?2:1));
     updatePlayer(dt);if(isClient())updateEnemiesClient(dt);else updateEnemies(dt*ws);updateLifts(dt*ws);updateHoles(dt*ws);updateSpells(dt);updateDebris(dt*ws);updateBolts(dt);updateSpits(dt*ws);updatePuffs(dt);updateSparks(dt*ws);updateBleeders(dt*ws);updatePuddles(dt);updateMatch(dt);updateHUD(dt);
   } else if(state==='dying'){updateDeath(dt);if(isNet())simWorld(dt);else updateDebris(dt*0.4);}
   else if(state==='spectate'){gameTime+=dt;simWorld(dt);spectateCam(dt);updateHUD(dt);}

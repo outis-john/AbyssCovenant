@@ -13,6 +13,10 @@ const CFG={
     tanker:{hp:170,speed:2.6,dmg:6, reach:1.8,scale:1.25,color:0x5a3a22},               // 炼油厂：油罐恶魔（近距离喷火，背后中弹 ×3，死时爆成火海）
     priest:{hp:120,speed:3.2,dmg:10,reach:1.6,scale:1.05,color:0x3a2040,ranged:false},  // 教堂：堕落祭司（给周围恶魔回血加护）
     frostling:{hp:85,speed:4.6,dmg:11,reach:1.6,scale:.95,color:0x6a9ac8},              // 冰洞：冰晶恶魔（打中会减速，死时碎成冰渣）
+    dblood: {hp:90, speed:7.5,dmg:16,reach:1.7,scale:1.05,color:0xb01010},              // 邪神仆从：血怒（扑杀猎手）
+    ddecay: {hp:240,speed:2.4,dmg:22,reach:2.0,scale:1.35,color:0x6a7a20},              // 邪神仆从：腐朽（臃肿瘟兽）
+    dexcess:{hp:60, speed:8.5,dmg:12,reach:1.6,scale:.95,color:0xd050a0},               // 邪神仆从：欲焰（迅捷舞者）
+    dchange:{hp:80, speed:3.6,dmg:14,reach:1.6,scale:1.0,color:0x3070e0,ranged:true},   // 邪神仆从：万变（施法者）
     caster:{hp:90, speed:3.8,dmg:16,reach:1.6,scale:1.0,color:0x3e5a26,ranged:true},     // 瘟火术士
   },
   // Boss：砸地冲击波半径 / 伤害倍率、扇形火球数量、狂暴召唤间隔
@@ -35,6 +39,8 @@ const CFG={
     fist:  {dmg:50,windup:.1, slash:.11},   // 破甲巨拳
     axe:   {dmg:54,windup:.16,slash:.16},   // 链锯战斧
   },
+  // 深渊侵蚀：过载偏高 / 反噬 / 被灵能攻击打中会涨；满了被拖入深渊彼岸 hell 秒，活下来获得邪神赐福
+  taint:{ovlRate:22,backlash:30,psyHit:8,hell:20,wave:5,waveN:3},
   heavyHold:0.28,   // 按住左键多少秒算重击
   field:{dur:8,cd:16,mul:1.6},              // 力场剑的分解力场
   psy:{lift:6,hole:10,bt:30},               // 灵能冷却：V 锁喉提摔 / G 黑洞 / Q 子弹时间

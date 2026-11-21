@@ -19,7 +19,7 @@ const COMBOS={
   saw:[{p:'a',dm:1,name:'斜劈'},{p:'h',dm:1,name:'横斩'},{p:'t',dm:1,thrust:true,bite:true,biteDur:.62,name:'突刺锯入'},{p:'u',dm:2.2,fin:true,name:'切开'}],
   ssword:[{p:'a',dm:1},{p:'b',dm:1}]};
 const frenzyMul=()=>player.frenzy>0?0.62:1;
-const LITANIES=['以圣约之名，斩断深渊的低语。','斥退亚空间之地狱，此身即是壁垒。','我的剑即是誓言，誓言永不熄灭。','血肉终将腐朽，信仰不会。',
+const LITANIES=['以圣约之名，斩断深渊的低语。','斥退深渊彼岸的地狱，此身即是壁垒。','我的剑即是誓言，誓言永不熄灭。','血肉终将腐朽，信仰不会。',
   '不洁之物，回到你们来的黑暗里去。','退去吧，地狱的造物——此地仍有人守望。','每一次挥剑，都是一次祷告。','沉睡者在注视着我，我不会令祂失望。',
   '恐惧是叛徒，怜悯是破绽。','以钢铁与圣火，净化此地。','我不求胜利，只求无愧。','黑暗终有尽头，而我便是那尽头。'];
 let litIdx=0,litT=0;
@@ -32,7 +32,7 @@ function melee(){
   if(MS.phase==='none'&&gameTime-(MS.lastEnd??-9)>1.0)MS.combo=0;
   MS.step=list[MS.combo%list.length];MS.combo++;MS.dir=stepDir();MS.counter=false;
   MS.phase='windup';MS.t=0;MS.s=0;MS.target=null;MS.hitDone=false;
-  const fm=frenzyMul();player.meleeCd=(M.windup+M.slash*(MS.step.thrust?1.2:1))*fm+0.14*fm;swordOut=1.4;swing=1;
+  const fm=frenzyMul()/(player.atkSpd||1);player.meleeCd=(M.windup+M.slash*(MS.step.thrust?1.2:1))*fm+0.14*fm;swordOut=1.4;swing=1;
 }
 function poseSet(){return MS.step?POSE[MS.step.p]:POSE.a;}
 function stepDir(){const P=poseSet();return P.pe[0]<P.ps[0]?1:-1;}
