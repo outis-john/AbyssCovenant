@@ -6,7 +6,7 @@ function executeTarget(){if(player.exCharge<100)return null;const fwd=new THREE.
   for(const e of enemies){if(!canExecute(e))continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<bd&&to.normalize().dot(fwd)>0.2){bd=d;best=e;}}return best;}
 function execute(mode='full'){
   if(ex.active)return;const chain=gameTime<(exChain.until||0)&&exChain.left>0&&player.exCharge<100;const save=player.exCharge;if(chain)player.exCharge=100;   // 连环处决：窗口内不耗充能
-  const t=executeTarget();if(!t){player.exCharge=save;return;}if(chain){exChain.left--;announce('连环处决！',0.8);}
+  const t=executeTarget();if(!t){player.exCharge=save;return;}if(chain){exChain.left--;announce('Chain execution!',0.8);}
   const W=WEAPONS[cur];ex.active=true;ex.t=0;ex.target=t;ex.fired={};ex.melee=!!W.melee;ex.type=W.melee?W.id:W.id;
   ex.mode=mode;ex.dur=mode==='quick'?0.45:({saw:1.15,power:1.0,ssword:1.05,bolter:0.9,pistol:0.75,shotgun:0.85,melta:1.05,plasma:1.1,hbolter:1.2,flamer:1.25,needle:0.95,hammer:1.15,fist:1.2,axe:1.2}[ex.type]||1);
   player.exCharge=0;reloadT=0;player.blocking=false;MS.phase='none';
@@ -21,7 +21,7 @@ function exKill(opts={}){
   damageEnemy(t,dealt+1,'body',dir.clone().multiplyScalar(opts.fling||1),{explode:true,how:opts.how||{},_exec:true,_noShield:true});
   if(t.alive&&!(isClient()&&t.remote)){t.hp=0;killEnemy(t,dir,true,opts.how||{});}   // 处决必杀：不被骨盾/庇护等减伤挡住
   const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+dealt*(ex.mode==='quick'?0.5:1));
-  announce((ex.mode==='quick'?'快速处决！':'处决！')+'回复 '+Math.round(player.hp-before)+' 生命',1.6);
+  announce((ex.mode==='quick'?'Quick execution!':'Execution!')+'Restored '+Math.round(player.hp-before)+' HP',1.6);
   taintAffinity('excess',3);exChain.until=gameTime+3;if(exChain.left<=0)exChain.left=2;
   if(ex.mode!=='quick')for(const o of enemies){if(!o.alive||o===t||o.boss)continue;if(o.g.position.distanceTo(t.g.position)<7){o.stun=Math.max(o.stun,1.6);o.lean=1.2;if(isClient()&&o.remote)sendNet({t:'stun',id:o.id,dur:1.6});}}   // 震慑
   hitstop=0.13;player.shake=0.45;player.punch=0.08;splat();showHit(true);play('kill');

@@ -1,11 +1,11 @@
 // ============================================================ 撤离、拾取物
 const COND_INFO={
-  kill:{name:'击杀恶魔',target:25},elite:{name:'击杀精英恶魔',target:1},hack:{name:'破解黄金时代终端',target:1},
-  ritual:{name:'在仪式法阵中坚守',target:1},cores:{name:'收集能源核心',target:3},
-  defend:{name:'坚守信标 45 秒',target:1},nest:{name:'摧毁恶魔巢穴',target:3},carry:{name:'把圣物棺带回逃生舱',target:1}};
-const PART_NAME={thruster:'推进器',fuel:'燃料罐',hull:'舱体零件'};
+  kill:{name:'Slay demons',target:25},elite:{name:'Slay an elite demon',target:1},hack:{name:'Hack the Golden Age terminal',target:1},
+  ritual:{name:'Hold the ritual circle',target:1},cores:{name:'Collect power cores',target:3},
+  defend:{name:'Hold the beacon for 45s',target:1},nest:{name:'Destroy demon nests',target:3},carry:{name:'Return the reliquary to the pod',target:1}};
+const PART_NAME={thruster:'Thruster',fuel:'Fuel Tank',hull:'Hull Part'};
 const PART_NEED={thruster:2,fuel:3,hull:1};
-function addProgress(type,n){const c=match.conds.find(c=>c.type===type);if(c&&c.prog<c.target){c.prog=Math.min(c.target,c.prog+n);if(c.prog>=c.target&&c.revealed)announce('撤离条件完成：'+COND_INFO[type].name,2.5);}}
+function addProgress(type,n){const c=match.conds.find(c=>c.type===type);if(c&&c.prog<c.target){c.prog=Math.min(c.target,c.prog+n);if(c.prog>=c.target&&c.revealed)announce('Extraction condition complete: '+COND_INFO[type].name,2.5);}}
 function randomCell(exclude=[]){for(let k=0;k<50;k++){const c=[Math.floor(rng()*G),Math.floor(rng()*G)];if(!exclude.some(e=>e[0]===c[0]&&e[1]===c[1]))return c;}return [1,1];}
 function cellPos(c,jit=6){return [c[0]*C+(rng()-.5)*jit*2,c[1]*C+(rng()-.5)*jit*2];}
 function netDrop(type,x,z){spawnPickup(type,x,z);if(isHost())bcast({t:'drop',type,x,z});}
@@ -50,32 +50,32 @@ function setupMatch(){
 function nearestInteractable(){let best=null,bd=2.6;for(const it of interactables){if(it.used||it.type==='ritual'||it.type==='ammo')continue;const d=Math.hypot(it.x-player.pos.x,it.z-player.pos.z)-((it.type==='pod'||it.type==='terminal')?1.2:0);if(d<bd){bd=d;best=it;}}return best;}
 function promptFor(it){
   if(!it)return'';{const mp=missionPrompt(it);if(mp)return mp;}
-  if(it.type==='clue')return'按 F 读取数据板（线索）';
-  if(PART_NAME[it.type])return'按 F 拾取'+PART_NAME[it.type];
-  if(it.type==='core')return'按 F 拾取能源核心';
-  if(it.type==='relic')return'按 F 拾取遗物';
-  if(it.type==='rare')return'按 F 拾取灵能圣物（稀有，无法用回收装置送走）';
-  if(it.type==='terminal')return match.hack>=0?'正在破解……留在终端附近':'按 F 开始破解终端';
-  if(it.type==='pod'){const c=match.carried;if(c.thruster+c.fuel+c.hull>0)return'按 F 安装零件';if(!podReady())return'逃生舱：'+podStatus();return match.launching>=0?'发射倒计时中，守住逃生舱！':'按 F 发射逃生舱';}
+  if(it.type==='clue')return'[F] Read data-slate (clue)';
+  if(PART_NAME[it.type])return'[F] Pick up '+PART_NAME[it.type];
+  if(it.type==='core')return'[F] Pick up power core';
+  if(it.type==='relic')return'[F] Pick up relic';
+  if(it.type==='rare')return'[F] Pick up psy-relic (rare, can’t be sent by beacon)';
+  if(it.type==='terminal')return match.hack>=0?'Hacking... stay near the terminal':'[F] Start hacking the terminal';
+  if(it.type==='pod'){const c=match.carried;if(c.thruster+c.fuel+c.hull>0)return'[F] Install parts';if(!podReady())return'Escape pod: '+podStatus();return match.launching>=0?'Launch countdown — defend the pod!':'[F] Launch the escape pod';}
   return'';
 }
 const podAssembled=()=>Object.keys(PART_NEED).every(k=>match.parts[k]>=PART_NEED[k]);
 const condsDone=()=>match.conds.every(c=>c.prog>=c.target);
 const podReady=()=>podAssembled()&&condsDone();
-function podStatus(){if(!podAssembled())return'零件不足';if(!condsDone())return'撤离条件未完成';return'就绪';}
+function podStatus(){if(!podAssembled())return'Missing parts';if(!condsDone())return'Extraction conditions incomplete';return'Ready';}
 function interact(it=interactTarget,by=null){
   if(!it)return;if(isClient()){sendNet({t:'interact',idx:it.idx});return;}
   if(missionInteract(it,by))return;
   if(it.type==='clue'){it.used=true;scene.remove(it.m);play('pickup');const c=match.conds.find(c=>!c.revealed);
-    if(c){c.revealed=true;annTeam('线索：撤离条件是「'+COND_INFO[c.type].name+'」',3.5);}else annTeam('数据板上只剩下逃生舱坐标',2.5);return;}
-  if(PART_NAME[it.type]){it.used=true;scene.remove(it.m);match.carried[it.type]++;play('pickup');annTeam('拾取 '+PART_NAME[it.type]+'，带回逃生舱安装',2);return;}
-  if(it.type==='core'){it.used=true;scene.remove(it.m);play('pickup');addProgress('cores',1);annTeam('能源核心 '+(match.conds.find(c=>c.type==='cores')?.prog??'')+'/3',2);return;}
+    if(c){c.revealed=true;annTeam('Clue: the extraction condition is “'+COND_INFO[c.type].name+'”',3.5);}else annTeam('The data-slate only holds the pod’s coordinates',2.5);return;}
+  if(PART_NAME[it.type]){it.used=true;scene.remove(it.m);match.carried[it.type]++;play('pickup');annTeam('Picked up  '+PART_NAME[it.type]+', — bring it back to the pod to install',2);return;}
+  if(it.type==='core'){it.used=true;scene.remove(it.m);play('pickup');addProgress('cores',1);annTeam('Power core '+(match.conds.find(c=>c.type==='cores')?.prog??'')+'/3',2);return;}
   if(it.type==='relic'){it.used=true;scene.remove(it.m);play('pickup');match.loot++;return;}
-  if(it.type==='rare'){it.used=true;scene.remove(it.m);play('pickup');match.rare=true;annTeam('你拿到了灵能圣物。它在低语……',3);if(!by)player.ovl+=20;return;}
-  if(it.type==='terminal'&&match.hack<0){match.hack=0;annTeam('开始破解——恶魔被惊动了！',2.5);spawnWave(5,true);return;}
+  if(it.type==='rare'){it.used=true;scene.remove(it.m);play('pickup');match.rare=true;annTeam('You took the psy-relic. It whispers...',3);if(!by)player.ovl+=20;return;}
+  if(it.type==='terminal'&&match.hack<0){match.hack=0;annTeam('Hacking started — the demons are stirring!',2.5);spawnWave(5,true);return;}
   if(it.type==='pod'){const c=match.carried;
-    if(c.thruster+c.fuel+c.hull>0){for(const k of Object.keys(c)){match.parts[k]=Math.min(PART_NEED[k],match.parts[k]+c[k]);c[k]=0;}play('pickup');annTeam('零件已安装：'+podPartsText(),2.5);updatePodLook();return;}
-    if(podReady()&&match.launching<0){match.launching=7;annTeam('逃生舱点火！坚守 7 秒！',3);spawnWave(7,true);}}
+    if(c.thruster+c.fuel+c.hull>0){for(const k of Object.keys(c)){match.parts[k]=Math.min(PART_NEED[k],match.parts[k]+c[k]);c[k]=0;}play('pickup');annTeam('Parts installed: '+podPartsText(),2.5);updatePodLook();return;}
+    if(podReady()&&match.launching<0){match.launching=7;annTeam('Escape pod ignition! Hold for 7 seconds!',3);spawnWave(7,true);}}
 }
 function podPartsText(){return Object.keys(PART_NEED).map(k=>PART_NAME[k]+' '+match.parts[k]+'/'+PART_NEED[k]).join('  ');}
 function updatePodLook(){const p=match.pod.m;const add=(geo,y,col)=>{const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:.3}));m.position.y=y;p.add(m);};
@@ -86,10 +86,10 @@ function updatePodLook(){const p=match.pod.m;const add=(geo,y,col)=>{const m=new
 }
 function callBeacon(pos=null){
   if(isClient()){sendNet({t:'beacon'});return;}const at=pos||player.pos;
-  if(match.beacons<=0){annTeam('回收装置已经用完了',1.5);return;}
-  if(match.loot<=0){annTeam('身上没有可以送走的物资',1.5);return;}
+  if(match.beacons<=0){annTeam('No recovery beacons left',1.5);return;}
+  if(match.loot<=0){annTeam('Nothing on you to send back',1.5);return;}
   match.beacons--;match.safeLoot+=match.loot;const n=match.loot;match.loot=0;play('beacon');
-  annTeam('回收装置升空：'+n+' 件物资已送回战舰。信号引来了恶魔！',3);spawnWave(6,false);
+  annTeam('Beacon launched: '+n+' loot sent to the ship. The signal drew demons!',3);spawnWave(6,false);
   const b=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),new THREE.MeshBasicMaterial({color:0xd8a657}));b.position.copy(at).setY(2);scene.add(b);beams.push({m:b,life:3,rise:true});if(isHost())bcast({t:'fx',k:'beacon',p:at.clone()});
 }
 function spawnWave(n,near){

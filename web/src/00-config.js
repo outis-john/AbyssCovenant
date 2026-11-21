@@ -47,20 +47,20 @@ const CFG={
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
   // 地图区域：tint 颜色、雾、灯光、各种敌人的出现权重
   biomes:{
-    hive:   {name:'巢都炼油厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1,tanker:2}},
-    sanctum:{name:'地下圣堂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3,priest:2}},
-    frost:  {name:'蓝冰洞窟',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2,frostling:3}}},
+    hive:   {name:'Hive Refinery',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1,tanker:2}},
+    sanctum:{name:'Undercroft Sanctum',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3,priest:2}},
+    frost:  {name:'Blue Ice Caverns',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2,frostling:3}}},
   // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
-  threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
+  threat:[null,{name:'I · Corruption',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'II · Fallen',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'III · Abyss',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
   // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物
   upgrades:[
-    {id:'armor', name:'强化甲片',  desc:'最大生命 +15',             max:3,cost:[4,8,14]},
-    {id:'blade', name:'精锻刃',    desc:'近战伤害 +15%',            max:3,cost:[5,10,16]},
-    {id:'mag',   name:'扩容弹匣',  desc:'爆弹枪 / 霰弹枪弹匣 +30%，开局备弹 +30%', max:2,cost:[6,12]},
-    {id:'melta', name:'热熔聚焦器',desc:'热熔枪伤害 +20%',          max:2,cost:[6,12]},
-    {id:'beacon',name:'备用回收装置',desc:'每局回收装置 +1 次',      max:1,cost:[10]},
-    {id:'psy',   name:'灵能导管',  desc:'灵能上限 +25，过载上限 +20',max:2,cost:[0,0],rare:[1,2]},
-    {id:'exec',  name:'嗜血圣印',  desc:'处决充能速度 +30%',        max:1,cost:[0],rare:[1]},
+    {id:'armor', name:'Reinforced Plating',  desc:'Max HP +15',             max:3,cost:[4,8,14]},
+    {id:'blade', name:'Forged Edge',    desc:'Melee damage +15%',            max:3,cost:[5,10,16]},
+    {id:'mag',   name:'Extended Mags',  desc:'Bolter / shotgun magazine +30%, starting ammo +30%', max:2,cost:[6,12]},
+    {id:'melta', name:'Melta Focuser',desc:'Melta damage +20%',          max:2,cost:[6,12]},
+    {id:'beacon',name:'Spare Recovery Beacon',desc:'+1 recovery beacon per run',      max:1,cost:[10]},
+    {id:'psy',   name:'Psy Conduit',  desc:'Psy max +25, overload max +20',max:2,cost:[0,0],rare:[1,2]},
+    {id:'exec',  name:'Bloodlust Seal',  desc:'Execution charge rate +30%',        max:1,cost:[0],rare:[1]},
   ],
   // 职业解锁价格（唤潮者、铸甲卫士免费）；武器熟练度：击杀数达到门槛，伤害每级 +5%
   unlockAll:true,   // 测试阶段：所有职业直接可用（改成 false 就恢复解锁价格）

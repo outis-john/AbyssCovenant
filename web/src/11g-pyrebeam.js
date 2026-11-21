@@ -6,7 +6,7 @@ function startPyreBeam(mul){if(PB.on)return;PB.on=true;PB.t=0;PB.mul=mul;PB.tick
   PB.outer=new THREE.Mesh(new THREE.CylinderGeometry(.45,.08,1,10,1,true),new THREE.MeshBasicMaterial({color:0xff6a10,transparent:true,opacity:.45,depthWrite:false,side:2}));
   PB.glow=new THREE.Mesh(new THREE.CylinderGeometry(.8,.12,1,10,1,true),new THREE.MeshBasicMaterial({color:0xff3000,transparent:true,opacity:.15,depthWrite:false,side:2}));
   g.add(PB.core,PB.outer,PB.glow);PB.sp=[];for(let i=0;i<18;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.1),new THREE.MeshBasicMaterial({color:i%2?0xffd060:0xff7020}));g.add(m);PB.sp.push(m);}
-  play('melta');play('spell',300);loopSound('flame',true);announce('焚灭火柱',.8);}
+  play('melta');play('spell',300);loopSound('flame',true);announce('Pyre Beam',.8);}
 function updatePyreBeam(dt){if(!PB.on)return;PB.t+=dt;const k=Math.min(1,PB.t/.25),fade=PB.t>PB.dur-.2?(PB.dur-PB.t)/.2:1;
   const {o,d}=aimRay(0);const a=o.clone().add(new THREE.Vector3(0,-.22,0)).addScaledVector(new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)),.12).addScaledVector(d,.5);
   const h=castRay(o,d,40);const wall=castRayWalls(o,d,40);const b=wall?wall.point:o.clone().addScaledVector(d,40);PB.end=b;

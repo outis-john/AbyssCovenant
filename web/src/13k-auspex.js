@@ -1,7 +1,7 @@
 // ============================================================ 侦测仪（非灵能职业都有）：按 T 开关；画面左侧弹出倾斜的全息屏，隔墙用模糊移动的小红点显示附近恶魔
 const AUS={on:false,sweep:0,lit:new Map(),range:32};
 function hasAuspex(){return CLS[cls]&&!CLS[cls].psy;}
-function toggleAuspex(){if(!hasAuspex()){announce('唤潮者没有侦测仪——用灵能感知吧',1.2);return;}AUS.on=!AUS.on;$('auspex').classList.toggle('show',AUS.on);play(AUS.on?'beacon':'equip');}
+function toggleAuspex(){if(!hasAuspex()){announce('Tidecallers have no auspex — use your psychic senses',1.2);return;}AUS.on=!AUS.on;$('auspex').classList.toggle('show',AUS.on);play(AUS.on?'beacon':'equip');}
 function updateAuspex(dt){if(!AUS.on)return;if(state!=='playing'&&state!=='spectate'){return;}const cv=$('ausCv');if(!cv||!cv.getContext)return;const g=cv.getContext('2d');if(!g)return;
   const W=cv.width,H=cv.height,cx=W/2,cy=H*.6,R=Math.min(W*.48,H*.58),sc=R/AUS.range;
   g.fillStyle='rgba(18,6,4,.55)';g.fillRect(0,0,W,H);
@@ -26,7 +26,7 @@ function updateAuspex(dt){if(!AUS.on)return;if(state!=='playing'&&state!=='spect
   g.restore();g.fillStyle='#ffe0b0';g.beginPath();g.moveTo(cx,cy-5);g.lineTo(cx-4,cy+4);g.lineTo(cx+4,cy+4);g.fill();
   // 噪点与扫描线
   for(let i=0;i<40;i++){g.fillStyle=`rgba(255,160,90,${Math.random()*.15})`;g.fillRect(Math.random()*W,Math.random()*H,1,1);}
-  const n=enemies.filter(e=>e.alive&&e.g.position.distanceTo(player.pos)<AUS.range).length;$('ausN').textContent=n?`${n} 个生命信号`:'未发现信号';}
+  const n=enemies.filter(e=>e.alive&&e.g.position.distanceTo(player.pos)<AUS.range).length;$('ausN').textContent=n?`${n} life signs`:'No signals';}
 // 模型：头戴侦测仪（人形在头侧，机甲在顶部天线）
 function addAuspexGear(model,c){if(!CLS[c]||CLS[c].psy)return;const dark=new THREE.MeshLambertMaterial({color:0x26262c}),lens=new THREE.MeshBasicMaterial({color:0xff4020});
   if(CLS[c].eye){const g=new THREE.Group();g.position.set(-.45,3.25,.1);const p=new THREE.Mesh(new THREE.BoxGeometry(.06,.5,.06),dark);p.position.y=.25;g.add(p);

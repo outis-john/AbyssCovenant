@@ -1,12 +1,12 @@
 // ============================================================ 职业大招表现：横幅 + 屏幕闪光 + 专属特效（队友也能看到）+ HUD 冷却环 + 详细说明
 const ULT_INFO={
-  surge:{color:'#b060ff',hex:0xb060ff,sub:'深渊之力从体内炸开',long:'清空全部过载、回复 15 生命，并以自己为中心炸开紫色冲击波：推开 7 米内的敌人，造成 40 伤害并震晕 1 秒。过载快爆的时候用它保命。'},
-  stim:{color:'#ff3030',hex:0xff3030,sub:'心跳加速，痛觉消失',long:'注射战斗兴奋剂：6 秒内移速 +30%、伤害 +25%，立即回复 20 生命。适合冲进敌群或者追杀逃跑的术士。'},
-  grenade:{color:'#ffa040',hex:0xffa040,sub:'投掷震爆手雷',long:'投出一枚震爆手雷，碰到敌人或 1.1 秒后爆炸：3.5 米内造成 120 伤害并震晕 1.2 秒。用来打断骨盾恶魔和成群的小恶魔。'},
-  warp:{color:'#80c8ff',hex:0x80c8ff,sub:'撕开现实，跃入敌阵',long:'瞬移到准星方向最远 10 米处（会被墙挡住），落地释放冲击波：4 米内造成 90 伤害并震晕 1.5 秒。原地会留下残影。'},
-  aegis:{color:'#ffd060',hex:0xffd060,sub:'圣光笼罩全队',long:'展开金色圣盾护罩 6 秒：站在 8 米内的你和队友受到的伤害减半。坚守信标、守仪式法阵时最有用。'},
-  stomp:{color:'#ffb050',hex:0xffb050,sub:'钢铁巨人冲锋',long:'机甲全速向前冲锋 0.6 秒，撞飞路上所有敌人（140 伤害，震晕 1 秒），冲锋结束时重重砸地，再震晕周围敌人。'},
-  pyre:{color:'#ff6020',hex:0xff6020,sub:'以火净化一切',long:'向四周喷出火焰风暴：6 米内所有敌人受到 80 伤害并被点燃，地上留下一圈燃烧的火海，持续烧伤走进来的敌人。'}};
+  surge:{color:'#b060ff',hex:0xb060ff,sub:'Abyssal power erupts from within',long:'Clears all overload and heals 15, then unleashes a purple shockwave: pushes back enemies within 7m, deals 40 damage and stuns for 1s. Use it when you’re about to overload.'},
+  stim:{color:'#ff3030',hex:0xff3030,sub:'Heart racing, pain gone',long:'Inject combat stims: +30% move speed and +25% damage for 6s, heal 20 instantly. Great for diving into a crowd or chasing a fleeing caster.'},
+  grenade:{color:'#ffa040',hex:0xffa040,sub:'Throw a shock grenade',long:'Throws a shock grenade that explodes on contact or after 1.1s: 120 damage and a 1.2s stun within 3.5m. Breaks up bone shields and imp swarms.'},
+  warp:{color:'#80c8ff',hex:0x80c8ff,sub:'Tear reality, strike the line',long:'Teleport up to 10m along your aim (blocked by walls); the landing shockwave deals 90 damage and stuns for 1.5s within 4m. Leaves an afterimage behind.'},
+  aegis:{color:'#ffd060',hex:0xffd060,sub:'Holy light shields the squad',long:'Raises a golden aegis dome for 6s: you and allies within 8m take half damage. Best when holding beacons or ritual circles.'},
+  stomp:{color:'#ffb050',hex:0xffb050,sub:'The iron giant charges',long:'The walker charges at full speed for 0.6s, smashing everything in its path (140 damage, 1s stun), then slams the ground to stun everything nearby.'},
+  pyre:{color:'#ff6020',hex:0xff6020,sub:'Purge everything with fire',long:'Unleashes a firestorm: everything within 6m takes 80 damage and catches fire, leaving a ring of burning ground that scorches anything that walks in.'}};
 for(const k in ULT_INFO)ZAB[k].long=ULT_INFO[k].long;
 let ufx=[];
 function ufxAdd(m,life,o={}){scene.add(m);ufx.push({m,t:0,life,...o});return m;}
@@ -49,6 +49,6 @@ function updateUltOverlays(dt){const t=$('ultTint');if(player.stimT>0){const p=(
   else t.style.opacity=0;
   updateUfx(dt);
   const c=CLS[cls];if(!c)return;const Z=ZAB[c.z],I=ULT_INFO[c.z],r=player.zcd>0?player.zcd/Z.cd:0;
-  $('zab').innerHTML=`<div class="zi" style="--c:${I.color};--p:${(1-r)*360}deg"><b>Z</b></div><div><div class="zn" style="color:${I.color}">${Z.name}${player.zcd>0?` <span>${Math.ceil(player.zcd)}s</span>`:' <span class="rd">就绪</span>'}</div><div class="zd">${Z.desc}</div></div>`;}
+  $('zab').innerHTML=`<div class="zi" style="--c:${I.color};--p:${(1-r)*360}deg"><b>Z</b></div><div><div class="zn" style="color:${I.color}">${Z.name}${player.zcd>0?` <span>${Math.ceil(player.zcd)}s</span>`:' <span class="rd">Ready</span>'}</div><div class="zd">${Z.desc}</div></div>`;}
 function ultPanel(c){const z=CLS[c]&&CLS[c].z;if(!z)return'';const Z=ZAB[z],I=ULT_INFO[z];
-  return `<div class="ultbox" style="border-color:${I.color}"><b style="color:${I.color}">职业大招 · ${Z.name}</b> <span class="dim">Z · 冷却 ${Z.cd} 秒</span><br>${I.long}</div>`;}
+  return `<div class="ultbox" style="border-color:${I.color}"><b style="color:${I.color}">Class Ultimate ·  ${Z.name}</b> <span class="dim">Z · cooldown ${Z.cd} s</span><br>${I.long}</div>`;}

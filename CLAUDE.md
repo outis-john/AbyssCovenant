@@ -5,6 +5,7 @@
 - 用户希望由 Claude 独立迭代开发；**不要修改用户电脑的系统配置、不要动用户的文件、注意节省 token**。
 - 每完成一项就发布 artifact 页面 + 推送 GitHub，并用简短中文汇报。
 - 世界观原创（借鉴战锤 40K 的氛围，但不使用其名字、种族、原文）。
+- **游戏内文字全部是英文**（用户要求，HUD 仿参考图的冷峻军用风，字体 Barlow Condensed / Oswald）；和用户交流仍用简体中文。新加的界面文字直接写英文，字符串里的撇号用 ’ 以免截断单引号。
 
 ## 项目现状
 - 主线是**网页版**。**源码在 `web/src/`，只改这里**；`python3 tools/build.py` 按文件名顺序拼接成 `web/index.html`、`docs/index.html`、`docs/abyss-offline.html`（这三个是生成物，别手改，但要提交）。所有 js 在同一个 module 作用域里，顺序即原顺序。

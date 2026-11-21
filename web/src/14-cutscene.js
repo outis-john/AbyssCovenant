@@ -35,7 +35,7 @@ function updateCutscene(dt){
     for(let i=0;i<14;i++){const s=.4+Math.random()*.8;const m=new THREE.Mesh(scaleBoxUV(new THREE.BoxGeometry(s,s*.5,s),s,s*.5,s),matBrick);const a=Math.random()*6.28,r=2+Math.random()*4;m.position.set(Math.cos(a)*r,H+Math.random()*3,Math.sin(a)*r);m.rotation.set(Math.random(),Math.random(),Math.random());scene.add(m);levelGroup.add(m);
       gibs.push({m,v:new THREE.Vector3(0,-2,0),spin:new THREE.Vector3(Math.random()*3,0,Math.random()*3),rest:false});}
     colliders.push({minX:-1.4,maxX:1.4,minZ:-1.4,maxZ:1.4});
-    setTimeout(()=>{if(state==='cutscene')$('cutCap').textContent='巢都第七区 · 空降坐标确认';},400);
+    setTimeout(()=>{if(state==='cutscene')$('cutCap').textContent='Hive Sector 7 · drop coordinates confirmed';},400);
   }
   // 舱门炸开，角色走出来
   if(t>3.6&&!cut.opened){cut.opened=true;play('saw');noiseHit&&actx&&noiseHit(1500,0.4,0.4);

@@ -1,5 +1,5 @@
 // ============================================================ 区域专属敌人 + 三种 Boss 变体 + 伤害玩家的地面危险（火海 / 冰锥）
-const BOSS_NAME={hive:'熔炉巨像',sanctum:'堕落大主教',frost:'冰霜巨兽'};
+const BOSS_NAME={hive:'Forge Colossus',sanctum:'Fallen Archbishop',frost:'Frost Behemoth'};
 Object.assign(ENEMY_BUILD,{
   tanker:e=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.9,8),new THREE.MeshLambertMaterial({color:0x8a2a1a,emissive:0x200400}));t.position.set(0,.15,-.42);e.parts.body.add(t);
     const n=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.5),gunDark);n.position.set(0,-.3,.25);e.parts.armR.add(n);e.tankM=t;e.flameCd=2;},
@@ -29,7 +29,7 @@ function tankerBurst(e){const p=e.g.position;play('boom');play('melta');puff(p.c
   if(!isClient())for(const o of enemies)if(o!==e&&o.alive&&o.g.position.distanceTo(p)<3.5)damageEnemy(o,50,'body',o.g.position.clone().sub(p).setY(0).normalize(),{_remote:true,how:{melt:true}});}
 function iceBurst(e){const c=e.g.position.clone().setY(1);for(let i=0;i<10;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.18,.18,.18),BM.ice);m.position.copy(c);scene.add(m);
   throwGib(m,new THREE.Vector3((Math.random()-.5)*7,2+Math.random()*4,(Math.random()-.5)*7));}play('clang');}
-function slowTarget(T,d){if(!T)return;if(T.remote)sendTo(T.remote.id,{t:'slow',d});else{player.slowT=Math.max(player.slowT||0,d);announce('被冻住了：移动变慢',0.8);}}
+function slowTarget(T,d){if(!T)return;if(T.remote)sendTo(T.remote.id,{t:'slow',d});else{player.slowT=Math.max(player.slowT||0,d);announce('Frozen: movement slowed',0.8);}}
 // ---------- 伤害玩家的地面危险（房主判定）
 let hazards=[],hazFx=[];
 function addHazard(kind,x,z,life){hazards.push({kind,x,z,life,tick:0});if(kind==='fire'){addFirePatch(x,z,true);}}
@@ -45,7 +45,7 @@ function updateHazards(dt){for(const h of hazards){h.life-=dt;h.tick-=dt;if(h.ti
 function bossVariantTick(e,T,ph,dt){if(!T||ph<2)return false;
   if(e.variant==='sanctum'){e.tpCd=(e.tpCd??6)-dt;if(e.tpCd<=0){e.tpCd=9;const b=new THREE.Vector3(Math.sin((T.remote?T.remote.yaw:player.yaw)),0,Math.cos(T.remote?T.remote.yaw:player.yaw));
       fxSend('tport',{x:e.g.position.x,z:e.g.position.z});embersBlue(e.g.position.clone().setY(1.5),20);e.g.position.set(T.pos.x+b.x*3,0,T.pos.z+b.z*3);collide(e.g.position,e.r);
-      embersBlue(e.g.position.clone().setY(1.5),20);fxSend('tport',{x:e.g.position.x,z:e.g.position.z});play('zap');annTeam('大主教出现在你身后！',1.2);e.cd=0.4;}}
+      embersBlue(e.g.position.clone().setY(1.5),20);fxSend('tport',{x:e.g.position.x,z:e.g.position.z});play('zap');annTeam('The Archbishop appears behind you!',1.2);e.cd=0.4;}}
   if(e.variant==='frost'){e.iceCd=(e.iceCd??4)-dt;if(e.iceCd<=0){e.iceCd=6;const x=T.pos.x,z=T.pos.z;iceWarn(x,z);fxSend('icewarn',{x,z});
       setTimeout(()=>{if(!e.alive)return;iceSpikes(x,z);fxSend('ice',{x,z});for(const t of targetsList())if(Math.hypot(t.pos.x-x,t.pos.z-z)<2){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:28,att:null});else hurtPlayer(28,false,null);slowTarget(t,2);}},1000);}}
   return false;}

@@ -1,13 +1,13 @@
 // ============================================================ 深渊侵蚀 → 被拖入深渊彼岸 → 邪神赐福（四位原创邪神）
 const GODS={
-  blood: {name:'血怒之王',realm:'血怒王座',color:0xc01010,css:'#ff3030',daemon:'dblood', fog:0x2a0404,bg:0x180202,lamp:0xff2010,whisper:'鲜血……为王座献上更多鲜血……',
-    bless:'血怒赐福',desc:'近战伤害 +40%，近战命中吸血 10%；枪械伤害 -20%'},
-  decay: {name:'腐朽之母',realm:'腐朽花园',color:0x6a8a20,css:'#a0d040',daemon:'ddecay', fog:0x1a2206,bg:0x0e1404,lamp:0x90c030,whisper:'别怕，孩子……腐烂就是永生……',
-    bless:'腐朽赐福',desc:'最大生命 +50%，每秒回复 2 生命，受伤 -15%；移速 -15%'},
-  excess:{name:'欲焰之主',realm:'欲焰宫殿',color:0xd040a0,css:'#ff60c0',daemon:'dexcess',fog:0x240616,bg:0x14040e,lamp:0xff50c0,whisper:'更快……更多……再来一次……',
-    bless:'欲焰赐福',desc:'移速 +25%，攻击速度 +25%；受伤 +15%'},
-  change:{name:'万变之眼',realm:'万变迷宫',color:0x3080ff,css:'#60a0ff',daemon:'dchange',fog:0x061430,bg:0x040a1c,lamp:0x4080ff,whisper:'一切皆可改变……包括你……',
-    bless:'万变赐福',desc:'灵能冷却 -50%，灵能回复 ×2，过载不再反噬（只灼烧 5 生命）；最大生命 -20%'}};
+  blood: {name:'Blood King',realm:'Throne of Blood',color:0xc01010,css:'#ff3030',daemon:'dblood', fog:0x2a0404,bg:0x180202,lamp:0xff2010,whisper:'Blood... more blood for the throne...',
+    bless:'Blessing of Blood',desc:'Melee damage +40%, melee lifesteal 10%; gun damage -20%'},
+  decay: {name:'Mother of Rot',realm:'Garden of Rot',color:0x6a8a20,css:'#a0d040',daemon:'ddecay', fog:0x1a2206,bg:0x0e1404,lamp:0x90c030,whisper:'Don’t be afraid, child... decay is eternity...',
+    bless:'Blessing of Rot',desc:'Max HP +50%, regen 2 HP/s, damage taken -15%; move speed -15%'},
+  excess:{name:'Lord of Excess',realm:'Palace of Excess',color:0xd040a0,css:'#ff60c0',daemon:'dexcess',fog:0x240616,bg:0x14040e,lamp:0xff50c0,whisper:'Faster... more... again...',
+    bless:'Blessing of Excess',desc:'Move speed +25%, attack speed +25%; damage taken +15%'},
+  change:{name:'Eye of Change',realm:'Labyrinth of Change',color:0x3080ff,css:'#60a0ff',daemon:'dchange',fog:0x061430,bg:0x040a1c,lamp:0x4080ff,whisper:'Everything can change... even you...',
+    bless:'Blessing of Change',desc:'Psy cooldowns -50%, psy regen ×2, overload no longer backlashes (burns 5 HP); max HP -20%'}};
 const HELL={on:false,t:0,god:null,wave:0,aff:{blood:0,decay:0,excess:0,change:0}};
 function taintAffinity(g,n){HELL.aff[g]=(HELL.aff[g]||0)+n;}
 function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.min(100,(player.taint||0)+n);if(g)taintAffinity(g,n/4);}
@@ -17,7 +17,7 @@ function updateAbyss(dt){if(!match)return;
   const r=player.ovl/player.maxOvl;if(r>0.6&&!HELL.on)addTaint(dt*(r-0.6)*CFG.taint.ovlRate,'change');
   if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
   if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
-  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'深渊彼岸');
+  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'Beyond the Abyss');
     HELL.waveT-=dt;if(HELL.waveT<=0&&HELL.t>2){HELL.waveT=CFG.taint.wave;spawnDaemons(G.daemon,CFG.taint.waveN);}
     $('hellTint').style.opacity=.5+Math.sin(gameTime*3)*.15;player.warp=Math.max(player.warp||0,.3);
     if(Math.random()<dt*.25)announce(G.whisper,1.6);
@@ -29,7 +29,7 @@ function realmVisual(G){scene.fog.color.setHex(G.fog);scene.fog.density=.055;sce
   $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
 function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.waveT=1.2;const G=GODS[god];
   realmVisual(G);play('backlash');play('hole');player.shake=.6;
-  ultBanner(G.realm,{color:G.css,sub:`你被拖入深渊彼岸——${G.name}在注视你。活过 ${CFG.taint.hell} 秒！`});
+  ultBanner(G.realm,{color:G.css,sub:`Dragged beyond the Abyss — ${G.name} is watching you. Survive  ${CFG.taint.hell} s!`});
   announce(G.whisper,3);}
 function exitHell(){HELL.on=false;player.taint=0;applyBiome();$('hellTint').style.opacity=0;setProgress(-1);
   const G=GODS[HELL.god];grantBless(HELL.god);for(const k in HELL.aff)HELL.aff[k]=0;

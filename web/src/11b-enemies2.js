@@ -12,7 +12,7 @@ function shieldBlock(e,dmg,dir,opts){const fwd=new THREE.Vector3(Math.sin(e.g.ro
   if(e.shieldHp<=0)breakShield(e);return dmg*0.1;}
 function breakShield(e){e.shieldHp=0;if(!e.shieldM||!e.shieldM.parent)return;const wp=new THREE.Vector3();e.shieldM.getWorldPosition(wp);e.g.remove(e.shieldM);
   for(let i=0;i<6;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.35,.4,.15),matBone);m.position.copy(wp).add(new THREE.Vector3((Math.random()-.5),(Math.random()-.5),0));scene.add(m);throwGib(m,new THREE.Vector3((Math.random()-.5)*5,3+Math.random()*3,(Math.random()-.5)*5));}
-  play('rip');if(e.g.position.distanceTo(player.pos)<20)announce('骨盾碎了！',0.8);}
+  play('rip');if(e.g.position.distanceTo(player.pos)<20)announce('Bone shield shattered!',0.8);}
 // 腐爆者爆炸：所有端都播放画面；伤害只由房主 / 单人计算
 function bloaterBurst(e){const P=e.g.position.clone().setY(1);puff(P,14,0x6a8020,1.6);spawnBlood(P,null,40);embersGreen(P);play('boom');play('sizzle');if(P.distanceTo(player.pos)<12)player.shake=Math.max(player.shake,.4);
   if(isClient())return;const R=3.6;

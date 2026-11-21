@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>深渊圣约 Abyss Covenant</title>
+<title>Abyss Covenant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:#e8d9c0;user-select:none}
   #game{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated;display:block}
@@ -63,13 +64,29 @@
   #exBars{position:fixed;inset:0;pointer-events:none;z-index:6;background:linear-gradient(#000 0 9%,transparent 9% 91%,#000 91%);opacity:0;transition:opacity .15s}#exBars.show{opacity:1}
   #hellTint{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity 1s;mix-blend-mode:screen}
   #blessTag{margin-top:4px;font-size:12px;font-weight:bold;text-shadow:0 0 6px currentColor}
-  #auspex{position:fixed;left:9%;top:24%;width:300px;z-index:15;pointer-events:none;opacity:0;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(.3);transform-origin:left center;transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1)}
-  #auspex.show{opacity:.92;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(1);animation:ausFlick 3s infinite}
-  #auspex canvas{display:block;width:300px;height:220px;border:2px solid rgba(255,140,60,.7);box-shadow:0 0 18px rgba(255,90,30,.45),inset 0 0 30px rgba(0,0,0,.6);background:rgba(10,4,2,.6);filter:blur(.4px)}
-  #auspex .ah{font-size:11px;color:#ffb070;letter-spacing:2px;background:rgba(40,12,4,.8);border:1px solid rgba(255,140,60,.6);border-bottom:0;padding:3px 8px}#auspex .ah span{float:right;color:#ff6040}
-  #auspex .st{position:absolute;right:100%;height:3px;background:linear-gradient(90deg,rgba(60,50,40,.9),rgba(160,120,80,.9));transform-origin:right center}
-  #auspex .s1{top:24%;width:150px;transform:rotate(-28deg)}#auspex .s2{top:62%;width:160px;transform:rotate(-34deg)}#auspex .s3{top:96%;width:120px;transform:rotate(-30deg)}
-  @keyframes ausFlick{0%,96%,100%{filter:none}97%{filter:brightness(1.6) hue-rotate(-10deg)}98%{filter:brightness(.7)}}
+  #auspex{position:fixed;left:11%;top:23%;width:330px;z-index:15;pointer-events:none;opacity:0;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(.25) translateX(-200px);transform-origin:left center;transition:opacity .2s,transform .45s cubic-bezier(.25,1.25,.4,1)}
+  #auspex.show{opacity:1;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(1)}
+  /* 机械支架：分段金属臂 + 铰链 + 液压杆 */
+  #auspex .arm{position:absolute;right:100%;height:16px;transform-origin:right center;background:linear-gradient(#5a564c,#34322c 45%,#1c1b18);border:1px solid #0c0b0a;box-shadow:inset 0 1px 0 rgba(255,240,210,.25),0 3px 6px rgba(0,0,0,.6);
+    background-image:radial-gradient(circle,#8a8270 1.5px,transparent 2px),linear-gradient(#5a564c,#34322c 45%,#1c1b18);background-size:22px 16px,100% 100%;background-position:4px 0,0 0}
+  #auspex .a1{top:18%;width:190px;transform:rotate(-27deg)}#auspex .a2{top:58%;width:205px;transform:rotate(-33deg)}#auspex .a3{top:92%;width:150px;height:12px;transform:rotate(-26deg)}
+  #auspex .pst{position:absolute;left:18%;top:-7px;width:55%;height:5px;background:linear-gradient(#c8c0a8,#6a6458);border:1px solid #1a1814;border-radius:2px}
+  #auspex .hg{position:absolute;right:-12px;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:radial-gradient(circle,#1a1916 3px,#8a8068 4px,#4a463c 7px,#22201c 11px);border:1px solid #0a0908}
+  #auspex .cable{position:absolute;right:100%;top:75%;width:170px;height:24px;border:3px solid #1a1a1a;border-color:transparent transparent #161616 transparent;border-radius:0 0 60% 40%;transform:rotate(-20deg);transform-origin:right top}
+  /* 显示器本体：铆接厚框、铭牌、散热格栅、指示灯 */
+  #auspex .bez{position:relative;padding:12px 14px 10px;background:linear-gradient(160deg,#55514a,#2e2c27 35%,#1d1c19 70%,#2a2824);border:2px solid #0c0b0a;border-radius:6px 6px 4px 4px;
+    box-shadow:inset 0 0 0 2px #3e3b34,inset 0 2px 0 rgba(255,240,200,.25),0 10px 24px rgba(0,0,0,.7)}
+  #auspex .bt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d8d0b8,#6a6050 55%,#1a1814 75%);box-shadow:0 1px 1px #000}
+  #auspex .b1{left:4px;top:4px}#auspex .b2{right:4px;top:4px}#auspex .b3{left:4px;bottom:4px}#auspex .b4{right:4px;bottom:4px}
+  #auspex .plate{display:flex;gap:8px;align-items:center;margin:0 6px 6px;padding:2px 8px;white-space:nowrap;font-size:9px!important;background:linear-gradient(#a08848,#6a5528);border:1px solid #2a2010;font:600 10px Oswald,sans-serif;letter-spacing:2px;color:#1a1208;text-shadow:0 1px 0 rgba(255,230,160,.4)}
+  #auspex .plate .tag{opacity:.7}#auspex .plate #ausN{margin-left:auto;color:#5a0c06}
+  #auspex .scr{position:relative;border:3px solid #0a0a09;border-radius:10px/14px;overflow:hidden;box-shadow:inset 0 0 22px rgba(0,0,0,.9)}
+  #auspex .scr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.28) 2px 3px),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55));pointer-events:none}
+  #auspex canvas{display:block;width:300px;height:220px;background:#0a0603;filter:blur(.35px) contrast(1.1)}
+  #auspex .foot{display:flex;align-items:center;gap:6px;margin-top:6px;font:600 9px Oswald,sans-serif;letter-spacing:2px;color:#8a8068}
+  #auspex .grl{flex:1;height:8px;background:repeating-linear-gradient(90deg,#0c0b0a 0 3px,#3a372f 3px 5px);border:1px solid #0a0908}
+  #auspex .led{width:7px;height:7px;border-radius:50%;background:#ff3018;box-shadow:0 0 6px #ff3018;animation:ausLed 1s steps(2) infinite}#auspex .led.g{background:#60ff70;box-shadow:0 0 6px #60ff70;animation-delay:.5s}
+  @keyframes ausLed{50%{opacity:.25}}
   body.inhub #auspex{display:none}
   #ultTint,#ultFlash{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0}
   #ultBanner{position:fixed;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:30;opacity:0}#ultBanner.go{animation:ub 1.4s ease-out}
@@ -132,7 +149,7 @@
   .lb{position:absolute;left:0;right:0;height:11vh;background:#000}.lb.top{top:0}.lb.bot{bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0 40px;box-sizing:border-box}
   #cutCap{font-size:20px;letter-spacing:6px;color:#d8a657}.skip{font-size:12px;color:#5a4f42}
   #hub .bottom .nb,#joinCode{pointer-events:auto;font-size:14px;padding:10px 14px}
-  #joinCode{width:92px;background:#1d110d;color:#f0dcb8;border:1px solid #6b4a2a;border-left:0;border-right:0;text-transform:uppercase;letter-spacing:3px;margin:0;font:inherit;font-size:14px}
+  #joinCode{width:118px;letter-spacing:1px!important;background:#1d110d;color:#f0dcb8;border:1px solid #6b4a2a;border-left:0;border-right:0;text-transform:uppercase;letter-spacing:3px;margin:0;font:inherit;font-size:14px}
   #lobby{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);width:560px;padding:16px 20px;background:rgba(10,6,5,.92);border:1px solid #6b4a2a;text-align:center;display:none;pointer-events:auto}
   #lobby.show{display:block}#lobby .lt{color:#d8a657;font-size:18px;letter-spacing:4px;margin-bottom:6px}#lobbyCode{font-size:26px;letter-spacing:6px;color:#f0c674}
   #matching{position:fixed;left:0;right:0;bottom:120px;text-align:center;display:none;pointer-events:auto}
@@ -145,6 +162,42 @@
   #result table{border-collapse:collapse;width:100%;margin:10px 0 6px;font-size:14px}
   #result td{padding:6px 4px;border-bottom:1px solid #2e1f17}#result td:last-child{text-align:right;color:#f0dcb8}
   .lost{color:#e05a4a!important}.gain{color:#8fd08f!important}
+
+  /* ===== HUD：冷峻军用风（参考图风格）===== */
+  body{font-family:"Barlow Condensed","Oswald","Arial Narrow","Microsoft YaHei",sans-serif}
+  #hud-bl{left:22px;bottom:20px;width:300px;font-size:13px;letter-spacing:.5px}
+  .sq{display:flex;gap:8px;align-items:flex-start;margin-top:6px}.sq .pf{width:44px;height:50px;flex:none;border:1px solid rgba(220,230,220,.35);background:linear-gradient(160deg,#2a2e2c,#0d0f0e);display:grid;place-items:center;font:600 15px Oswald,sans-serif;color:#cfd8d0;letter-spacing:1px}
+  .sq.mate .pf{width:30px;height:34px;font-size:11px}.sq .sqi{flex:1;min-width:0}
+  .sq .nm{display:flex;justify-content:space-between;font-weight:600;font-size:14px;color:#e8eee8;text-transform:uppercase;letter-spacing:1px}.sq .nm .hpn{font-weight:500;color:#9aa8a0;font-size:12px}
+  .sq.mate .nm{font-size:12px}.sq.mate .bar{height:4px;margin:3px 0}
+  .bar{height:6px;background:rgba(0,0,0,.55);border:0;margin:4px 0;position:relative;box-shadow:0 0 0 1px rgba(200,210,200,.18)}
+  .bar.seg{height:8px}.bar.seg::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(0,0,0,.85) calc(10% - 2px) 10%)}
+  .bar.thin{height:3px;margin:2px 0 5px}
+  #hp>div{background:linear-gradient(#f2f6f2,#b8c4bc)}#st>div{background:#6fa8c0}#exb>div{background:#d8a040}#exb.full>div{background:#ffcc60;box-shadow:0 0 6px #ffcc60}
+  #mana>div{background:#7aa0ff}#ovl>div{background:#e05a4a}
+  .mini{display:block;margin-top:2px}.mini span,.psyb span{font-size:10px;letter-spacing:2px;color:#8a968e}.mini b,.psyb b{color:#d8e0da;font-weight:600;margin-left:4px}
+  #blessTag{font-size:11px;letter-spacing:2px;text-transform:uppercase}
+  #weapons{left:auto;right:22px;bottom:20px;transform:none;flex-direction:column;align-items:flex-end;gap:4px}
+  .wslot{display:flex;align-items:center;gap:10px;border:0;background:linear-gradient(270deg,rgba(10,12,11,.75),rgba(10,12,11,0));padding:4px 10px 4px 30px;min-width:0;color:#9aa49e;font-size:12px;letter-spacing:1px;text-transform:uppercase;clip-path:polygon(14px 0,100% 0,100% 100%,0 100%)}
+  .wslot .wn{min-width:120px;text-align:right;font-weight:600}.wslot .wk{border:1px solid rgba(200,210,200,.4);padding:0 4px;font-size:11px;color:#c8d0ca}
+  .wslot .am{font:600 15px Oswald,sans-serif;color:#cfd8d0;min-width:60px;text-align:right}.wslot .am small{font-size:11px;color:#7a847e;margin-left:2px}
+  .wslot.on{background:linear-gradient(270deg,rgba(30,36,33,.92),rgba(30,36,33,.15));color:#eef3ee;padding:8px 12px 8px 40px}
+  .wslot.on .am{font-size:40px;line-height:.9;color:#f2f6f2;text-shadow:0 0 8px rgba(255,255,255,.25)}.wslot.on .am small{display:block;font-size:14px;color:#a0aaa4;text-align:right}
+  .wslot .low{color:#ff6a50}
+  #hud-br{left:50%;right:auto;bottom:16px;transform:translateX(-50%);width:auto;text-align:center}
+  .psyb{display:grid;grid-template-columns:auto 160px auto 160px;gap:4px 8px;align-items:center;justify-content:center}
+  .spell{border:0;border-bottom:2px solid;background:rgba(10,12,11,.7);padding:3px 8px;font-size:12px;min-width:76px;letter-spacing:1px;text-transform:uppercase}
+  #obj{left:auto;right:22px;top:216px;max-width:330px;font-size:13px;line-height:1.5;background:linear-gradient(90deg,rgba(24,28,26,.85),rgba(24,28,26,.55));border-left:3px solid #c8d0ca;padding:8px 12px 8px 12px}
+  #obj h3{font:600 12px Oswald,sans-serif;color:#c8d0ca;letter-spacing:3px;text-transform:uppercase}#obj h3::before{content:'◎ ';color:#f0f4f0}
+  #obj .done{color:#8fd08f;text-decoration:line-through}#obj .hidden{color:#8a948e}
+  #mapWrap{right:22px;top:20px}#mapLegend{font-size:11px;letter-spacing:1px}
+  #announce{top:24%;left:50%;width:auto;transform:translateX(-50%);padding:6px 40px;font:600 20px Oswald,sans-serif;text-transform:uppercase;letter-spacing:3px;color:#f2f6f2;
+    background:linear-gradient(90deg,rgba(20,24,22,0),rgba(20,24,22,.85) 20%,rgba(20,24,22,.85) 80%,rgba(20,24,22,0));border-top:1px solid rgba(220,230,220,.5);border-bottom:1px solid rgba(220,230,220,.5);white-space:nowrap}
+  #prompt{top:62%;font-size:15px;letter-spacing:1px;text-transform:uppercase}
+  #bossbar{width:360px!important;top:10px!important;font:600 13px Oswald,sans-serif!important;letter-spacing:2px;color:#e04030!important;text-transform:uppercase}
+  #bossbar>div{height:5px!important;border:0!important;background:rgba(0,0,0,.6)!important;box-shadow:0 -3px 0 rgba(200,180,160,.5)}
+  #zab{bottom:178px;left:22px}#zab .zn{font-family:Oswald,sans-serif;letter-spacing:1px;text-transform:uppercase}
+  #progress{height:4px}
 </style>
 </head>
 <body>
@@ -154,79 +207,86 @@
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
 <div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
-<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="auspex"><i class="st s1"></i><i class="st s2"></i><i class="st s3"></i><div class="ah">侦测仪 · 生命信号扫描 <span id="ausN"></span></div><canvas id="ausCv" width="300" height="220"></canvas></div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="auspex">
+  <div class="arm a1"><i class="pst"></i><i class="hg"></i></div><div class="arm a2"><i class="pst"></i><i class="hg"></i></div><div class="arm a3"><i class="hg"></i></div><i class="cable"></i>
+  <div class="bez"><b class="bt b1"></b><b class="bt b2"></b><b class="bt b3"></b><b class="bt b4"></b>
+    <div class="plate"><span>AUSPEX MK.IV</span><span class="tag">LIFE-SIGN SCAN</span><span id="ausN"></span></div>
+    <div class="scr"><canvas id="ausCv" width="300" height="220"></canvas></div>
+    <div class="foot"><i class="grl"></i><i class="led"></i><i class="led g"></i><span>RNG 32M</span></div></div>
+</div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
-<div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
+<div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> Pod <span style="color:#60ffb0">●</span> Clue / terminal <span style="color:#ff9a40">●</span> Parts · M to enlarge</div></div>
 <div class="layer" id="splat"></div>
 <div id="announce"></div>
 <div id="prompt"></div>
-<div id="bossbar" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:420px;display:none;text-align:center;color:#e8c0a0;font-size:13px;text-shadow:0 0 4px #000">深渊领主<div style="height:8px;border:1px solid #6b2a1a;background:#1a0806;margin-top:3px"><div id="bossfill" style="height:100%;width:100%;background:#c0302a"></div></div></div>
+<div id="bossbar" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:420px;display:none;text-align:center;color:#e8c0a0;font-size:13px;text-shadow:0 0 4px #000">Abyss Lord<div style="height:8px;border:1px solid #6b2a1a;background:#1a0806;margin-top:3px"><div id="bossfill" style="height:100%;width:100%;background:#c0302a"></div></div></div>
 <div id="trainBox" style="position:fixed;top:60px;left:50%;transform:translateX(-50%);display:none;max-width:640px;padding:10px 18px;background:rgba(10,5,4,.85);border:1px solid #d8a657;color:#ffe0a0;font-size:15px;text-align:center;z-index:40"></div>
 <div id="progress" class="bar"><div style="background:#d8a657"></div></div>
 <div id="litany"></div>
 <div id="weapons"></div>
 <div id="hud-bl">
-  <div>生命 <span id="hpTxt"></span></div><div class="bar" id="hp"><div></div></div>
-  <div>体力</div><div class="bar" id="st"><div></div></div>
-  <div>处决 <span id="exTxt"></span></div><div class="bar" id="exb"><div></div></div>
-  <div>深渊侵蚀 <span id="taintTxt"></span></div><div class="bar" id="taint"><div style="background:#9030c0"></div></div>
-  <div id="blessTag"></div>
+  <div id="squad"></div>
+  <div class="sq me"><div class="pf" id="pf"></div><div class="sqi">
+    <div class="nm"><span id="myName"></span><span class="hpn" id="hpTxt"></span></div>
+    <div class="bar seg" id="hp"><div></div></div><div class="bar thin" id="st"><div></div></div>
+    <div class="mini"><span>EXECUTE <b id="exTxt"></b></span><div class="bar thin" id="exb"><div></div></div></div>
+    <div class="mini"><span>CORRUPTION <b id="taintTxt"></b></span><div class="bar thin" id="taint"><div style="background:#9a40d0"></div></div></div>
+    <div id="blessTag"></div></div></div>
 </div>
 <div id="hud-br">
-  <div>灵能 <span id="manaTxt"></span></div><div class="bar" id="mana"><div></div></div>
-  <div>过载 <span id="ovlTxt"></span></div><div class="bar" id="ovl"><div></div></div>
+  <div class="psyb"><span>PSYKER <b id="manaTxt"></b></span><div class="bar thin" id="mana"><div></div></div><span>OVERLOAD <b id="ovlTxt"></b></span><div class="bar thin" id="ovl"><div></div></div></div>
   <div id="spells"></div>
 </div>
 
-<div id="letterbox"><div class="lb top"></div><div class="lb bot"><span id="cutCap"></span><span class="skip">点击 / 空格 跳过</span></div></div>
+<div id="letterbox"><div class="lb top"></div><div class="lb bot"><span id="cutCap"></span><span class="skip">Click / Space to skip</span></div></div>
 <div class="layer" id="fade" style="background:#000;opacity:0"></div>
 <div id="hub" class="show">
   <header class="hbar">
-    <div><div class="title">深渊圣约</div><div class="sub">战舰「永夜誓约号」· 整备甲板</div></div>
-    <div class="hbar-r"><div id="vaultInfo"></div><button id="trainBtn" class="ghost">训练场</button><button id="setBtn" class="ghost">设置</button></div>
+    <div><div class="title">ABYSS COVENANT</div><div class="sub">Warship "Eternal Night Oath" · Armoury Deck</div></div>
+    <div class="hbar-r"><div id="vaultInfo"></div><button id="trainBtn" class="ghost">Training</button><button id="setBtn" class="ghost">Settings</button></div>
   </header>
   <section class="left pnl">
-    <h4>职业</h4>
+    <h4>Class</h4>
     <div class="clsrow" id="clsCards"></div>
     <div id="clsInfo"></div>
-    <h4>主武器</h4><div class="lo" id="loPrimary"></div>
-    <h4>近战武器</h4><div class="lo" id="loMelee"></div>
+    <h4>Primary</h4><div class="lo" id="loPrimary"></div>
+    <h4>Melee</h4><div class="lo" id="loMelee"></div>
     <div class="small" id="loDesc"></div>
-    <div class="small dim">副武器：爆弹手枪（无限备弹）· 拖动角色旋转查看</div>
+    <div class="small dim">Sidearm: bolt pistol (infinite ammo) · drag the model to rotate</div>
   </section>
   <section class="right pnl"><div id="shop"></div></section>
   <div class="bottom">
     <div class="deploy pnl">
       <div id="deployOpts"></div>
-      <div class="drow"><button id="goBtn">单人行动</button>
-        <div class="mp"><button id="hostBtn" class="nb">创建房间</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入</button></div></div>
-      <div class="hint">撤离方式未知 · 阵亡会丢失身上的一切 · 按 H 查看按键</div>
+      <div class="drow"><button id="goBtn">Deploy Solo</button>
+        <div class="mp"><button id="hostBtn" class="nb">Create Room</button><input id="joinCode" maxlength="6" placeholder="Room code"><button id="joinBtn" class="nb">Join</button></div></div>
+      <div class="hint">Extraction unknown · death loses everything you carry · press H for controls</div>
     </div>
   </div>
 </div>
 </div>
-<div id="lobby"><div class="lt">联机房间</div><div>房间码 <b id="lobbyCode">—</b></div><div class="slots" id="lobbyList"></div>
-  <div id="netMsg" class="hint"></div><button id="lobbyStart">开始行动</button><button id="lobbyLeave">离开房间</button></div>
+<div id="lobby"><div class="lt">Squad Room</div><div>Room code <b id="lobbyCode">—</b></div><div class="slots" id="lobbyList"></div>
+  <div id="netMsg" class="hint"></div><button id="lobbyStart">Deploy</button><button id="lobbyLeave">Leave Room</button></div>
 <div id="matching">
-  <div id="mmText">正在寻找队友……</div>
-  <div class="slots"><div class="slot me" id="slot0"></div><div class="slot wait" id="slot1">寻找中…</div><div class="slot wait" id="slot2">寻找中…</div></div>
-  <button id="mmCancel">取消匹配</button>
-  <div class="hint">联机功能开发中，目前会以单人身份空降</div>
+  <div id="mmText">Searching for squadmates...</div>
+  <div class="slots"><div class="slot me" id="slot0"></div><div class="slot wait" id="slot1">Searching...</div><div class="slot wait" id="slot2">Searching...</div></div>
+  <button id="mmCancel">Cancel</button>
+  <div class="hint">Multiplayer in development — deploying solo for now</div>
 </div>
-<div class="panel" id="ready"><div class="box" style="text-align:center"><h2>空降舱已着陆</h2><p>巢都第七区。撤离方式未知——寻找数据板线索。</p><button id="readyBtn">点击开始行动</button></div></div>
+<div class="panel" id="ready"><div class="box" style="text-align:center"><h2>Drop pod has landed</h2><p>Hive Sector 7. Extraction method unknown — find data-slate clues.</p><button id="readyBtn">Click to deploy</button></div></div>
 
-<div class="panel" id="settings"><div class="box" style="width:520px"><h2>设置</h2><div id="setRows"></div><h3 style="margin:16px 0 4px;color:#d8a657;font-size:14px">按键（点击后按新键，Esc 取消）· 也支持手柄</h3><div id="keyRows" style="max-height:220px;overflow:auto"></div><button id="setClose">完成</button></div></div>
-<div id="help"><h3 style="margin:0 0 6px">按键说明 <small>（H 关闭）</small></h3><div id="helpBody"></div></div>
-<div class="panel" id="pause"><div class="box"><h2>暂停</h2><button id="resume">继续</button><button id="pauseSet">设置</button><button id="pauseHelp">按键说明</button><button id="quit">放弃行动</button></div></div>
+<div class="panel" id="settings"><div class="box" style="width:520px"><h2>Settings</h2><div id="setRows"></div><h3 style="margin:16px 0 4px;color:#d8a657;font-size:14px">Controls (click then press a new key, Esc to cancel) · gamepad supported</h3><div id="keyRows" style="max-height:220px;overflow:auto"></div><button id="setClose">done</button></div></div>
+<div id="help"><h3 style="margin:0 0 6px">Help <small>(H close)</small></h3><div id="helpBody"></div></div>
+<div class="panel" id="pause"><div class="box"><h2>Paused</h2><button id="resume">Resume</button><button id="pauseSet">Settings</button><button id="pauseHelp">Help</button><button id="quit">Abandon Mission</button></div></div>
 
 <div class="panel" id="runes"><div class="box" style="width:640px">
-  <h2>符文拼装</h2>
-  <p class="small">每个技能 = 形态 + 元素 + 修饰。形态和元素各占 1 槽，每个修饰占 1 槽。槽位：<b id="slotInfo"></b></p>
+  <h2>Rune Builder</h2>
+  <p class="small">Each skill = form + element + modifiers. Form and element take 1 slot each; each modifier takes 1 slot. Slots: <b id="slotInfo"></b></p>
   <div id="runeList"></div>
-  <button id="runeDone">完成</button>
+  <button id="runeDone">done</button>
 </div></div>
 
-<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="backBtn">返回战舰</button></div></div>
+<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="backBtn">Return to Ship</button></div></div>
 
 <script type="module">
 // ============================================================ 数值表（想调手感改这里就行，改完运行 python3 tools/build.py）
@@ -278,20 +338,20 @@ const CFG={
   perf:{gibs:320,bloods:650,sparks:500,puffs:250},   // 同屏碎块 / 血迹 / 火花 / 烟雾上限，卡顿就调小
   // 地图区域：tint 颜色、雾、灯光、各种敌人的出现权重
   biomes:{
-    hive:   {name:'巢都炼油厂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1,tanker:2}},
-    sanctum:{name:'地下圣堂',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3,priest:2}},
-    frost:  {name:'蓝冰洞窟',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2,frostling:3}}},
+    hive:   {name:'Hive Refinery',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x1a120c,fogD:.038,bg:0x0e0906,hemi:[0x9a8a78,0x2a1c10],lamp:0xffa040,dark:0x1a1210,spawn:{imp:6,caster:2,bloater:2,hound:1,bulwark:1,tanker:2}},
+    sanctum:{name:'Undercroft Sanctum',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x2a1c10,fogD:.034,bg:0x1a1008,hemi:[0xb09070,0x302010],lamp:0xffd070,dark:0x1a1210,spawn:{imp:4,caster:4,bloater:1,hound:1,bulwark:3,priest:2}},
+    frost:  {name:'Blue Ice Caverns',wall:0xffffff,floor:0xffffff,ceil:0xffffff,fog:0x8aa4bc,fogD:.06, bg:0x5a7088,hemi:[0x9ab0c8,0x203040],lamp:0x70b0ff,dark:0x5a7a9a,spawn:{imp:4,caster:1,bloater:1,hound:5,bulwark:2,frostling:3}}},
   // 威胁等级：敌人血量 / 伤害倍率、每个房间多刷几只、刷怪潮间隔、带回物资倍率
-  threat:[null,{name:'一级 · 侵蚀',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'二级 · 沦陷',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'三级 · 深渊',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
+  threat:[null,{name:'I · Corruption',hp:1,dmg:1,extra:0,wave:50,loot:1},{name:'II · Fallen',hp:1.35,dmg:1.25,extra:1,wave:40,loot:1.6},{name:'III · Abyss',hp:1.8,dmg:1.5,extra:2,wave:32,loot:2.5}],
   // 战舰工坊升级：cost 每级花费的物资，rare 每级花费的圣物
   upgrades:[
-    {id:'armor', name:'强化甲片',  desc:'最大生命 +15',             max:3,cost:[4,8,14]},
-    {id:'blade', name:'精锻刃',    desc:'近战伤害 +15%',            max:3,cost:[5,10,16]},
-    {id:'mag',   name:'扩容弹匣',  desc:'爆弹枪 / 霰弹枪弹匣 +30%，开局备弹 +30%', max:2,cost:[6,12]},
-    {id:'melta', name:'热熔聚焦器',desc:'热熔枪伤害 +20%',          max:2,cost:[6,12]},
-    {id:'beacon',name:'备用回收装置',desc:'每局回收装置 +1 次',      max:1,cost:[10]},
-    {id:'psy',   name:'灵能导管',  desc:'灵能上限 +25，过载上限 +20',max:2,cost:[0,0],rare:[1,2]},
-    {id:'exec',  name:'嗜血圣印',  desc:'处决充能速度 +30%',        max:1,cost:[0],rare:[1]},
+    {id:'armor', name:'Reinforced Plating',  desc:'Max HP +15',             max:3,cost:[4,8,14]},
+    {id:'blade', name:'Forged Edge',    desc:'Melee damage +15%',            max:3,cost:[5,10,16]},
+    {id:'mag',   name:'Extended Mags',  desc:'Bolter / shotgun magazine +30%, starting ammo +30%', max:2,cost:[6,12]},
+    {id:'melta', name:'Melta Focuser',desc:'Melta damage +20%',          max:2,cost:[6,12]},
+    {id:'beacon',name:'Spare Recovery Beacon',desc:'+1 recovery beacon per run',      max:1,cost:[10]},
+    {id:'psy',   name:'Psy Conduit',  desc:'Psy max +25, overload max +20',max:2,cost:[0,0],rare:[1,2]},
+    {id:'exec',  name:'Bloodlust Seal',  desc:'Execution charge rate +30%',        max:1,cost:[0],rare:[1]},
   ],
   // 职业解锁价格（唤潮者、铸甲卫士免费）；武器熟练度：击杀数达到门槛，伤害每级 +5%
   unlockAll:true,   // 测试阶段：所有职业直接可用（改成 false 就恢复解锁价格）
@@ -362,7 +422,7 @@ function capBloods(){while(bloods.length>CFG.perf.bloods){const o=bloods.shift()
 // ---------- F3：帧率和对象数量
 const perfMon={on:false,t:0,n:0,fps:0};
 function updatePerf(dt){if(!perfMon.on)return;perfMon.t+=dt;perfMon.n++;if(perfMon.t<0.5)return;perfMon.fps=Math.round(perfMon.n/perfMon.t);perfMon.t=0;perfMon.n=0;
-  const i=renderer.info.render||{};$('perf').textContent=`FPS ${perfMon.fps} · 敌人 ${enemies.filter(e=>e.alive).length} · 碎块 ${gibs.length} · 血 ${bloods.length} · 粒子 ${sparks.length+puffs.length} · 绘制 ${i.calls??'-'}`;}
+  const i=renderer.info.render||{};$('perf').textContent=`FPS ${perfMon.fps} · Enemies ${enemies.filter(e=>e.alive).length} · Gibs ${gibs.length} · Blood ${bloods.length} · Particles ${sparks.length+puffs.length} · Draws ${i.calls??'-'}`;}
 // ============================================================ 音效（全部合成）
 let hum=null,humGain=null,masterLP=null;
 function humEngine(on,fast){if(!humGain)return;humGain.gain.setTargetAtTime(on?(fast?0.16:0.06):0,actx.currentTime,0.05);hum.frequency.setTargetAtTime(fast?95:58,actx.currentTime,0.05);}
@@ -614,7 +674,7 @@ function killEnemy(e,dir,explode,how={}){
   if(e.boss&&!isClient())bossDown(e);
   if(e.type==='bloater')bloaterBurst(e);
   if(e.type==='tanker')tankerBurst(e);if(e.type==='frostling')iceBurst(e);
-  if(e.type==='nest'&&!isClient()){addProgress('nest',1);annTeam('恶魔巢穴被摧毁！',2);}
+  if(e.type==='nest'&&!isClient()){addProgress('nest',1);annTeam('Demon nest destroyed!',2);}
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);
   try{
@@ -875,17 +935,17 @@ function showHit(kill){const h=$('hit');h.className=kill?'kill':'';h.style.opaci
 function spawnSpark(p){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xffc060}));m.position.copy(p);scene.add(m);setTimeout(()=>scene.remove(m),80);}
 // ============================================================ 武器与配装
 const RANGED={
-  bolter:{id:'bolter',name:'爆弹枪',magSize:24,reserveMax:192,res0:120,rate:7,dmg:24,pellets:1,spread:.012,auto:true,climb:.016,kick:1.2,reload:1.1,knock:.35,snd:'bolter',desc:'全自动火箭推进爆弹：钉进目标后小范围爆炸，能炸碎命中的部位。',model:gun,flash:flash},
-  shotgun:{id:'shotgun',name:'霰弹枪',magSize:6,reserveMax:48,res0:30,rate:1.3,dmg:16,pellets:10,spread:.1,auto:false,climb:.06,kick:2.2,reload:1.3,knock:.5,snd:'shotgun',desc:'大口径，10 颗弹丸。近距离能把敌人胸口轰出大洞，或把半边身体轰飞。',model:shotgun,flash:sgFlash},
-  melta:{id:'melta',name:'热熔枪',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:1.6,dmg:170,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:0,range:16,pierce:true,snd:'melta',desc:'无需弹药，会过热。右键蓄力、左键发射，直接烧穿一条线上所有敌人的身体。',model:melta,flash:meltaFlash}};
-const PISTOL={id:'pistol',name:'爆弹手枪',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:.8,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
+  bolter:{id:'bolter',name:'Bolter',magSize:24,reserveMax:192,res0:120,rate:7,dmg:24,pellets:1,spread:.012,auto:true,climb:.016,kick:1.2,reload:1.1,knock:.35,snd:'bolter',desc:'Fully automatic rocket-propelled bolts: they bury into the target and detonate, shattering whatever they hit.',model:gun,flash:flash},
+  shotgun:{id:'shotgun',name:'Shotgun',magSize:6,reserveMax:48,res0:30,rate:1.3,dmg:16,pellets:10,spread:.1,auto:false,climb:.06,kick:2.2,reload:1.3,knock:.5,snd:'shotgun',desc:'Heavy gauge, 10 pellets. Up close it blasts a hole through the chest or tears half the body away.',model:shotgun,flash:sgFlash},
+  melta:{id:'melta',name:'Meltagun',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:1.6,dmg:170,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:0,range:16,pierce:true,snd:'melta',desc:'No ammo, but it overheats. Hold RMB to charge, LMB to fire — burns straight through every enemy in a line.',model:melta,flash:meltaFlash}};
+const PISTOL={id:'pistol',name:'Bolt Pistol',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:.8,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
 const MELEE={
-  saw:{id:'saw',name:'链锯剑',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'四段连招：斜劈、横斩、突刺锯入、切开。右键按住蓄力，松开进入狂热（移速和攻速提升）。重击（按住左键）：回旋锯斩，拦腰锯断周围一圈敌人。'},
-  power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'四段连招：左劈、右劈、突刺、上挑，每刀都能劈开前方所有敌人。右键：分解力场（8 秒，伤害 ×1.6，挥砍时吟诵祷言）。重击（按住左键）：裂地斩，劈开前方一条直线上的所有敌人。'},
-  hammer:{id:'hammer',name:'雷殛锤',melee:true,cleave:true,dmg:72,windup:.24,slash:.2,desc:'三段大范围横扫，打退一片。重击：雷霆砸地，震晕周围所有敌人。'},
-  fist:{id:'fist',name:'破甲巨拳',melee:true,dmg:50,windup:.1,slash:.11,desc:'刺拳、直拳、上勾拳，拳拳打碎血肉。重击：抓住面前的敌人当场捏碎（精英要先打残）。'},
-  axe:{id:'axe',name:'链锯战斧',melee:true,bite:true,dmg:54,windup:.16,slash:.16,desc:'沉重的劈砍会咬进敌人身体。重击：横斩斩首。'},
-  ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'按住 E 举盾格挡（时机准可防反）；右键切换剑 / 爆弹手枪。重击（按住左键）：盾击，撞飞并震晕前方敌人。'}};
+  saw:{id:'saw',name:'Chainsword',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'4-hit combo: slash, sweep, thrust-and-grind, rip. Hold RMB to rev, release for Frenzy (move and attack speed up). Heavy (hold LMB): Spin Saw, cuts everything around you in half.'},
+  power:{id:'power',name:'Power Sword',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'4-hit combo: left, right, thrust, rising cut — every swing cleaves all enemies in front. RMB: Disruption Field (8s, damage ×1.6, chant litanies). Heavy (hold LMB): Earth Splitter, cleaves every enemy in a straight line.'},
+  hammer:{id:'hammer',name:'Thunder Hammer',melee:true,cleave:true,dmg:72,windup:.24,slash:.2,desc:'3 wide sweeping blows that knock back crowds. Heavy: Thunder Slam, stuns everything around you.'},
+  fist:{id:'fist',name:'Power Fist',melee:true,dmg:50,windup:.1,slash:.11,desc:'Jab, cross, uppercut — every punch pulps flesh. Heavy: grab the enemy in front and crush it (elites must be weakened first).'},
+  axe:{id:'axe',name:'Chain Axe',melee:true,bite:true,dmg:54,windup:.16,slash:.16,desc:'Heavy chops that bite into flesh. Heavy: decapitating sweep.'},
+  ssword:{id:'ssword',name:'Sword & Shield',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'Hold E to block (perfect timing parries); RMB toggles sword / bolt pistol. Heavy (hold LMB): Shield Bash, knocks back and stuns enemies in front.'}};
 for(const k in CFG.guns)if(RANGED[k])Object.assign(RANGED[k],CFG.guns[k]);for(const k in CFG.melee)Object.assign(MELEE[k],CFG.melee[k]);
 const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
@@ -897,16 +957,16 @@ function applyLoadout(){const P={...RANGED[loadout.primary]},M={...MELEE[loadout
   ammo=[{mag:WEAPONS[0].magSize,res:WEAPONS[0].res0},{mag:PISTOL.magSize,res:Infinity},{}];cur=0;reloadT=0;switchT=0;reloadFor=-1;}
 applyLoadout();
 function activeGun(){const w=WEAPONS[cur];if(w.melee)return (w.block&&player.ssPistol)?{w:PISTOL,slot:1}:null;return {w,slot:cur};}
-function switchWeapon(i){if(i===0&&match&&match.carrier&&match.carrier===net.myId){announce('扛着圣物棺，不能用主武器',0.8);return;}if(i===1&&CLS[cls]&&CLS[cls].noPistol){if(cur===1)return;announce('机甲没有副武器',0.8);return;}if(i===cur||i<0||i>2||MS.phase==='bite'||ex.active)return;cur=i;switchT=0.3;reloadT=0;reloadFor=-1;player.blocking=false;player.revving=false;
+function switchWeapon(i){if(i===0&&match&&match.carrier&&match.carrier===net.myId){announce('Carrying the reliquary — primary weapon unavailable',0.8);return;}if(i===1&&CLS[cls]&&CLS[cls].noPistol){if(cur===1)return;announce('Walkers have no sidearm',0.8);return;}if(i===cur||i<0||i>2||MS.phase==='bite'||ex.active)return;cur=i;switchT=0.3;reloadT=0;reloadFor=-1;player.blocking=false;player.revving=false;
   if(i!==2){swordOut=0;sword.visible=false;ghost.visible=false;shieldG.visible=false;}MS.phase='none';swing=0;MS.queued=false;play('equip');if(cur!==2&&MS.phase!=='none'){MS.phase='none';swing=0;}}
-function startReload(){const G=activeGun();if(!G)return;const w=G.w;if(player.channelT>0){announce('施法中无法换弹',0.8);return;}if(w.heat)return;if(reloadT>0||switchT>0||ex.active)return;const a=ammo[G.slot];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('没有备弹了',1);return;}
+function startReload(){const G=activeGun();if(!G)return;const w=G.w;if(player.channelT>0){announce('Can’t reload while casting',0.8);return;}if(w.heat)return;if(reloadT>0||switchT>0||ex.active)return;const a=ammo[G.slot];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('Out of reserve ammo',1);return;}
   reloadT=w.reload;reloadFor=G.slot;play('magOut');setTimeout(()=>{if(reloadT>0)play('magIn');},w.reload*550);}
 function finishReload(){const w=reloadFor===1?PISTOL:WEAPONS[reloadFor],a=ammo[reloadFor];const n=Math.min(w.magSize-a.mag,a.res);a.mag+=n;if(a.res!==Infinity)a.res-=n;play('chamber');reloadFor=-1;}
 function tryFire(pressed){if(ex.active)return;const G=activeGun();
   if(!G){if(pressed&&!player.blocking)meleePress();return;}const w=G.w,slot=G.slot;
   if(!w.auto&&!pressed)return;
   if(reloadT>0||switchT>0||player.fireCd>0)return;
-  if(w.heat){if(!pressed)return;if(heat.over>0){play('dry');announce('热熔枪过热！',0.8);return;}fire(w);return;}
+  if(w.heat){if(!pressed)return;if(heat.over>0){play('dry');announce('Melta overheated!',0.8);return;}fire(w);return;}
   if(ammo[slot].mag<=0){if(pressed)play('dry');startReload();return;}
   fire(w,slot);
 }
@@ -925,7 +985,7 @@ function fire(w,slot=cur){
       if(!k&&(part==='armL'||part==='armR'))vaporizeLimb(e,part);
       e.burn=2;embers(h.point,6);puff(h.point,2,0x333333,.8);anyHit=true;anyKill=anyKill||k;}
     heatBeam(o.clone().add(new THREE.Vector3(0,-.18,0)),end,0.5+mScale);
-    heat.v+=20+heat.charge*45;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');announce('热熔枪过热！散热中…',1.5);}
+    heat.v+=20+heat.charge*45;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');announce('Melta overheated! Venting...',1.5);}
   } else if(w.id==='bolter'||w.spin){const r=fromMuzzle(w,w.spread*(w.spin?1.6-player.spin:1));spawnBolt(r.o,r.d,w,r.muzzle);}
   else if(w.id==='shotgun'){const r=shotgunBlast(w);anyHit=r.anyHit;anyKill=r.anyKill;head=r.head;}
   else for(let k=0;k<w.pellets;k++){const {o,d}=aimRay(w.spread);const h=castRay(o,d);if(!h)continue;const e=h.object.userData.enemy;
@@ -981,14 +1041,14 @@ const [snM,snF]=gunModel([[.12,.14,.55,0,0,.15,gunMat],[.1,.2,.12,0,-.14,.25,new
 // 视角模型整体缩小并往前挪，免得离镜头太近
 for(const G of [plasmaM,hbM,flM,snM]){const inner=new THREE.Group();while(G.children.length)inner.add(G.children[0]);inner.scale.setScalar(.68);inner.position.set(0,-.03,-.26);G.add(inner);}
 Object.assign(RANGED,{
-  plasma:{id:'plasma',name:'等离子枪',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:3,dmg:46,pellets:1,spread:.006,auto:false,climb:.04,kick:1.8,reload:0,splash:2.2,snd:'none',
-    desc:'发射飞行的等离子弹，命中后范围爆炸。右键蓄力过充：伤害 ×3、爆炸更大，但过热时会烫伤自己。',model:plasmaM,flash:plasmaF},
-  hbolter:{id:'hbolter',name:'重型爆弹机枪',spin:true,magSize:120,reserveMax:480,res0:240,rate:13,dmg:20,pellets:1,spread:.03,auto:true,climb:.008,kick:1.1,reload:2.6,knock:.25,snd:'hbolter',
-    desc:'按住开火，枪管越转越快，射速从 3 发 / 秒升到 13 发 / 秒。开火时移动变慢。',model:hbM,flash:hbF},
-  flamer:{id:'flamer',name:'火焰喷射器',flame:true,magSize:100,reserveMax:300,res0:200,rate:12,dmg:9,pellets:1,spread:0,auto:true,climb:0,kick:.2,reload:2,range:7,snd:'flame',
-    desc:'近距离锥形喷火，同时烧到一片敌人，被点燃的敌人会持续掉血。射程只有 7 米。',model:flM,flash:flF},
-  needle:{id:'needle',name:'穿甲狙击枪',scope:true,magSize:5,reserveMax:30,res0:20,rate:1.1,dmg:150,pellets:1,spread:0,auto:false,climb:.12,kick:3.4,reload:1.8,knock:.9,pierce3:true,snd:'needle',
-    desc:'右键开镜。一枪穿透最多 3 个敌人，爆头直接打爆头颅。',model:snM,flash:snF}});
+  plasma:{id:'plasma',name:'Plasma Gun',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:3,dmg:46,pellets:1,spread:.006,auto:false,climb:.04,kick:1.8,reload:0,splash:2.2,snd:'none',
+    desc:'Fires plasma bolts that explode on impact. Hold RMB to overcharge: ×3 damage and a bigger blast, but overheating burns you.',model:plasmaM,flash:plasmaF},
+  hbolter:{id:'hbolter',name:'Heavy Bolter',spin:true,magSize:120,reserveMax:480,res0:240,rate:13,dmg:20,pellets:1,spread:.03,auto:true,climb:.008,kick:1.1,reload:2.6,knock:.25,snd:'hbolter',
+    desc:'Hold to fire — the barrels spin up from 3 to 13 rounds per second. You move slower while firing.',model:hbM,flash:hbF},
+  flamer:{id:'flamer',name:'Flamer',flame:true,magSize:100,reserveMax:300,res0:200,rate:12,dmg:9,pellets:1,spread:0,auto:true,climb:0,kick:.2,reload:2,range:7,snd:'flame',
+    desc:'Short-range cone of fire that burns a whole crowd and sets them alight. Range only 7m.',model:flM,flash:flF},
+  needle:{id:'needle',name:'Needle Rifle',scope:true,magSize:5,reserveMax:30,res0:20,rate:1.1,dmg:150,pellets:1,spread:0,auto:false,climb:.12,kick:3.4,reload:1.8,knock:.9,pierce3:true,snd:'needle',
+    desc:'RMB to aim. Each shot pierces up to 3 enemies; headshots burst skulls.',model:snM,flash:snF}});
 for(const k of ['plasma','hbolter','flamer','needle'])if(CFG.guns[k])Object.assign(RANGED[k],CFG.guns[k]);
 Object.assign(sfx,{
   plasma(){tone('sine',90,28,0.7,0.35);tone('sawtooth',1400,120,0.22,0.3);noiseHit(2500,0.45,0.35,'bandpass');tone('square',3200,600,0.08,0.12);},
@@ -1014,7 +1074,7 @@ let plasmaBalls=[];
 function fireSpecial(w,mScale){
   if(w.id==='plasma'){const {o,d,muzzle}=fromMuzzle(w,w.spread);const big=mScale>0.9;const m=new THREE.Mesh(new THREE.BoxGeometry(big?.3:.18,big?.3:.18,big?.3:.18),new THREE.MeshBasicMaterial({color:big?0xe0f4ff:0x60c0ff}));
     if(muzzle)m.position.copy(o);else m.position.copy(o).add(new THREE.Vector3(0,-.12,0)).addScaledVector(d,.6);scene.add(m);plasmaBalls.push({m,d:d.clone(),life:2,dmg:w.dmg*(big?3:1)*player.gunMul,r:w.splash*(big?1.6:1)});
-    play(big?'plasmaBig':'plasma');heat.v+=big?55:16;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');if(big){hurtPlayer(12,true);announce('等离子过热！你被烫伤了',1.5);}else announce('等离子枪过热！',1.2);}return true;}
+    play(big?'plasmaBig':'plasma');heat.v+=big?55:16;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');if(big){hurtPlayer(12,true);announce('Plasma overheated! You got burned',1.5);}else announce('Plasma gun overheated!',1.2);}return true;}
   if(w.flame){const R=fromMuzzle(w,0);const fwd=R.d,o=R.o;let any=false,kill=false;
     const oc=o.clone().addScaledVector(fwd,-1);   // 判定从枪口后 1 米算，锥形更宽一点
     for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().setY(Math.max(.6,o.y-.4)).sub(oc);const L=to.length();if(L>w.range+1+e.r)continue;if(to.normalize().dot(fwd)<Math.cos(0.5))continue;
@@ -1092,18 +1152,18 @@ Object.assign(POSE,{
   t:{start:[0.08,0.25,0.0],end:[-0.04,0.02,0.0],ps:[.32,-.38,-.12],pe:[.06,-.26,-.82]},     // 突刺
   u:{start:[-0.85,0.35,0.25],end:[1.05,-0.25,-0.2],ps:[.2,-.7,-.32],pe:[.22,.02,-.46]}});   // 上挑
 const COMBOS={
-  power:[{p:'a',dm:1,name:'左劈'},{p:'r',dm:1,name:'右劈'},{p:'t',dm:1.3,thrust:true,name:'突刺'},{p:'u',dm:1.7,fin:true,name:'上挑'}],
-  saw:[{p:'a',dm:1,name:'斜劈'},{p:'h',dm:1,name:'横斩'},{p:'t',dm:1,thrust:true,bite:true,biteDur:.62,name:'突刺锯入'},{p:'u',dm:2.2,fin:true,name:'切开'}],
+  power:[{p:'a',dm:1,name:'Left cut'},{p:'r',dm:1,name:'Right cut'},{p:'t',dm:1.3,thrust:true,name:'Thrust'},{p:'u',dm:1.7,fin:true,name:'Rising cut'}],
+  saw:[{p:'a',dm:1,name:'Slash'},{p:'h',dm:1,name:'Sweep'},{p:'t',dm:1,thrust:true,bite:true,biteDur:.62,name:'Thrust & grind'},{p:'u',dm:2.2,fin:true,name:'Rip'}],
   ssword:[{p:'a',dm:1},{p:'b',dm:1}]};
 const frenzyMul=()=>player.frenzy>0?0.62:1;
-const LITANIES=['以圣约之名，斩断深渊的低语。','斥退深渊彼岸的地狱，此身即是壁垒。','我的剑即是誓言，誓言永不熄灭。','血肉终将腐朽，信仰不会。',
-  '不洁之物，回到你们来的黑暗里去。','退去吧，地狱的造物——此地仍有人守望。','每一次挥剑，都是一次祷告。','沉睡者在注视着我，我不会令祂失望。',
-  '恐惧是叛徒，怜悯是破绽。','以钢铁与圣火，净化此地。','我不求胜利，只求无愧。','黑暗终有尽头，而我便是那尽头。'];
+const LITANIES=['In the Covenant’s name, I sever the Abyss’s whispers.','Hell beyond the Abyss, be repelled — I am the bulwark.','My blade is my oath, and the oath never dies.','Flesh will rot. Faith will not.',
+  'Unclean things, return to the darkness you crawled from.','Begone, spawn of hell — this place is still watched.','Every swing is a prayer.','The Sleeper watches me. I will not fail Him.',
+  'Fear is a traitor. Mercy is a weakness.','With steel and holy fire, this place is cleansed.','I do not ask for victory, only to be without shame.','The dark has an end — and I am that end.'];
 let litIdx=0,litT=0;
 const fieldMul=()=>(WEAPONS[2].id==='power'&&player.field>0)?CFG.field.mul:1;
-function activateField(){if(player.fieldCd>0){announce('分解力场冷却中 '+Math.ceil(player.fieldCd)+' 秒',0.8);return;}
-  player.field=CFG.field.dur;player.fieldCd=CFG.field.cd;play('fieldOn');play('choir');announce('分解力场 · 激活',1.2);showLitany();}
-function showLitany(){const el=$('litany');el.textContent='「'+LITANIES[litIdx++%LITANIES.length]+'」';el.style.transition='none';el.style.opacity=1;litT=1.8;}
+function activateField(){if(player.fieldCd>0){announce('Disruption field cooling down '+Math.ceil(player.fieldCd)+' s',0.8);return;}
+  player.field=CFG.field.dur;player.fieldCd=CFG.field.cd;play('fieldOn');play('choir');announce('Disruption Field · Active',1.2);showLitany();}
+function showLitany(){const el=$('litany');el.textContent='“'+LITANIES[litIdx++%LITANIES.length]+'”';el.style.transition='none';el.style.opacity=1;litT=1.8;}
 function melee(){
   if(ex.active||player.revving)return;if(player.meleeCd>0||MS.phase==='bite'){MS.queued=true;return;}MS.queued=false;const M=WEAPONS[2],list=COMBOS[M.id];
   if(MS.phase==='none'&&gameTime-(MS.lastEnd??-9)>1.0)MS.combo=0;
@@ -1179,12 +1239,12 @@ function updateSparks(dt){while(sparks.length>CFG.perf.sparks){const o=sparks.sh
 // ============================================================ 重击（按住左键）+ 新近战武器模型
 // 每把近战武器：轻攻击 = COMBOS 里的连招；重击 = HEAVY 里的独特动作（蓄力时举起武器，松开释放）
 const HEAVY={
-  saw:   {p:'h',dm:2.2,k:'spin',  name:'回旋锯斩'},
-  power: {p:'a',dm:2.6,k:'line',  name:'裂地斩'},
-  ssword:{p:'t',dm:0.8,k:'bash',  thrust:true,name:'盾击'},
-  hammer:{p:'hm3',dm:1.9,k:'quake', name:'雷霆砸地'},
-  fist:  {p:'f4',dm:3.0,k:'crush', thrust:true,name:'捏碎'},
-  axe:   {p:'x3',dm:2.4,k:'behead',name:'斩首'}};
+  saw:   {p:'h',dm:2.2,k:'spin',  name:'Spin Saw'},
+  power: {p:'a',dm:2.6,k:'line',  name:'Earth Splitter'},
+  ssword:{p:'t',dm:0.8,k:'bash',  thrust:true,name:'Shield Bash'},
+  hammer:{p:'hm3',dm:1.9,k:'quake', name:'Thunder Slam'},
+  fist:  {p:'f4',dm:3.0,k:'crush', thrust:true,name:'Crush'},
+  axe:   {p:'x3',dm:2.4,k:'behead',name:'Behead'}};
 // 新武器自己的动作：幅度更大，彼此不同（锤：抡圆横扫 + 过顶砸；拳：直拳 / 勾拳 / 上勾；斧：过顶劈 / 反手上撩 / 整圈横斩）
 Object.assign(POSE,{
   hm1:{start:[0.25,2.5,1.5],end:[0.05,-2.5,-1.3],ps:[.72,-.08,-.35],pe:[-.8,-.5,-.6]},
@@ -1198,9 +1258,9 @@ Object.assign(POSE,{
   x2:{start:[-1.3,-1.5,-0.9],end:[1.2,1.4,1.1],ps:[-.42,-.65,-.45],pe:[.7,.12,-.6]},
   x3:{start:[0.1,2.7,0.35],end:[0.1,-2.7,-0.35],ps:[.75,-.25,-.35],pe:[-.85,-.3,-.5]}});
 Object.assign(COMBOS,{
-  hammer:[{p:'hm1',dm:1,name:'抡圆横扫'},{p:'hm2',dm:1.1,name:'回身横扫'},{p:'hm3',dm:1.6,fin:true,name:'过顶重砸'}],
-  fist:[{p:'f1',dm:.8,thrust:true,name:'直拳'},{p:'f2',dm:1.1,name:'勾拳'},{p:'f3',dm:1.6,fin:true,name:'上勾拳'}],
-  axe:[{p:'x1',dm:1,name:'过顶劈'},{p:'x2',dm:1.1,name:'反手上撩'},{p:'x3',dm:1.4,bite:true,biteDur:.35,name:'回旋锯斩'}]});
+  hammer:[{p:'hm1',dm:1,name:'Wide sweep'},{p:'hm2',dm:1.1,name:'Back sweep'},{p:'hm3',dm:1.6,fin:true,name:'Overhead smash'}],
+  fist:[{p:'f1',dm:.8,thrust:true,name:'Cross'},{p:'f2',dm:1.1,name:'Hook'},{p:'f3',dm:1.6,fin:true,name:'Uppercut'}],
+  axe:[{p:'x1',dm:1,name:'Overhead chop'},{p:'x2',dm:1.1,name:'Rising backhand'},{p:'x3',dm:1.4,bite:true,biteDur:.35,name:'Spin Saw'}]});
 // ---------- 模型
 const hammerG=new THREE.Group();view.add(hammerG);hammerG.visible=false;
 {const hd=new THREE.Mesh(new THREE.BoxGeometry(.36,.26,.26),new THREE.MeshLambertMaterial({map:texMetal,color:0x8a8a9a}));hd.position.z=-.95;hammerG.add(hd);
@@ -1268,7 +1328,7 @@ function executeTarget(){if(player.exCharge<100)return null;const fwd=new THREE.
   for(const e of enemies){if(!canExecute(e))continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<bd&&to.normalize().dot(fwd)>0.2){bd=d;best=e;}}return best;}
 function execute(mode='full'){
   if(ex.active)return;const chain=gameTime<(exChain.until||0)&&exChain.left>0&&player.exCharge<100;const save=player.exCharge;if(chain)player.exCharge=100;   // 连环处决：窗口内不耗充能
-  const t=executeTarget();if(!t){player.exCharge=save;return;}if(chain){exChain.left--;announce('连环处决！',0.8);}
+  const t=executeTarget();if(!t){player.exCharge=save;return;}if(chain){exChain.left--;announce('Chain execution!',0.8);}
   const W=WEAPONS[cur];ex.active=true;ex.t=0;ex.target=t;ex.fired={};ex.melee=!!W.melee;ex.type=W.melee?W.id:W.id;
   ex.mode=mode;ex.dur=mode==='quick'?0.45:({saw:1.15,power:1.0,ssword:1.05,bolter:0.9,pistol:0.75,shotgun:0.85,melta:1.05,plasma:1.1,hbolter:1.2,flamer:1.25,needle:0.95,hammer:1.15,fist:1.2,axe:1.2}[ex.type]||1);
   player.exCharge=0;reloadT=0;player.blocking=false;MS.phase='none';
@@ -1283,7 +1343,7 @@ function exKill(opts={}){
   damageEnemy(t,dealt+1,'body',dir.clone().multiplyScalar(opts.fling||1),{explode:true,how:opts.how||{},_exec:true,_noShield:true});
   if(t.alive&&!(isClient()&&t.remote)){t.hp=0;killEnemy(t,dir,true,opts.how||{});}   // 处决必杀：不被骨盾/庇护等减伤挡住
   const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+dealt*(ex.mode==='quick'?0.5:1));
-  announce((ex.mode==='quick'?'快速处决！':'处决！')+'回复 '+Math.round(player.hp-before)+' 生命',1.6);
+  announce((ex.mode==='quick'?'Quick execution!':'Execution!')+'Restored '+Math.round(player.hp-before)+' HP',1.6);
   taintAffinity('excess',3);exChain.until=gameTime+3;if(exChain.left<=0)exChain.left=2;
   if(ex.mode!=='quick')for(const o of enemies){if(!o.alive||o===t||o.boss)continue;if(o.g.position.distanceTo(t.g.position)<7){o.stun=Math.max(o.stun,1.6);o.lean=1.2;if(isClient()&&o.remote)sendNet({t:'stun',id:o.id,dur:1.6});}}   // 震慑
   hitstop=0.13;player.shake=0.45;player.punch=0.08;splat();showHit(true);play('kill');
@@ -1388,7 +1448,7 @@ const bt={t:0};let lifts=[],holes=[];
 function payPsy(cost,ovlMul=1){const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
 function fwdFlat(){return new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));}
 function castLift(free=false){
-  if(!free&&PSY.lift.cd>0){announce('锁喉冷却中',0.8);return;}
+  if(!free&&PSY.lift.cd>0){announce('Choke cooling down',0.8);return;}
   if(isClient()){payPsy(30);PSY.lift.cd=PSY.lift.max;player.channelT=1.7;play('lift');sendNet({t:'cast',k:'lift'});if(player.ovl>=player.maxOvl)backlash();return;}
   const f=fwdFlat(),list=[];
   for(const e of enemies){if(!e.alive||e.lifted||e.boss||e.static)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<16&&to.normalize().dot(f)>Math.cos(0.66))list.push([d,e]);}
@@ -1396,7 +1456,7 @@ function castLift(free=false){
   // 扇形范围提示
   const fan=new THREE.Mesh(new THREE.CircleGeometry(16,20,Math.PI/2-0.66,1.32),new THREE.MeshBasicMaterial({color:0xa040ff,transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));
   const fg=new THREE.Group();fg.position.set(player.pos.x,.05,player.pos.z);fg.rotation.y=player.yaw;fan.rotation.x=-Math.PI/2;fg.add(fan);scene.add(fg);beams.push({m:fg,life:.45,fadeChild:fan});
-  if(!targets.length){if(!free)announce('扇形范围内没有目标',1);return;}
+  if(!targets.length){if(!free)announce('No target in range',1);return;}
   if(!free){payPsy(30);PSY.lift.cd=PSY.lift.max;player.channelT=1.7;}play('lift');
   targets.forEach((e,i)=>{e.lifted=true;e.kv.set(0,0,0);lifts.push({e,t:-i*0.05,vy:0,phase:'rise',tend:0});});
   if(player.ovl>=player.maxOvl)backlash();
@@ -1421,7 +1481,7 @@ function updateLifts(dt){
 }
 function dust(p,n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x6a6058}));m.position.set(p.x,.2,p.z);m.scale.setScalar(2);scene.add(m);const a=Math.random()*6.28,s=3+Math.random()*4;sparks.push({m,v:new THREE.Vector3(Math.cos(a)*s,1+Math.random()*2,Math.sin(a)*s),life:.5+Math.random()*.4});}}
 function castHole(free=false,origin=null){
-  if(!free&&PSY.hole.cd>0){announce('黑洞冷却中',0.8);return;}
+  if(!free&&PSY.hole.cd>0){announce('Void Rift cooling down',0.8);return;}
   const {o,d}=aimRay(0);const h=castRay(o,d,30);const P=(h?h.point:o.clone().addScaledVector(d,18)).addScaledVector(d,-0.8);P.y=1.3;
   if(isClient()){payPsy(40);PSY.hole.cd=PSY.hole.max;spawnHoleVisual(P);sendNet({t:'cast',k:'hole'});if(player.ovl>=player.maxOvl)backlash();return;}
   if(!free){payPsy(40);PSY.hole.cd=PSY.hole.max;}play('hole');
@@ -1450,19 +1510,19 @@ function updateHoles(dt){
   holes=holes.filter(H=>!H.done);
 }
 function castBT(){
-  if(PSY.bt.cd>0){announce('子弹时间冷却中',0.8);return;}
-  payPsy(60,0.8);PSY.bt.cd=PSY.bt.max;bt.t=cls==='tide'?8:6;play('bt');announce('子弹时间 · 攻击吸血',1.6);
+  if(PSY.bt.cd>0){announce('Slow Time cooling down',0.8);return;}
+  payPsy(60,0.8);PSY.bt.cd=PSY.bt.max;bt.t=cls==='tide'?8:6;play('bt');announce('Slow Time · Lifesteal',1.6);
   if(player.ovl>=player.maxOvl)backlash();
 }
 // ============================================================ 灵能
-const FORMS={bolt:'射线',blast:'爆炸',shield:'护盾',summon:'召唤'};
-const ELEMS={fire:'火',lightning:'雷',void:'虚空',mind:'心灵'};
-const MODS={homing:'追踪',split:'分裂',delayed:'延时'};
+const FORMS={bolt:'Bolt',blast:'Blast',shield:'Shield',summon:'Summon'};
+const ELEMS={fire:'Fire',lightning:'Lightning',void:'Void',mind:'Mind'};
+const MODS={homing:'Homing',split:'Split',delayed:'Delayed'};
 const ELEM_COLOR={fire:0xff6a20,lightning:0x8fd0ff,void:0xa040ff,mind:0x60ffb0};
 const ELEM_MUL={fire:1,lightning:.9,void:1.3,mind:.6};
 const spellCost=s=>({bolt:15,blast:30,shield:20,summon:40}[s.form])+10*s.mods.length;
 const spellSlots=s=>2+s.mods.length;
-const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'焚灭火柱':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
+const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'Pyre Beam':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
 function castSpell(i){
   const s=spells[i];if(!s||spellSlots(s)>player.slots)return;
   const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;
@@ -1470,7 +1530,7 @@ function castSpell(i){
   play('spell',s.elem==='lightning'?900:s.elem==='void'?250:500);
   const go=()=>{if(state!=='playing')return;const n=s.mods.includes('split')?3:1;
     for(let k=0;k<n;k++){const {o,d}=aimRay(0);if(n>1)d.applyAxisAngle(new THREE.Vector3(0,1,0),(k-1)*0.14);execSpell(s,o,d,(n>1?0.6:1)*(s.mods.includes('delayed')?1.5:1));}};
-  if(s.mods.includes('delayed')){announce('延时符文：1 秒后释放',1);setTimeout(go,1000);}else go();
+  if(s.mods.includes('delayed')){announce('Delayed rune: releases in 1s',1);setTimeout(go,1000);}else go();
   if(player.ovl>=player.maxOvl)backlash();
 }
 function nearestEnemy(p,maxD,cone){let best=null,bd=maxD;for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().setY(1.2).sub(p);const d=to.length();if(d>bd)continue;if(cone&&to.normalize().dot(cone)<0.85)continue;bd=d;best=e;}return best;}
@@ -1492,7 +1552,7 @@ function execSpell(s,o,d,scale){
   } else if(s.form==='blast'){
     const m=new THREE.Mesh(new THREE.SphereGeometry(.25,6,4),new THREE.MeshBasicMaterial({color:col}));m.position.copy(o).addScaledVector(d,.8);scene.add(m);
     projectiles.push({m,v:d.clone().multiplyScalar(24),s,mul,life:3,homing:s.mods.includes('homing')});
-  } else if(s.form==='shield'){player.shield=Math.max(player.shield,4*scale);announce('灵能护盾',1);}
+  } else if(s.form==='shield'){player.shield=Math.max(player.shield,4*scale);announce('Psychic Shield',1);}
   else if(s.form==='summon'){
     const m=new THREE.Mesh(new THREE.OctahedronGeometry(.3),new THREE.MeshBasicMaterial({color:col}));scene.add(m);
     wisps.push({m,s,mul,life:8*scale,cd:0,a:Math.random()*6});
@@ -1507,14 +1567,14 @@ function explode(p,s,mul){
 function beam(a,b,col){const g=new THREE.BufferGeometry().setFromPoints([a,b]);const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:col}));scene.add(l);beams.push({m:l,life:.12});}
 function backlash(){
   const over=player.ovl-player.maxOvl;player.ovl=player.maxOvl*0.5;
-  if(Math.random()<player.ignoreChance){announce('你压制住了深渊的反噬',2);return;}
-  if(player.bless==='change'){hurtPlayer(5,true);announce('万变赐福吞下了反噬',1.2);return;}
+  if(Math.random()<player.ignoreChance){announce('You suppressed the backlash',2);return;}
+  if(player.bless==='change'){hurtPlayer(5,true);announce('The Blessing of Change swallowed the backlash',1.2);return;}
   addTaint(CFG.taint.backlash,'change');play('backlash');player.warp=2.5;player.shake=0.5;
-  if(over>=35){announce('重度反噬——裂隙撕开了！',3);hurtPlayer(20,true);
+  if(over>=35){announce('Severe backlash — the rift tears open!',3);hurtPlayer(20,true);
     for(let k=0;k<3;k++){const a=Math.random()*6.28;spawnEnemy('imp',player.pos.x+Math.cos(a)*4,player.pos.z+Math.sin(a)*4);}}
-  else if(over>=15){announce('中度反噬——灵能爆发！',2);hurtPlayer(30,true);
+  else if(over>=15){announce('Moderate backlash — psychic eruption!',2);hurtPlayer(30,true);
     for(const e of enemies)if(e.alive&&e.g.position.distanceTo(player.pos)<5)damageEnemy(e,30,'body',e.g.position.clone().sub(player.pos).normalize(),{knock:1.5});}
-  else{announce('轻度反噬',1.5);hurtPlayer(10,true);}
+  else{announce('Minor backlash',1.5);hurtPlayer(10,true);}
 }
 function updateSpells(dt){
   for(const p of projectiles){p.life-=dt;
@@ -1533,12 +1593,12 @@ function updateSpells(dt){
 
 // ============================================================ 撤离、拾取物
 const COND_INFO={
-  kill:{name:'击杀恶魔',target:25},elite:{name:'击杀精英恶魔',target:1},hack:{name:'破解黄金时代终端',target:1},
-  ritual:{name:'在仪式法阵中坚守',target:1},cores:{name:'收集能源核心',target:3},
-  defend:{name:'坚守信标 45 秒',target:1},nest:{name:'摧毁恶魔巢穴',target:3},carry:{name:'把圣物棺带回逃生舱',target:1}};
-const PART_NAME={thruster:'推进器',fuel:'燃料罐',hull:'舱体零件'};
+  kill:{name:'Slay demons',target:25},elite:{name:'Slay an elite demon',target:1},hack:{name:'Hack the Golden Age terminal',target:1},
+  ritual:{name:'Hold the ritual circle',target:1},cores:{name:'Collect power cores',target:3},
+  defend:{name:'Hold the beacon for 45s',target:1},nest:{name:'Destroy demon nests',target:3},carry:{name:'Return the reliquary to the pod',target:1}};
+const PART_NAME={thruster:'Thruster',fuel:'Fuel Tank',hull:'Hull Part'};
 const PART_NEED={thruster:2,fuel:3,hull:1};
-function addProgress(type,n){const c=match.conds.find(c=>c.type===type);if(c&&c.prog<c.target){c.prog=Math.min(c.target,c.prog+n);if(c.prog>=c.target&&c.revealed)announce('撤离条件完成：'+COND_INFO[type].name,2.5);}}
+function addProgress(type,n){const c=match.conds.find(c=>c.type===type);if(c&&c.prog<c.target){c.prog=Math.min(c.target,c.prog+n);if(c.prog>=c.target&&c.revealed)announce('Extraction condition complete: '+COND_INFO[type].name,2.5);}}
 function randomCell(exclude=[]){for(let k=0;k<50;k++){const c=[Math.floor(rng()*G),Math.floor(rng()*G)];if(!exclude.some(e=>e[0]===c[0]&&e[1]===c[1]))return c;}return [1,1];}
 function cellPos(c,jit=6){return [c[0]*C+(rng()-.5)*jit*2,c[1]*C+(rng()-.5)*jit*2];}
 function netDrop(type,x,z){spawnPickup(type,x,z);if(isHost())bcast({t:'drop',type,x,z});}
@@ -1583,32 +1643,32 @@ function setupMatch(){
 function nearestInteractable(){let best=null,bd=2.6;for(const it of interactables){if(it.used||it.type==='ritual'||it.type==='ammo')continue;const d=Math.hypot(it.x-player.pos.x,it.z-player.pos.z)-((it.type==='pod'||it.type==='terminal')?1.2:0);if(d<bd){bd=d;best=it;}}return best;}
 function promptFor(it){
   if(!it)return'';{const mp=missionPrompt(it);if(mp)return mp;}
-  if(it.type==='clue')return'按 F 读取数据板（线索）';
-  if(PART_NAME[it.type])return'按 F 拾取'+PART_NAME[it.type];
-  if(it.type==='core')return'按 F 拾取能源核心';
-  if(it.type==='relic')return'按 F 拾取遗物';
-  if(it.type==='rare')return'按 F 拾取灵能圣物（稀有，无法用回收装置送走）';
-  if(it.type==='terminal')return match.hack>=0?'正在破解……留在终端附近':'按 F 开始破解终端';
-  if(it.type==='pod'){const c=match.carried;if(c.thruster+c.fuel+c.hull>0)return'按 F 安装零件';if(!podReady())return'逃生舱：'+podStatus();return match.launching>=0?'发射倒计时中，守住逃生舱！':'按 F 发射逃生舱';}
+  if(it.type==='clue')return'[F] Read data-slate (clue)';
+  if(PART_NAME[it.type])return'[F] Pick up '+PART_NAME[it.type];
+  if(it.type==='core')return'[F] Pick up power core';
+  if(it.type==='relic')return'[F] Pick up relic';
+  if(it.type==='rare')return'[F] Pick up psy-relic (rare, can’t be sent by beacon)';
+  if(it.type==='terminal')return match.hack>=0?'Hacking... stay near the terminal':'[F] Start hacking the terminal';
+  if(it.type==='pod'){const c=match.carried;if(c.thruster+c.fuel+c.hull>0)return'[F] Install parts';if(!podReady())return'Escape pod: '+podStatus();return match.launching>=0?'Launch countdown — defend the pod!':'[F] Launch the escape pod';}
   return'';
 }
 const podAssembled=()=>Object.keys(PART_NEED).every(k=>match.parts[k]>=PART_NEED[k]);
 const condsDone=()=>match.conds.every(c=>c.prog>=c.target);
 const podReady=()=>podAssembled()&&condsDone();
-function podStatus(){if(!podAssembled())return'零件不足';if(!condsDone())return'撤离条件未完成';return'就绪';}
+function podStatus(){if(!podAssembled())return'Missing parts';if(!condsDone())return'Extraction conditions incomplete';return'Ready';}
 function interact(it=interactTarget,by=null){
   if(!it)return;if(isClient()){sendNet({t:'interact',idx:it.idx});return;}
   if(missionInteract(it,by))return;
   if(it.type==='clue'){it.used=true;scene.remove(it.m);play('pickup');const c=match.conds.find(c=>!c.revealed);
-    if(c){c.revealed=true;annTeam('线索：撤离条件是「'+COND_INFO[c.type].name+'」',3.5);}else annTeam('数据板上只剩下逃生舱坐标',2.5);return;}
-  if(PART_NAME[it.type]){it.used=true;scene.remove(it.m);match.carried[it.type]++;play('pickup');annTeam('拾取 '+PART_NAME[it.type]+'，带回逃生舱安装',2);return;}
-  if(it.type==='core'){it.used=true;scene.remove(it.m);play('pickup');addProgress('cores',1);annTeam('能源核心 '+(match.conds.find(c=>c.type==='cores')?.prog??'')+'/3',2);return;}
+    if(c){c.revealed=true;annTeam('Clue: the extraction condition is “'+COND_INFO[c.type].name+'”',3.5);}else annTeam('The data-slate only holds the pod’s coordinates',2.5);return;}
+  if(PART_NAME[it.type]){it.used=true;scene.remove(it.m);match.carried[it.type]++;play('pickup');annTeam('Picked up  '+PART_NAME[it.type]+', — bring it back to the pod to install',2);return;}
+  if(it.type==='core'){it.used=true;scene.remove(it.m);play('pickup');addProgress('cores',1);annTeam('Power core '+(match.conds.find(c=>c.type==='cores')?.prog??'')+'/3',2);return;}
   if(it.type==='relic'){it.used=true;scene.remove(it.m);play('pickup');match.loot++;return;}
-  if(it.type==='rare'){it.used=true;scene.remove(it.m);play('pickup');match.rare=true;annTeam('你拿到了灵能圣物。它在低语……',3);if(!by)player.ovl+=20;return;}
-  if(it.type==='terminal'&&match.hack<0){match.hack=0;annTeam('开始破解——恶魔被惊动了！',2.5);spawnWave(5,true);return;}
+  if(it.type==='rare'){it.used=true;scene.remove(it.m);play('pickup');match.rare=true;annTeam('You took the psy-relic. It whispers...',3);if(!by)player.ovl+=20;return;}
+  if(it.type==='terminal'&&match.hack<0){match.hack=0;annTeam('Hacking started — the demons are stirring!',2.5);spawnWave(5,true);return;}
   if(it.type==='pod'){const c=match.carried;
-    if(c.thruster+c.fuel+c.hull>0){for(const k of Object.keys(c)){match.parts[k]=Math.min(PART_NEED[k],match.parts[k]+c[k]);c[k]=0;}play('pickup');annTeam('零件已安装：'+podPartsText(),2.5);updatePodLook();return;}
-    if(podReady()&&match.launching<0){match.launching=7;annTeam('逃生舱点火！坚守 7 秒！',3);spawnWave(7,true);}}
+    if(c.thruster+c.fuel+c.hull>0){for(const k of Object.keys(c)){match.parts[k]=Math.min(PART_NEED[k],match.parts[k]+c[k]);c[k]=0;}play('pickup');annTeam('Parts installed: '+podPartsText(),2.5);updatePodLook();return;}
+    if(podReady()&&match.launching<0){match.launching=7;annTeam('Escape pod ignition! Hold for 7 seconds!',3);spawnWave(7,true);}}
 }
 function podPartsText(){return Object.keys(PART_NEED).map(k=>PART_NAME[k]+' '+match.parts[k]+'/'+PART_NEED[k]).join('  ');}
 function updatePodLook(){const p=match.pod.m;const add=(geo,y,col)=>{const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:.3}));m.position.y=y;p.add(m);};
@@ -1619,10 +1679,10 @@ function updatePodLook(){const p=match.pod.m;const add=(geo,y,col)=>{const m=new
 }
 function callBeacon(pos=null){
   if(isClient()){sendNet({t:'beacon'});return;}const at=pos||player.pos;
-  if(match.beacons<=0){annTeam('回收装置已经用完了',1.5);return;}
-  if(match.loot<=0){annTeam('身上没有可以送走的物资',1.5);return;}
+  if(match.beacons<=0){annTeam('No recovery beacons left',1.5);return;}
+  if(match.loot<=0){annTeam('Nothing on you to send back',1.5);return;}
   match.beacons--;match.safeLoot+=match.loot;const n=match.loot;match.loot=0;play('beacon');
-  annTeam('回收装置升空：'+n+' 件物资已送回战舰。信号引来了恶魔！',3);spawnWave(6,false);
+  annTeam('Beacon launched: '+n+' loot sent to the ship. The signal drew demons!',3);spawnWave(6,false);
   const b=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),new THREE.MeshBasicMaterial({color:0xd8a657}));b.position.copy(at).setY(2);scene.add(b);beams.push({m:b,life:3,rise:true});if(isHost())bcast({t:'fx',k:'beacon',p:at.clone()});
 }
 function spawnWave(n,near){
@@ -1640,7 +1700,7 @@ function hurtPlayer(n,self=false,att=null){
   if(!self&&player.blocking){
     if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
       play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;if(isClient()&&att.remote)sendNet({t:'stun',id:att.id,dur:1.4});att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
-      $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);announce('防反！',0.8);
+      $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);announce('Parry!',0.8);
       player.blocking=false;MS.step={p:'h',dm:2.4,cleave:true,fin:true};MS.dir=stepDir();MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
     n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);
@@ -1809,7 +1869,7 @@ function updateSpits(dt){
     for(const t of tl){const dx=P.x-t.pos.x,dz=P.z-t.pos.z,dy=P.y-((t.pos.y||0)+1);if(dx*dx+dz*dz<0.5&&Math.abs(dy)<1.1){
       if(!s.visual&&t.local&&player.blocking&&gameTime-player.blockStart<0.3){   // 完美格挡：把瘟火球弹回去
         const back=s.att&&s.att.alive?s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize():s.v.clone().negate().normalize();
-        s.v.copy(back.multiplyScalar(20));s.reflected=true;s.life=2;s.m.material.color.setHex(0xfff080);play('clang');play('parry');hitstop=0.08;announce('弹反！',0.8);
+        s.v.copy(back.multiplyScalar(20));s.reflected=true;s.life=2;s.m.material.color.setHex(0xfff080);play('clang');play('parry');hitstop=0.08;announce('Reflect!',0.8);
         $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);break;}
       if(!s.visual){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:s.dmg,att:s.att&&s.att.id,psy:1});else{hurtPlayer(s.dmg,false,s.att&&s.att.alive?s.att:null);addTaint(CFG.taint.psyHit,'change');}}
       spitPop(s);break;}}}
@@ -1819,7 +1879,7 @@ function updateSpits(dt){
 
 // ---------- Boss：深渊领主（房主判定；砸地特效用 fx 事件同步给队友）
 function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>e.maxHp*0.33?2:3;
-  if(ph>e.phase){e.phase=ph;annTeam(ph===2?'深渊领主怒吼——瘟火从它掌中涌出！':'深渊领主陷入狂暴！裂隙在它身边撕开……',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
+  if(ph>e.phase){e.phase=ph;annTeam(ph===2?'The Abyss Lord roars — plague-fire pours from its hands!':'The Abyss Lord goes berserk! Rifts tear open around it...',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
   const aL=e.parts.armL,aR=e.parts.armR;
   if(bossVariantTick(e,T,ph,dt))return true;
   if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy(e.variant==='sanctum'?'caster':'imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
@@ -1841,7 +1901,7 @@ function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>
 }
 function slamFx(x,z){const P=new THREE.Vector3(x,0.3,z);play('boom');for(let i=0;i<18;i++){const a=i/18*6.28;puff(new THREE.Vector3(x+Math.cos(a)*CFG.boss.slamR*.8,.3,z+Math.sin(a)*CFG.boss.slamR*.8),1,0x4a3a2a,1.2);}
   embers(P,10);if(player.pos.distanceTo(P)<14)player.shake=Math.max(player.shake,0.5);}
-function bossDown(e){const p=e.g.position;annTeam('深渊领主倒下了！它的心脏化作一件灵能圣物。',3);
+function bossDown(e){const p=e.g.position;annTeam('The Abyss Lord falls! Its heart becomes a psy-relic.',3);
   netDrop('rare',p.x,p.z);for(let k=0;k<4;k++)netDrop('relic',p.x+(Math.random()-.5)*4,p.z+(Math.random()-.5)*4);}
 
 // ---------- 绕障碍：前方有碰撞体就左右试探转向；原地卡住就侧移一会儿
@@ -1879,7 +1939,7 @@ function shieldBlock(e,dmg,dir,opts){const fwd=new THREE.Vector3(Math.sin(e.g.ro
   if(e.shieldHp<=0)breakShield(e);return dmg*0.1;}
 function breakShield(e){e.shieldHp=0;if(!e.shieldM||!e.shieldM.parent)return;const wp=new THREE.Vector3();e.shieldM.getWorldPosition(wp);e.g.remove(e.shieldM);
   for(let i=0;i<6;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.35,.4,.15),matBone);m.position.copy(wp).add(new THREE.Vector3((Math.random()-.5),(Math.random()-.5),0));scene.add(m);throwGib(m,new THREE.Vector3((Math.random()-.5)*5,3+Math.random()*3,(Math.random()-.5)*5));}
-  play('rip');if(e.g.position.distanceTo(player.pos)<20)announce('骨盾碎了！',0.8);}
+  play('rip');if(e.g.position.distanceTo(player.pos)<20)announce('Bone shield shattered!',0.8);}
 // 腐爆者爆炸：所有端都播放画面；伤害只由房主 / 单人计算
 function bloaterBurst(e){const P=e.g.position.clone().setY(1);puff(P,14,0x6a8020,1.6);spawnBlood(P,null,40);embersGreen(P);play('boom');play('sizzle');if(P.distanceTo(player.pos)<12)player.shake=Math.max(player.shake,.4);
   if(isClient())return;const R=3.6;
@@ -1961,7 +2021,7 @@ function mergeProps(){try{
     return out;};
   wallMeshes=mergeSet(levelGroup.children.filter(m=>walls.has(m)));   // 墙合并后仍然用来做射线检测
   mergeSet(levelGroup.children.filter(m=>!walls.has(m)&&!wallMeshes.includes(m)));
-}catch(e){/* 测试替身里没有真实几何体，跳过 */}}
+}catch(e){/* real geometry missing in the test stub, skip */}}
 // ---------- 炼油厂：储油罐、管道、阀门、检修走道、钠灯、蒸汽、警示条纹
 function refinery(i,j,cx,cz,sides){
   for(const w of sides){const r=wallRot(w);const nx=w.n[0],nz=w.n[1];
@@ -2013,24 +2073,24 @@ function missionSetup(types,used){
   if(types.includes('nest')&&!isClient())for(let k=0;k<3;k++){const c=randomCell([[0,0],podCell]);const e=spawnEnemy('nest',...cellPos(c,4));e.spawnT=3;}
   if(types.includes('carry')){const c=randomCell([[0,0],podCell,...used]);used.push(c);spawnPickup('reliquary',...cellPos(c,3));}
   match.carrier=null;}
-function missionPrompt(it){if(it.type==='defend')return match.defend>=0?'坚守中：留在信标附近！':'按 F 启动信标（坚守 45 秒）';
-  if(it.type==='reliquary')return'按 F 扛起圣物棺（变慢，只能用副武器和近战）';
-  if(it.type==='pod'&&match.carrier&&match.carrier===net.myId)return'按 F 把圣物棺装进逃生舱';return'';}
+function missionPrompt(it){if(it.type==='defend')return match.defend>=0?'Holding: stay near the beacon!':'[F] Activate beacon (hold 45s)';
+  if(it.type==='reliquary')return'[F] Shoulder the reliquary (slower, sidearm & melee only)';
+  if(it.type==='pod'&&match.carrier&&match.carrier===net.myId)return'[F] Load the reliquary into the pod';return'';}
 function missionInteract(it,by){const who=by?by.id:net.myId;
-  if(it.type==='defend'){if(match.defend<0){match.defend=0;annTeam('信标启动——守住 45 秒！',3);spawnWave(4,true);}return true;}
-  if(it.type==='reliquary'){if(match.carrier)return true;it.used=true;scene.remove(it.m);match.carrier=who;play('pickup');annTeam((by?by.name||'队友':'你')+'扛起了圣物棺',2);return true;}
-  if(it.type==='pod'&&match.carrier&&match.carrier===who){match.carrier=null;addProgress('carry',1);play('beacon');annTeam('圣物棺已装入逃生舱',2.5);return true;}
+  if(it.type==='defend'){if(match.defend<0){match.defend=0;annTeam('Beacon active — hold for 45 seconds!',3);spawnWave(4,true);}return true;}
+  if(it.type==='reliquary'){if(match.carrier)return true;it.used=true;scene.remove(it.m);match.carrier=who;play('pickup');annTeam((by?by.name||'Teammate':'You')+'shouldered the reliquary',2);return true;}
+  if(it.type==='pod'&&match.carrier&&match.carrier===who){match.carrier=null;addProgress('carry',1);play('beacon');annTeam('Reliquary loaded into the pod',2.5);return true;}
   return false;}
 function missionTick(dt){if(!match)return;
   // 扛棺的人不能用主武器
   if(match.carrier&&match.carrier===net.myId&&cur===0&&state==='playing'){cur=2;switchT=0.3;}
   const dp=interactables.find(i=>i.type==='defend');
-  if(dp&&match.defend>=0&&match.defend<45){setProgress(match.defend/45,'坚守');
+  if(dp&&match.defend>=0&&match.defend<45){setProgress(match.defend/45,'Holding');
     if(!isClient()){if(anyPlayerNear(dp.x,dp.z,8))match.defend+=dt;dp.waveT=(dp.waveT||0)-dt;if(dp.waveT<=0){dp.waveT=6;spawnWave(2,true);}
-      if(match.defend>=45){match.defend=45;dp.used=true;addProgress('defend',1);annTeam('信标坚守完成',2.5);setProgress(-1);}}}
+      if(match.defend>=45){match.defend=45;dp.used=true;addProgress('defend',1);annTeam('Beacon defended',2.5);setProgress(-1);}}}
   // 扛棺的人阵亡：圣物棺掉在原地
   if(!isClient()&&match.carrier){let pos=null;if(match.carrier===net.myId){if(player.hp<=0)pos=player.pos;}else{const r=net.remotes.get(match.carrier);if(!r||r.dead)pos=r?r.pos:player.pos;}
-    if(pos){match.carrier=null;netDrop('reliquary',pos.x,pos.z);annTeam('圣物棺掉在了地上！',2);}}}
+    if(pos){match.carrier=null;netDrop('reliquary',pos.x,pos.z);annTeam('The reliquary hit the ground!',2);}}}
 ENEMY_BUILD.nest=e=>{for(const k of ['head','armL','armR','legL','legR']){e.parts[k].scale.setScalar(.01);e.parts[k].position.set(0,.8,0);}
   e.parts.body.scale.set(2.4,1.3,2.4);e.parts.body.position.y=.7;
   for(let i=0;i<6;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.3,.3,.3),new THREE.MeshLambertMaterial({color:0xc04060,emissive:0x400010}));const a=i/6*Math.PI*2;s.position.set(Math.cos(a)*.42,.3,Math.sin(a)*.42);s.userData.part='sac';e.parts.body.add(s);}
@@ -2039,7 +2099,7 @@ ENEMY_AI.nest=(e,T,pp,to,dist,dt)=>{e.parts.body.scale.y=1.3+Math.sin(gameTime*3
   if(e.spawnT<=0&&dist<22){e.spawnT=7;const a=Math.random()*6.28;spawnEnemy('imp',e.g.position.x+Math.cos(a)*1.8,e.g.position.z+Math.sin(a)*1.8);play('growl');puff(e.g.position.clone().setY(.6),6,0x6a1a2a,1);}
   return true;};
 // ============================================================ 区域专属敌人 + 三种 Boss 变体 + 伤害玩家的地面危险（火海 / 冰锥）
-const BOSS_NAME={hive:'熔炉巨像',sanctum:'堕落大主教',frost:'冰霜巨兽'};
+const BOSS_NAME={hive:'Forge Colossus',sanctum:'Fallen Archbishop',frost:'Frost Behemoth'};
 Object.assign(ENEMY_BUILD,{
   tanker:e=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.9,8),new THREE.MeshLambertMaterial({color:0x8a2a1a,emissive:0x200400}));t.position.set(0,.15,-.42);e.parts.body.add(t);
     const n=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.5),gunDark);n.position.set(0,-.3,.25);e.parts.armR.add(n);e.tankM=t;e.flameCd=2;},
@@ -2069,7 +2129,7 @@ function tankerBurst(e){const p=e.g.position;play('boom');play('melta');puff(p.c
   if(!isClient())for(const o of enemies)if(o!==e&&o.alive&&o.g.position.distanceTo(p)<3.5)damageEnemy(o,50,'body',o.g.position.clone().sub(p).setY(0).normalize(),{_remote:true,how:{melt:true}});}
 function iceBurst(e){const c=e.g.position.clone().setY(1);for(let i=0;i<10;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.18,.18,.18),BM.ice);m.position.copy(c);scene.add(m);
   throwGib(m,new THREE.Vector3((Math.random()-.5)*7,2+Math.random()*4,(Math.random()-.5)*7));}play('clang');}
-function slowTarget(T,d){if(!T)return;if(T.remote)sendTo(T.remote.id,{t:'slow',d});else{player.slowT=Math.max(player.slowT||0,d);announce('被冻住了：移动变慢',0.8);}}
+function slowTarget(T,d){if(!T)return;if(T.remote)sendTo(T.remote.id,{t:'slow',d});else{player.slowT=Math.max(player.slowT||0,d);announce('Frozen: movement slowed',0.8);}}
 // ---------- 伤害玩家的地面危险（房主判定）
 let hazards=[],hazFx=[];
 function addHazard(kind,x,z,life){hazards.push({kind,x,z,life,tick:0});if(kind==='fire'){addFirePatch(x,z,true);}}
@@ -2085,20 +2145,20 @@ function updateHazards(dt){for(const h of hazards){h.life-=dt;h.tick-=dt;if(h.ti
 function bossVariantTick(e,T,ph,dt){if(!T||ph<2)return false;
   if(e.variant==='sanctum'){e.tpCd=(e.tpCd??6)-dt;if(e.tpCd<=0){e.tpCd=9;const b=new THREE.Vector3(Math.sin((T.remote?T.remote.yaw:player.yaw)),0,Math.cos(T.remote?T.remote.yaw:player.yaw));
       fxSend('tport',{x:e.g.position.x,z:e.g.position.z});embersBlue(e.g.position.clone().setY(1.5),20);e.g.position.set(T.pos.x+b.x*3,0,T.pos.z+b.z*3);collide(e.g.position,e.r);
-      embersBlue(e.g.position.clone().setY(1.5),20);fxSend('tport',{x:e.g.position.x,z:e.g.position.z});play('zap');annTeam('大主教出现在你身后！',1.2);e.cd=0.4;}}
+      embersBlue(e.g.position.clone().setY(1.5),20);fxSend('tport',{x:e.g.position.x,z:e.g.position.z});play('zap');annTeam('The Archbishop appears behind you!',1.2);e.cd=0.4;}}
   if(e.variant==='frost'){e.iceCd=(e.iceCd??4)-dt;if(e.iceCd<=0){e.iceCd=6;const x=T.pos.x,z=T.pos.z;iceWarn(x,z);fxSend('icewarn',{x,z});
       setTimeout(()=>{if(!e.alive)return;iceSpikes(x,z);fxSend('ice',{x,z});for(const t of targetsList())if(Math.hypot(t.pos.x-x,t.pos.z-z)<2){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:28,att:null});else hurtPlayer(28,false,null);slowTarget(t,2);}},1000);}}
   return false;}
 // ============================================================ 深渊侵蚀 → 被拖入深渊彼岸 → 邪神赐福（四位原创邪神）
 const GODS={
-  blood: {name:'血怒之王',realm:'血怒王座',color:0xc01010,css:'#ff3030',daemon:'dblood', fog:0x2a0404,bg:0x180202,lamp:0xff2010,whisper:'鲜血……为王座献上更多鲜血……',
-    bless:'血怒赐福',desc:'近战伤害 +40%，近战命中吸血 10%；枪械伤害 -20%'},
-  decay: {name:'腐朽之母',realm:'腐朽花园',color:0x6a8a20,css:'#a0d040',daemon:'ddecay', fog:0x1a2206,bg:0x0e1404,lamp:0x90c030,whisper:'别怕，孩子……腐烂就是永生……',
-    bless:'腐朽赐福',desc:'最大生命 +50%，每秒回复 2 生命，受伤 -15%；移速 -15%'},
-  excess:{name:'欲焰之主',realm:'欲焰宫殿',color:0xd040a0,css:'#ff60c0',daemon:'dexcess',fog:0x240616,bg:0x14040e,lamp:0xff50c0,whisper:'更快……更多……再来一次……',
-    bless:'欲焰赐福',desc:'移速 +25%，攻击速度 +25%；受伤 +15%'},
-  change:{name:'万变之眼',realm:'万变迷宫',color:0x3080ff,css:'#60a0ff',daemon:'dchange',fog:0x061430,bg:0x040a1c,lamp:0x4080ff,whisper:'一切皆可改变……包括你……',
-    bless:'万变赐福',desc:'灵能冷却 -50%，灵能回复 ×2，过载不再反噬（只灼烧 5 生命）；最大生命 -20%'}};
+  blood: {name:'Blood King',realm:'Throne of Blood',color:0xc01010,css:'#ff3030',daemon:'dblood', fog:0x2a0404,bg:0x180202,lamp:0xff2010,whisper:'Blood... more blood for the throne...',
+    bless:'Blessing of Blood',desc:'Melee damage +40%, melee lifesteal 10%; gun damage -20%'},
+  decay: {name:'Mother of Rot',realm:'Garden of Rot',color:0x6a8a20,css:'#a0d040',daemon:'ddecay', fog:0x1a2206,bg:0x0e1404,lamp:0x90c030,whisper:'Don’t be afraid, child... decay is eternity...',
+    bless:'Blessing of Rot',desc:'Max HP +50%, regen 2 HP/s, damage taken -15%; move speed -15%'},
+  excess:{name:'Lord of Excess',realm:'Palace of Excess',color:0xd040a0,css:'#ff60c0',daemon:'dexcess',fog:0x240616,bg:0x14040e,lamp:0xff50c0,whisper:'Faster... more... again...',
+    bless:'Blessing of Excess',desc:'Move speed +25%, attack speed +25%; damage taken +15%'},
+  change:{name:'Eye of Change',realm:'Labyrinth of Change',color:0x3080ff,css:'#60a0ff',daemon:'dchange',fog:0x061430,bg:0x040a1c,lamp:0x4080ff,whisper:'Everything can change... even you...',
+    bless:'Blessing of Change',desc:'Psy cooldowns -50%, psy regen ×2, overload no longer backlashes (burns 5 HP); max HP -20%'}};
 const HELL={on:false,t:0,god:null,wave:0,aff:{blood:0,decay:0,excess:0,change:0}};
 function taintAffinity(g,n){HELL.aff[g]=(HELL.aff[g]||0)+n;}
 function addTaint(n,g){if(HELL.on||state!=='playing')return;player.taint=Math.min(100,(player.taint||0)+n);if(g)taintAffinity(g,n/4);}
@@ -2108,7 +2168,7 @@ function updateAbyss(dt){if(!match)return;
   const r=player.ovl/player.maxOvl;if(r>0.6&&!HELL.on)addTaint(dt*(r-0.6)*CFG.taint.ovlRate,'change');
   if(player.bless==='decay')player.hp=Math.min(player.maxHp,player.hp+2*dt);
   if(!HELL.on&&player.taint>=100&&state==='playing')enterHell(pickGod());
-  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'深渊彼岸');
+  if(HELL.on){HELL.t-=dt;const G=GODS[HELL.god];setProgress(1-HELL.t/CFG.taint.hell,'Beyond the Abyss');
     HELL.waveT-=dt;if(HELL.waveT<=0&&HELL.t>2){HELL.waveT=CFG.taint.wave;spawnDaemons(G.daemon,CFG.taint.waveN);}
     $('hellTint').style.opacity=.5+Math.sin(gameTime*3)*.15;player.warp=Math.max(player.warp||0,.3);
     if(Math.random()<dt*.25)announce(G.whisper,1.6);
@@ -2120,7 +2180,7 @@ function realmVisual(G){scene.fog.color.setHex(G.fog);scene.fog.density=.055;sce
   $('hellTint').style.background=`radial-gradient(ellipse at center,transparent 40%,${G.css} 140%)`;}
 function enterHell(god){HELL.on=true;HELL.god=god;HELL.t=CFG.taint.hell;HELL.waveT=1.2;const G=GODS[god];
   realmVisual(G);play('backlash');play('hole');player.shake=.6;
-  ultBanner(G.realm,{color:G.css,sub:`你被拖入深渊彼岸——${G.name}在注视你。活过 ${CFG.taint.hell} 秒！`});
+  ultBanner(G.realm,{color:G.css,sub:`Dragged beyond the Abyss — ${G.name} is watching you. Survive  ${CFG.taint.hell} s!`});
   announce(G.whisper,3);}
 function exitHell(){HELL.on=false;player.taint=0;applyBiome();$('hellTint').style.opacity=0;setProgress(-1);
   const G=GODS[HELL.god];grantBless(HELL.god);for(const k in HELL.aff)HELL.aff[k]=0;
@@ -2156,7 +2216,7 @@ function startPyreBeam(mul){if(PB.on)return;PB.on=true;PB.t=0;PB.mul=mul;PB.tick
   PB.outer=new THREE.Mesh(new THREE.CylinderGeometry(.45,.08,1,10,1,true),new THREE.MeshBasicMaterial({color:0xff6a10,transparent:true,opacity:.45,depthWrite:false,side:2}));
   PB.glow=new THREE.Mesh(new THREE.CylinderGeometry(.8,.12,1,10,1,true),new THREE.MeshBasicMaterial({color:0xff3000,transparent:true,opacity:.15,depthWrite:false,side:2}));
   g.add(PB.core,PB.outer,PB.glow);PB.sp=[];for(let i=0;i<18;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.1),new THREE.MeshBasicMaterial({color:i%2?0xffd060:0xff7020}));g.add(m);PB.sp.push(m);}
-  play('melta');play('spell',300);loopSound('flame',true);announce('焚灭火柱',.8);}
+  play('melta');play('spell',300);loopSound('flame',true);announce('Pyre Beam',.8);}
 function updatePyreBeam(dt){if(!PB.on)return;PB.t+=dt;const k=Math.min(1,PB.t/.25),fade=PB.t>PB.dur-.2?(PB.dur-PB.t)/.2:1;
   const {o,d}=aimRay(0);const a=o.clone().add(new THREE.Vector3(0,-.22,0)).addScaledVector(new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)),.12).addScaledVector(d,.5);
   const h=castRay(o,d,40);const wall=castRayWalls(o,d,40);const b=wall?wall.point:o.clone().addScaledVector(d,40);PB.end=b;
@@ -2184,26 +2244,26 @@ function updateMatch(dt){
   {const [ci,cj]=cellOf(player.pos);match.explored.add(ci+','+cj);}
   // 刷怪潮
   if(isClient()){if(match.hack>=0&&match.hack<8)setProgress(match.hack/8);else if(match.launching>=0)setProgress(1-match.launching/7);else if(match.ritual>=0&&match.ritual<12)setProgress(match.ritual/12);else setProgress(-1);}
-  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=curThreat().wave;spawnWave(CFG.wave.size+curThreat().extra,false);annTeam('远处传来裂隙撕开的声音……',2);}}
+  else{waveTimer-=dt;if(waveTimer<=0){waveTimer=curThreat().wave;spawnWave(CFG.wave.size+curThreat().extra,false);annTeam('A rift tears open in the distance...',2);}}
   // 终端破解
   const term=interactables.find(i=>i.type==='terminal');
   if(!isClient()&&term&&match.hack>=0&&match.hack<8){if(anyPlayerNear(term.x,term.z,6)){match.hack+=dt;if(Math.random()<dt*0.25)spawnWave(1,true);}
-    setProgress(match.hack/8,'破解中');if(match.hack>=8){addProgress('hack',1);term.used=true;annTeam('终端破解完成',2);setProgress(-1);}}
+    setProgress(match.hack/8,'Hacking');if(match.hack>=8){addProgress('hack',1);term.used=true;annTeam('Terminal hacked',2);setProgress(-1);}}
   // 仪式法阵
   const rit=interactables.find(i=>i.type==='ritual');
   if(!isClient()&&rit&&!rit.used){const inside=anyPlayerNear(rit.x,rit.z,3);
-    if(inside){if(match.ritual<0){match.ritual=0;annTeam('仪式开始——守住法阵 12 秒！',2.5);spawnWave(5,true);}match.ritual+=dt;setProgress(match.ritual/12,'仪式');if(Math.hypot(rit.x-player.pos.x,rit.z-player.pos.z)<3)player.ovl+=dt*1.5;
-      if(Math.random()<dt*0.3)spawnWave(1,true);if(match.ritual>=12){rit.used=true;addProgress('ritual',1);annTeam('仪式完成',2);setProgress(-1);rit.m.material.color.setHex(0x40ff80);}}
+    if(inside){if(match.ritual<0){match.ritual=0;annTeam('Ritual begun — hold the circle for 12 seconds!',2.5);spawnWave(5,true);}match.ritual+=dt;setProgress(match.ritual/12,'Ritual');if(Math.hypot(rit.x-player.pos.x,rit.z-player.pos.z)<3)player.ovl+=dt*1.5;
+      if(Math.random()<dt*0.3)spawnWave(1,true);if(match.ritual>=12){rit.used=true;addProgress('ritual',1);annTeam('Ritual complete',2);setProgress(-1);rit.m.material.color.setHex(0x40ff80);}}
     else if(match.ritual>=0)setProgress(-1);}
   // 发射倒计时
-  if(!isClient()&&match.launching>=0){match.launching-=dt;setProgress(1-match.launching/7,'发射倒计时');if(match.launching<=0){match.launching=-2;endMatch(true);}}
+  if(!isClient()&&match.launching>=0){match.launching-=dt;setProgress(1-match.launching/7,'Launch');if(match.launching<=0){match.launching=-2;endMatch(true);}}
   // 最近的蜡烛光
   if(Math.floor(gameTime*2)!==Math.floor((gameTime-dt)*2)){const near=candles.slice().sort((a,b)=>a.distanceToSquared(player.pos)-b.distanceToSquared(player.pos));
     candleLights.forEach((l,i)=>{if(near[i])l.position.copy(near[i]);});}
   candleLights.forEach((l,i)=>l.intensity=18+Math.sin(gameTime*9+i*3)*4+Math.random()*3);
   // 拾取物旋转
   for(const it of interactables)if(!it.used&&it.type==='ammo'&&Math.hypot(it.x-player.pos.x,it.z-player.pos.z)<1.5&&state==='playing'){it.used=true;scene.remove(it.m);if(isClient())sendNet({t:'interact',idx:it.idx});
-    if(!WEAPONS[0].heat){const add=Math.ceil(WEAPONS[0].magSize*1.5);ammo[0].res=Math.min(WEAPONS[0].reserveMax,ammo[0].res+add);play('pickup');announce(WEAPONS[0].name+' 弹药 +'+add,1);}}
+    if(!WEAPONS[0].heat){const add=Math.ceil(WEAPONS[0].magSize*1.5);ammo[0].res=Math.min(WEAPONS[0].reserveMax,ammo[0].res+add);play('pickup');announce(WEAPONS[0].name+' Ammo +'+add,1);}}
   for(const it of interactables)if(!it.used&&['ammo','clue','thruster','fuel','hull','core','relic','rare'].includes(it.type)){it.m.rotation.y+=dt*1.5;it.m.position.y=0.8+Math.sin(gameTime*2+it.x)*0.1;}
   for(const b of beams)if(b.rise)b.m.position.y+=dt*6;
 }
@@ -2233,22 +2293,28 @@ function updateHUD(dt){updateBossBar();
   const bar=(id,v)=>$(id).firstElementChild.style.width=(clamp(v,0,1)*100)+'%';
   bar('hp',player.hp/player.maxHp);bar('st',player.stamina/100);bar('mana',player.mana/player.maxMana);bar('ovl',player.ovl/player.maxOvl);
   $('hpTxt').textContent=Math.ceil(Math.max(0,player.hp))+' / '+player.maxHp;$('manaTxt').textContent=Math.floor(player.mana);$('ovlTxt').textContent=Math.floor(player.ovl/player.maxOvl*100)+'%';
-  const sk=[['V','锁喉提摔',PSY.lift],['G','黑洞',PSY.hole],['Q','子弹时间',PSY.bt]];
-  $('spells').innerHTML=sk.map(([k,n,P])=>`<div class="spell" style="border-color:${P.cd>0?'#3a2a20':'#a040ff'}">${k} ${n}<br><span class="small">${P.cd>0?Math.ceil(P.cd)+' 秒':'就绪'}</span></div>`).join('')+`<div class="spell">C ${spellName(spells[0])}<br><span class="small">${spellCost(spells[0])} 灵能</span></div>`;
+  const sk=[['V','Choke',PSY.lift],['G','Void Rift',PSY.hole],['Q','Slow Time',PSY.bt]];
+  $('spells').innerHTML=sk.map(([k,n,P])=>`<div class="spell" style="border-color:${P.cd>0?'#3a3e3c':'#a060ff'}">[${k}] ${n}<br><span class="small">${P.cd>0?Math.ceil(P.cd)+'s':'READY'}</span></div>`).join('')+`<div class="spell" style="border-color:#ff8030">[C] ${spellName(spells[0])}<br><span class="small">${spellCost(spells[0])} PSY</span></div>`;
+  $('myName').textContent=(CLS_INFO[cls]?.name||cls);$('pf').textContent=(CLS_INFO[cls]?.name||cls).split(' ').map(w=>w[0]).join('').slice(0,2);
+  $('squad').innerHTML=isNet()?[...net.remotes.values()].filter(r=>r.inMatch).map(r=>`<div class="sq mate"><div class="pf">${(CLS_INFO[r.cls]?.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2)}</div><div class="sqi"><div class="nm"><span>${r.name||CLS_INFO[r.cls]?.name||'Brother'}</span><span class="hpn">${r.dead?'DOWN':Math.max(0,r.hp)}</span></div><div class="bar seg"><div style="width:${r.dead?0:clamp(r.hp/r.maxHp,0,1)*100}%;background:linear-gradient(#f2f6f2,#b8c4bc)"></div></div></div></div>`).join(''):'';
   if(bt.t>0){canvas.style.filter='saturate(.35) contrast(1.15) brightness(1.1)';$('btfx').style.opacity=1;}else $('btfx').style.opacity=0;
   if(masterLP)masterLP.frequency.setTargetAtTime(bt.t>0?650:20000,actx.currentTime,0.1);
-  let h='<h3>撤离条件</h3>';
-  for(const c of match.conds)h+=c.revealed?`<div class="${c.prog>=c.target?'done':''}">${c.prog>=c.target?'✔':'◇'} ${COND_INFO[c.type].name} ${c.target>1?c.prog+'/'+c.target:''}</div>`:`<div class="hidden">？ 未知条件——寻找数据板线索</div>`;
-  h+=`<div style="margin-top:6px">逃生舱：${podPartsText()}</div>`;
-  const c=match.carried;const carry=Object.keys(c).filter(k=>c[k]).map(k=>PART_NAME[k]+'×'+c[k]).join(' ');if(carry)h+=`<div>携带零件：${carry}</div>`;
-  h+=`<div>身上物资：${match.loot}${match.rare?' + 灵能圣物':''} · 已送回：${match.safeLoot} · 回收装置：${match.beacons}</div>`;
-  if(isNet()){const ts=[...net.remotes.values()].filter(r=>r.inMatch);if(ts.length)h+='<div style="margin-top:6px;color:#8fd0ff">队友：'+ts.map(r=>(CLS_INFO[r.cls]?.name||'队友')+' '+(r.dead?'阵亡':Math.max(0,r.hp)+'/'+r.maxHp)).join(' · ')+'</div>';}
+  let h='<h3>Extraction</h3>';
+  for(const c of match.conds)h+=c.revealed?`<div class="${c.prog>=c.target?'done':''}">${c.prog>=c.target?'✔':'◇'} ${COND_INFO[c.type].name} ${c.target>1?c.prog+'/'+c.target:''}</div>`:`<div class="hidden">? Unknown condition — find data-slate clues</div>`;
+  h+=`<div style="margin-top:6px">Escape pod: ${podPartsText()}</div>`;
+  const c=match.carried;const carry=Object.keys(c).filter(k=>c[k]).map(k=>PART_NAME[k]+'×'+c[k]).join(' ');if(carry)h+=`<div>Carrying parts: ${carry}</div>`;
+  h+=`<div>Loot carried: ${match.loot}${match.rare?' + psy-relic':''} · Sent back: ${match.safeLoot} · Beacons: ${match.beacons}</div>`;
+  if(isNet()){const ts=[...net.remotes.values()].filter(r=>r.inMatch);if(ts.length)h+='<div style="margin-top:6px;color:#8fd0ff">Squad: '+ts.map(r=>(CLS_INFO[r.cls]?.name||'Teammate')+' '+(r.dead?'Down':Math.max(0,r.hp)+'/'+r.maxHp)).join(' · ')+'</div>';}
   $('obj').innerHTML=h;
-  $('weapons').innerHTML=WEAPONS.map((w,i)=>{if(i===1&&CLS[cls].noPistol)return '';const a=ammo[i];const txt=(w.block&&player.ssPistol)?`手枪 ${ammo[1].mag} / ∞`:(w.id==='power'&&player.field>0)?`<span style="color:#8fd0ff">分解力场 ${player.field.toFixed(1)}</span>`:(w.id==='power'&&player.fieldCd>0)?`力场冷却 ${Math.ceil(player.fieldCd)}`:(w.id==='saw'&&player.frenzy>0)?`<span style="color:#ffb040">狂热 ${player.frenzy.toFixed(1)}</span>`:w.heat?(heat.over>0?'<span class="low">过热</span>':`热量 ${Math.round(heat.v)}%`+(heat.charge>0.05?` · 蓄力 ${Math.round(heat.charge*100)}%`:'')):w.melee?'—':`<span class="${a.mag<=w.magSize*0.25?'low':''}">${a.mag}</span> / ${a.res===Infinity?'∞':a.res}`;return `<div class="wslot ${i===cur?'on':''}">${i+1} ${w.name}<b>${reloadT>0&&i===cur?'换弹中…':txt}</b></div>`;}).join('');
+  $('weapons').innerHTML=WEAPONS.map((w,i)=>{if(i===1&&CLS[cls].noPistol)return '';const a=ammo[i];const pad=n=>String(n).padStart(3,'0');
+    const am=(w.block&&player.ssPistol)?`${pad(ammo[1].mag)}<small>∞</small>`:(w.id==='power'&&player.field>0)?`<span style="color:#8fd0ff">${player.field.toFixed(1)}</span><small>FIELD</small>`:(w.id==='power'&&player.fieldCd>0)?`${Math.ceil(player.fieldCd)}<small>COOLDOWN</small>`:
+      (w.id==='saw'&&player.frenzy>0)?`<span style="color:#ffb040">${player.frenzy.toFixed(1)}</span><small>FRENZY</small>`:w.heat?(heat.over>0?'<span class="low">VENT</span><small>OVERHEAT</small>':`${Math.round(heat.v)}<small>HEAT${heat.charge>0.05?' · '+Math.round(heat.charge*100)+'%':''}</small>`):
+      w.melee?'—':`<span class="${a.mag<=w.magSize*0.25?'low':''}">${pad(a.mag)}</span><small>${a.res===Infinity?'∞':a.res}</small>`;
+    return `<div class="wslot ${i===cur?'on':''}"><span class="am">${reloadT>0&&i===cur?'<small>RELOADING</small>':am}</span><span class="wn">${w.en||w.name}</span><span class="wk">${i+1}</span></div>`;}).join('');
   mapT-=dt;if(mapT<=0){mapT=0.1;drawMinimap();}
   interactTarget=nearestInteractable();
-  const xt=executeTarget();$('prompt').textContent=ex.active?'':xt?'按 X 处决':promptFor(interactTarget);
-  $('exb').firstElementChild.style.width=(player.exCharge||0)+'%';$('exTxt').textContent=(player.exCharge||0)>=100?'就绪 · X':Math.floor(player.exCharge||0)+'%';$('exb').classList.toggle('full',(player.exCharge||0)>=100);
+  const xt=executeTarget();$('prompt').textContent=ex.active?'':xt?'[X] Execute':promptFor(interactTarget);
+  $('exb').firstElementChild.style.width=(player.exCharge||0)+'%';$('exTxt').textContent=(player.exCharge||0)>=100?'Ready · X':Math.floor(player.exCharge||0)+'%';$('exb').classList.toggle('full',(player.exCharge||0)>=100);
   if(announceT>0){announceT-=dt;if(announceT<=0)$('announce').style.opacity=0;}
   // 过载：画面和声音
   const r=player.ovl/player.maxOvl;
@@ -2263,9 +2329,9 @@ function updateHUD(dt){updateBossBar();
 function openRunes(){
   state='runes';document.exitPointerLock?.();$('runes').classList.add('show');$('slotInfo').textContent=player.slots;
   const opt=(o,v)=>Object.entries(o).map(([k,n])=>`<option value="${k}" ${k===v?'selected':''}>${n}</option>`).join('');
-  $('runeList').innerHTML=spells.map((s,i)=>`<div class="rune" data-i="${i}"><b>技能 ${i+1}</b>　形态 <select data-f="form">${opt(FORMS,s.form)}</select>　元素 <select data-f="elem">${opt(ELEMS,s.elem)}</select>　修饰 ${Object.entries(MODS).map(([k,n])=>`<label><input type="checkbox" data-m="${k}" ${s.mods.includes(k)?'checked':''}> ${n}</label>`).join(' ')}
+  $('runeList').innerHTML=spells.map((s,i)=>`<div class="rune" data-i="${i}"><b>Skill ${i+1}</b> Form <select data-f="form">${opt(FORMS,s.form)}</select> Element <select data-f="elem">${opt(ELEMS,s.elem)}</select> Modifier ${Object.entries(MODS).map(([k,n])=>`<label><input type="checkbox" data-m="${k}" ${s.mods.includes(k)?'checked':''}> ${n}</label>`).join(' ')}
     <div class="small" data-info></div></div>`).join('');
-  const refresh=()=>document.querySelectorAll('.rune').forEach(d=>{const s=spells[d.dataset.i];d.querySelector('[data-info]').textContent=`占用 ${spellSlots(s)} / ${player.slots} 槽 · 消耗 ${spellCost(s)} 灵能`+(spellSlots(s)>player.slots?' · 槽位不够，无法施放':'');});
+  const refresh=()=>document.querySelectorAll('.rune').forEach(d=>{const s=spells[d.dataset.i];d.querySelector('[data-info]').textContent=`Uses ${spellSlots(s)} / ${player.slots} slots · cost ${spellCost(s)} Psy`+(spellSlots(s)>player.slots?' · Not enough slots to cast':'');});
   document.querySelectorAll('.rune').forEach(d=>{const s=spells[d.dataset.i];
     d.querySelectorAll('select').forEach(sel=>sel.onchange=()=>{s[sel.dataset.f]=sel.value;refresh();});
     d.querySelectorAll('input').forEach(cb=>cb.onchange=()=>{const m=cb.dataset.m;if(cb.checked){if(spellSlots(s)>=player.slots){cb.checked=false;return;}s.mods.push(m);}else s.mods=s.mods.filter(x=>x!==m);refresh();});});
@@ -2275,7 +2341,7 @@ $('runeDone').onclick=()=>{$('runes').classList.remove('show');resumeGame();};
 
 // ============================================================ 开始 / 结束
 function updateBossBar(){let b=null;for(const e of enemies)if(e.alive&&e.boss&&e.g.position.distanceTo(player.pos)<32){b=e;break;}
-  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b){const bn=$('bossbar').firstChild;if(bn&&bn.nodeType===3)bn.textContent=BOSS_NAME[b.variant]||'深渊领主';}if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}
+  $('bossbar').style.display=b&&(state==='playing'||state==='spectate')?'':'none';if(b){const bn=$('bossbar').firstChild;if(bn&&bn.nodeType===3)bn.textContent=BOSS_NAME[b.variant]||'Abyss Lord';}if(b)$('bossfill').style.width=Math.max(0,b.hp/b.maxHp*100)+'%';}
 // ============================================================ 局外：战舰整备甲板
 const hubScene=new THREE.Scene(), hubCam=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,0.1,300);
 window.__hubCam=hubCam;
@@ -2364,10 +2430,10 @@ function buildCharacter(c){
   g.position.y=0.42;return g;
 }
 const CLS_INFO={
-  tide:{name:'唤潮者',desc:'帝国认可的灵能者。深渊在他耳边低语，他用符文把这股力量拧成武器。灵能用得越狠越强，也越危险。',stats:[['生命',100,150],['灵能槽',4,5],['过载上限',130,130],['枪械伤害',1,1.3],['减伤',0,.2]],
-    perks:'灵能核心 4 槽 · 过载上限 +30% · 25% 概率免疫反噬'},
-  ward:{name:'铸甲卫士',desc:'被基因改造的帝国精英，身披动力甲。枪械伤害更高、更耐打，但灵能天赋有限。',stats:[['生命',150,150],['灵能槽',3,5],['过载上限',100,130],['枪械伤害',1.3,1.3],['减伤',.2,.2]],
-    perks:'灵能核心 3 槽 · 枪械伤害 +30% · 受到伤害 -20%'}};
+  tide:{name:'Tidecaller',desc:'A sanctioned psyker. The Abyss whispers in his ear, and he twists its power into weapons with runes. The harder he pushes, the stronger — and more dangerous — it gets.',stats:[['HP',100,150],['Psy slots',4,5],['Overload cap',130,130],['Gun damage',1,1.3],['Damage reduction',0,.2]],
+    perks:'4 psy core slots · overload cap +30% · 25% chance to ignore backlash'},
+  ward:{name:'Forged Warden',desc:'A gene-forged elite in power armour. Hits harder with guns and takes more punishment, but has little psychic gift.',stats:[['HP',150,150],['Psy slots',3,5],['Overload cap',100,130],['Gun damage',1.3,1.3],['Damage reduction',.2,.2]],
+    perks:'3 psy core slots · gun damage +30% · damage taken -20%'}};
 function selectClass(c){
   cls=c;document.querySelectorAll('.card').forEach(el=>el.classList.toggle('sel',el.dataset.cls===c));
   if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);paintModel(hub.char,(loadout.paint||{})[c]||0);if(typeof addAuspexGear==='function')addAuspexGear(hub.char,c);if(typeof CLS!=='undefined'&&CLS[c]&&CLS[c].eye)hub.char.scale.multiplyScalar(.55);hubScene.add(hub.char);
@@ -2393,11 +2459,11 @@ document.querySelectorAll('.card').forEach(el=>el.onclick=()=>{initAudio();selec
 // 战舰仓库（保存在这个浏览器里）
 function loadVault(){try{return JSON.parse(localStorage.getItem('abyss_vault'))||{loot:0,rare:0,runs:0,extracted:0};}catch(e){return{loot:0,rare:0,runs:0,extracted:0};}}
 function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));}catch(e){}}
-function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>物资<b>${v.loot}</b></span><span>圣物<b style="color:#d070ff">${v.rare}</b></span><span title="出击 / 成功撤离">战绩<b>${v.extracted}/${v.runs}</b></span>`;}
+function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>Loot<b>${v.loot}</b></span><span>Relics<b style="color:#d070ff">${v.rare}</b></span><span title="Deployments / extractions">Record<b>${v.extracted}/${v.runs}</b></span>`;}
 function renderLoadout(){
   const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).filter(w=>{const a=typeof CLS!=='undefined'&&CLS[cls]&&CLS[cls][key==='primary'?'guns':'melee'];return !a||a.includes(w.id);}).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
   mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
-  $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>：${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>：${MELEE[loadout.melee].desc}<div class="dim">${masteryText(loadout.primary)} · ${masteryText(loadout.melee)}</div>`;
+  $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>: ${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>: ${MELEE[loadout.melee].desc}<div class="dim">${masteryText(loadout.primary)} · ${masteryText(loadout.melee)}</div>`;
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});
 }
 function enterHub(){
@@ -2413,12 +2479,12 @@ let mmTimers=[];
 function startMatchmaking(){
   initAudio();actx.resume?.();
   state='matching';$('hub').classList.remove('show');$('matching').classList.add('show');
-  $('slot0').textContent='你 · '+CLS_INFO[cls].name;
-  for(const i of [1,2]){$('slot'+i).textContent='寻找中…';$('slot'+i).className='slot wait';}
-  $('mmText').textContent='正在寻找队友……';$('mmCancel').style.display='';
+  $('slot0').textContent='You ·  '+CLS_INFO[cls].name;
+  for(const i of [1,2]){$('slot'+i).textContent='Searching...';$('slot'+i).className='slot wait';}
+  $('mmText').textContent='Searching for squadmates...';$('mmCancel').style.display='';
   mmTimers=[
-    setTimeout(()=>{for(const i of [1,2]){$('slot'+i).textContent='无人响应';$('slot'+i).className='slot';}$('mmText').textContent='未找到可用队友——以单人身份空降';},3200),
-    setTimeout(()=>{$('mmCancel').style.display='none';$('mmText').textContent='空降舱发射中……';play('beacon');},5000),
+    setTimeout(()=>{for(const i of [1,2]){$('slot'+i).textContent='No response';$('slot'+i).className='slot';}$('mmText').textContent='No squadmates found — deploying solo';},3200),
+    setTimeout(()=>{$('mmCancel').style.display='none';$('mmText').textContent='Drop pod launching...';play('beacon');},5000),
     setTimeout(()=>{prepareMatch();$('matching').classList.remove('show');$('hub').classList.remove('show');startCutscene();},6600),
   ];
 }
@@ -2434,17 +2500,17 @@ const SET=loadSet();
 function saveSet(){try{localStorage.setItem('abyss_settings',JSON.stringify(SET));}catch(e){}}
 function applySet(){camera.fov=SET.fov;camera.updateProjectionMatrix();PIX=SET.pix;resize();if(master)master.gain.value=0.75*SET.vol/75;
   perfMon.on=SET.fps;$('perf').style.display=SET.fps?'':'none';}
-const SET_ROWS=[['sens','鼠标灵敏度',0.2,3,0.05,v=>v.toFixed(2)+'×'],['vol','音量',0,100,1,v=>v+'%'],['music','音乐音量',0,100,1,v=>v+'%'],['fov','视野 FOV',60,110,1,v=>v+'°'],['pix','像素大小（越大越复古、越流畅）',1,6,1,v=>v+'']];
+const SET_ROWS=[['sens','Mouse sensitivity',0.2,3,0.05,v=>v.toFixed(2)+'×'],['vol','Volume',0,100,1,v=>v+'%'],['music','Music volume',0,100,1,v=>v+'%'],['fov','Field of view',60,110,1,v=>v+'°'],['pix','Pixel size (bigger = more retro, smoother)',1,6,1,v=>v+'']];
 function openSettings(){const b=$('setRows');
   b.innerHTML=SET_ROWS.map(([k,n,a,z,st])=>`<label class="setrow"><span>${n}</span><input type="range" id="set_${k}" min="${a}" max="${z}" step="${st}" value="${SET[k]}"><b id="setv_${k}"></b></label>`).join('')+
-    `<label class="setrow"><span>显示帧率（F3）</span><input type="checkbox" id="set_fps" ${SET.fps?'checked':''}></label>`;
+    `<label class="setrow"><span>Show FPS (F3)</span><input type="checkbox" id="set_fps" ${SET.fps?'checked':''}></label>`;
   for(const [k,,,,,f] of SET_ROWS){const el=$('set_'+k);const show=()=>{$('setv_'+k).textContent=f(+el.value);};show();el.oninput=()=>{SET[k]=+el.value;show();applySet();saveSet();};}
   $('set_fps').onchange=e=>{SET.fps=e.target.checked;applySet();saveSet();};
   $('settings').classList.add('show');if(typeof renderKeys==='function')renderKeys();}
 $('setClose').onclick=()=>$('settings').classList.remove('show');
 $('setBtn').onclick=openSettings;$('pauseSet').onclick=openSettings;
-const HELP=[['WASD / 空格 / Shift','移动 / 跳 / 冲刺'],['左键 · 右键','攻击 · 武器特殊功能（蓄力、力场、狂热、切手枪）'],['1 2 3 / 滚轮','主武器 · 爆弹手枪 · 近战'],['R','换弹'],['E','举盾格挡（剑盾，时机准可防反 / 弹反火球）'],
-  ['X','处决（充能满时）：点按快速处决，按住完整处决（震慑周围敌人）；处决后 3 秒内可免充能连环处决 2 次'],['V · G · Q','灵能：锁喉提摔 · 黑洞 · 子弹时间'],['C · Tab','符文技能 · 拼装符文'],['F','互动 / 拾取'],['T','侦测仪：隔墙显示附近恶魔（非灵能职业）'],['B','呼叫回收装置'],['M','放大小地图'],['H','显示 / 隐藏本说明'],['Esc','暂停 / 设置'],['F3','帧率']];
+const HELP=[['WASD / Space / Shift','Move / jump / sprint'],['LMB · RMB','Attack · weapon special (charge, field, frenzy, pistol swap)'],['1 2 3 / Wheel','Primary · bolt pistol · melee'],['R','Reload'],['E','Raise shield (Sword & Shield; perfect timing parries / reflects fireballs)'],
+  ['X','Execute (when charged): tap for quick execution, hold for full execution (terrifies nearby enemies); chain up to 2 more within 3s for free'],['V · G · Q','Psychic: Choke · Void Rift · Slow Time'],['C · Tab','Rune skill · build runes'],['F','Interact / pick up'],['T','Auspex: see nearby demons through walls (non-psykers)'],['B','Call recovery beacon'],['M','Enlarge minimap'],['H','Show / hide this help'],['Esc','Pause / settings'],['F3','FPS']];
 $('helpBody').innerHTML=HELP.map(([k,v])=>`<div class="hk"><b>${k}</b><span>${v}</span></div>`).join('');
 function toggleHelp(on){const h=$('help');h.classList.toggle('show',on??!h.classList.contains('show'));}
 $('pauseHelp').onclick=()=>toggleHelp(true);
@@ -2455,12 +2521,12 @@ function upLv(id){return (loadVault().up||{})[id]||0;}
 function curThreat(){return CFG.threat[(match&&match.threat)||pendingThreat];}
 function renderShop(){const v=loadVault();v.up=v.up||{};
   const rows=CFG.upgrades.map(u=>{const lv=v.up[u.id]||0,max=lv>=u.max,c=max?0:u.cost[lv],r=max?0:(u.rare?u.rare[lv]:0);
-    const can=!max&&v.loot>=c&&v.rare>=r;const price=max?'已满级':[c?c+' 物资':'',r?r+' 圣物':''].filter(Boolean).join(' + ');
+    const can=!max&&v.loot>=c&&v.rare>=r;const price=max?'Maxed':[c?c+' Loot':'',r?r+' Relics':''].filter(Boolean).join(' + ');
     return `<div class="up"><div><b>${u.name}</b> <span class="lv">${'■'.repeat(lv)}${'□'.repeat(u.max-lv)}</span><div class="small">${u.desc}</div></div><button data-up="${u.id}" ${can?'':'disabled'}>${price}</button></div>`;}).join('');
-  const th=CFG.threat.slice(1).map((t,i)=>`<button class="th ${loadout.threat===i+1?'sel':''}" data-th="${i+1}">${t.name}<small>物资 ×${t.loot}</small></button>`).join('');
-  const am=v.rare>0?`<label class="am"><input type="checkbox" id="amulet" ${loadout.amulet?'checked':''}> 佩戴圣物护符出击（生命 +${CFG.amulet.hp}，伤害 +${Math.round((CFG.amulet.dmg-1)*100)}%；<b style="color:#e05a4a">阵亡会失去 1 件圣物</b>）</label>`:'<div class="small">拥有灵能圣物后可以佩戴圣物护符出击。</div>';
-  $('shop').innerHTML=`<h3>战舰工坊</h3>${rows}`;const bi=[['random','随机区域']].concat(Object.entries(CFG.biomes).map(([k,b])=>[k,b.name])).map(([k,n])=>`<button class="th ${(loadout.biome||'random')===k?'sel':''}" data-bi="${k}">${n}</button>`).join('');
-  $('deployOpts').innerHTML=`<div class="ths" style="margin-bottom:6px">${bi}</div><div class="lbl">威胁等级</div><div class="ths">${th}</div>${am}`;
+  const th=CFG.threat.slice(1).map((t,i)=>`<button class="th ${loadout.threat===i+1?'sel':''}" data-th="${i+1}">${t.name}<small>Loot ×${t.loot}</small></button>`).join('');
+  const am=v.rare>0?`<label class="am"><input type="checkbox" id="amulet" ${loadout.amulet?'checked':''}> Deploy wearing a relic amulet (HP +${CFG.amulet.hp}, damage +${Math.round((CFG.amulet.dmg-1)*100)}%; <b style="color:#e05a4a">lose 1 relic if you die</b>)</label>`:'<div class="small">Own a psy-relic to deploy with a relic amulet.</div>';
+  $('shop').innerHTML=`<h3>Ship Forge</h3>${rows}`;const bi=[['random','Random zone']].concat(Object.entries(CFG.biomes).map(([k,b])=>[k,b.name])).map(([k,n])=>`<button class="th ${(loadout.biome||'random')===k?'sel':''}" data-bi="${k}">${n}</button>`).join('');
+  $('deployOpts').innerHTML=`<div class="ths" style="margin-bottom:6px">${bi}</div><div class="lbl">Threat level</div><div class="ths">${th}</div>${am}`;
   $('deployOpts').querySelectorAll('[data-bi]').forEach(b=>b.onclick=()=>{loadout.biome=b.dataset.bi;saveLoadout();renderShop();play('equip');});
   $('shop').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>buyUpgrade(b.dataset.up));
   $('deployOpts').querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{loadout.threat=+b.dataset.th;saveLoadout();renderShop();play('equip');});
@@ -2480,22 +2546,22 @@ function upgradeWeapons(P,M){const mg=1+0.3*upLv('mag');P.dmg*=1+0.05*masteryLv(
 // ============================================================ 训练场：一步步教操作（不计入战舰仓库）
 const training={on:false,step:0,k0:0};
 const TSTEPS_ALL=[
-  {t:'左键射击：打死一个靶子恶魔　（1 主武器 · R 换弹 · 2 爆弹手枪）',ok:()=>match.kills>training.k0},
-  {t:'按 3 换近战，连续按左键打出四段连招',ok:()=>cur===2&&MS.combo>=4},
-  {t:'按住左键蓄力，松开打出重击（每把近战武器的重击都不一样）',ok:()=>player.didHeavy},
-  {t:'按 V：灵能锁喉，把前方的敌人提到空中',psy:true,ok:()=>PSY.lift.cd>0},
-  {t:'按 G：灵能黑洞，把一群敌人吸进去',psy:true,ok:()=>PSY.hole.cd>0},
-  {t:'按 Z：使用职业技能',psy:false,ok:()=>player.zcd>0},
-  {t:'按 X：处决（已帮你充满能量），对准发光的敌人',enter:()=>{player.exCharge=100;},ok:()=>ex.active},
-  {t:'瘟火术士来了！横移躲开绿色火球，然后干掉它（打断它右臂就不能施法）',enter:()=>{training.caster=spawnEnemy('caster',0,-16);training.caster.dmg=6;},ok:()=>training.caster&&!training.caster.alive},
-  {t:'训练完成！按 Esc →「放弃行动」返回战舰，去真正的战场吧。',ok:()=>false}];
+  {t:'LMB to shoot: kill a target demon  (1 primary · R reload · 2 bolt pistol)',ok:()=>match.kills>training.k0},
+  {t:'Press 3 for melee, tap LMB repeatedly for the 4-hit combo',ok:()=>cur===2&&MS.combo>=4},
+  {t:'Hold LMB to charge, release for a heavy attack (every melee weapon’s heavy is different)',ok:()=>player.didHeavy},
+  {t:'Press V: psychic Choke lifts the enemies in front into the air',psy:true,ok:()=>PSY.lift.cd>0},
+  {t:'Press G: Void Rift sucks in a crowd',psy:true,ok:()=>PSY.hole.cd>0},
+  {t:'Press Z: use your class ability',psy:false,ok:()=>player.zcd>0},
+  {t:'Press X: execute (charge filled for you) — aim at a glowing enemy',enter:()=>{player.exCharge=100;},ok:()=>ex.active},
+  {t:'A Plague Caster! Strafe to dodge the green fireballs, then kill it (cut off its right arm to stop its casting)',enter:()=>{training.caster=spawnEnemy('caster',0,-16);training.caster.dmg=6;},ok:()=>training.caster&&!training.caster.alive},
+  {t:'Training complete! Esc → "Abandon" to return to the ship. Time for the real battlefield.',ok:()=>false}];
 let TSTEPS=TSTEPS_ALL;
 function startTraining(){TSTEPS=TSTEPS_ALL.filter(s=>s.psy===undefined||s.psy===!!CLS[cls].psy);player.didHeavy=false;if(isNet())leaveRoom();initAudio();actx.resume?.();prepareMatch();training.on=true;training.step=-1;
   for(const e of enemies){e.alive=false;scene.remove(e.g);}enemies=[];waveTimer=1e9;player.pos.set(0,0,0);player.yaw=0;
   $('hub').classList.remove('show');document.body.classList.remove('inhub');view.visible=true;$('trainBox').style.display='';
   state='playing';canvas.requestPointerLock?.();nextTrainStep();}
 function nextTrainStep(){training.step++;const S=TSTEPS[training.step];training.k0=match.kills;if(S.enter)S.enter();
-  $('trainBox').innerHTML=`<small>训练 ${Math.min(training.step+1,TSTEPS.length-1)} / ${TSTEPS.length-1}</small><br>${S.t}`;if(training.step>0)play('pickup');}
+  $('trainBox').innerHTML=`<small>Training ${Math.min(training.step+1,TSTEPS.length-1)} / ${TSTEPS.length-1}</small><br>${S.t}`;if(training.step>0)play('pickup');}
 function updateTraining(dt){if(player.hp<40)player.hp=40;   // 训练里不会死
   const dummies=enemies.filter(e=>e.alive&&e.dummy);
   if(dummies.length<4){const e=spawnEnemy('imp',(Math.random()-.5)*8,-7-Math.random()*3);e.dummy=true;e.speed=0;e.reach=0;e.dmg=0;}
@@ -2512,17 +2578,17 @@ const CLS={
   relic:   {hp:265,speed:.78, dmgTaken:.55, gunMul:1.25,meleeMul:1.3,psy:false,guns:['plasma','hbolter','melta','flamer'],melee:['hammer','power','axe'],z:'aegis',noSprint:true,heavy:true},
   walker:  {hp:450,speed:.66, dmgTaken:.5,  gunMul:1.4, meleeMul:1.6,psy:false,guns:['hbolter','melta','plasma'],melee:['fist'],z:'stomp',noSprint:true,noJump:true,noPistol:true,heavy:true,eye:3.0,r:.85},
   redeemer:{hp:520,speed:.72, dmgTaken:.48, gunMul:1.35,meleeMul:1.6,psy:false,guns:['flamer','hbolter'],melee:['fist'],z:'pyre',noSprint:true,noJump:true,noPistol:true,heavy:true,eye:3.2,r:.9}};
-const ZAB={surge:{name:'深渊回响',cd:25,desc:'清空过载、回复 15 生命'},stim:{name:'战斗兴奋剂',cd:18,desc:'6 秒移速 +30%、伤害 +25%，回复 20 生命'},
-  grenade:{name:'震爆手雷',cd:10,desc:'投出手雷，爆炸伤害并震晕'},warp:{name:'跃迁突袭',cd:14,desc:'瞬移到前方 10 米，落地冲击波震晕敌人'},
-  aegis:{name:'圣盾领域',cd:20,desc:'6 秒内你和附近队友受到伤害减半'},stomp:{name:'践踏冲锋',cd:10,desc:'向前冲锋，撞飞并碾碎路上的敌人'},pyre:{name:'烈焰风暴',cd:14,desc:'向四周喷出火焰，点燃 6 米内所有敌人'}};
+const ZAB={surge:{name:'Abyssal Echo',cd:25,desc:'Clear overload, heal 15'},stim:{name:'Combat Stims',cd:18,desc:'6 s: move +30%, damage +25%, heal 20'},
+  grenade:{name:'Shock Grenade',cd:10,desc:'Throw a grenade that damages and stuns'},warp:{name:'Warp Strike',cd:14,desc:'Teleport 10m forward, landing shockwave stuns'},
+  aegis:{name:'Aegis Field',cd:20,desc:'6 s: you and nearby allies take half damage'},stomp:{name:'Stomping Charge',cd:10,desc:'Charge forward, trampling everything in the way'},pyre:{name:'Firestorm',cd:14,desc:'Spray flames around you, igniting everything within 6m'}};
 Object.assign(CLS_INFO,{
-  reforged:{name:'新铸卫士',tag:'强化战士',desc:'第二代改造战士，骨骼与器官重新铸造。比前辈更高、更快、更耐打。',perks:'生命 175 · 枪械伤害 +30% · 移速 +8% · Z：震爆手雷'},
-  bastion:{name:'壁垒重甲',tag:'重甲突击',desc:'穿着能在虚空中行走的厚重战甲，几乎打不穿。不能冲刺，但能跃迁突入敌阵。',perks:'生命 240 · 减伤 40% · 近战 +20% · 不能冲刺 · Z：跃迁突袭'},
-  relic:{name:'圣遗壁垒',tag:'圣物重甲',desc:'从战舰圣库里请出的古老重甲，只交给最资深的战士。慢，但每一击都是审判。',perks:'生命 265 · 减伤 45% · 近战 +30% · 不能冲刺 · Z：圣盾领域'},
-  walker:{name:'长眠机神',tag:'步行机甲',desc:'一位阵亡英雄长眠在机甲的棺椁里，被唤醒再战。巨拳能捏碎一切。',perks:'生命 450 · 减伤 50% · 视线高 · 不能冲刺跳跃 · Z：践踏冲锋'},
-  redeemer:{name:'救赎机神',tag:'重型机甲',desc:'更新、更大的步行机甲，用火焰净化整条走廊。',perks:'生命 520 · 减伤 52% · 只能用火焰 / 重爆弹 · Z：烈焰风暴'}});
-CLS_INFO.tide.tag='灵能者';CLS_INFO.ward.tag='动力甲战士';CLS_INFO.tide.perks+=' · 唯一能用灵能（V G Q C）· Z：深渊回响';CLS_INFO.ward.perks+=' · Z：战斗兴奋剂';
-for(const k in CLS){const c=CLS[k];CLS_INFO[k].stats=[['生命',c.hp,520],['枪械伤害',c.gunMul,1.4],['近战伤害',c.meleeMul,1.6],['减伤',1-c.dmgTaken,.55],['速度',c.speed,1.1]];}
+  reforged:{name:'Reforged Warden',tag:'Enhanced warrior',desc:'Second-generation warrior, bones and organs re-forged. Taller, faster and tougher than his forebears.',perks:'HP 175 · gun damage +30% · move +8% · Z: Shock Grenade'},
+  bastion:{name:'Bastion Plate',tag:'Heavy assault',desc:'Clad in armour built to walk the void, almost impossible to pierce. Can’t sprint, but warps straight into the enemy line.',perks:'HP 240 · damage reduction 40% · melee +20% · no sprint · Z: Warp Strike'},
+  relic:{name:'Relic Bastion',tag:'Relic armour',desc:'Ancient armour brought out of the ship’s reliquary, granted only to the most senior warriors. Slow, but every blow is judgement.',perks:'HP 265 · damage reduction 45% · melee +30% · no sprint · Z: Aegis Field'},
+  walker:{name:'Venerable Walker',tag:'Walker',desc:'A fallen hero sleeps in this walker’s sarcophagus, woken to fight again. Its great fist crushes anything.',perks:'HP 450 · damage reduction 50% · high view · no sprint/jump · Z: Stomping Charge'},
+  redeemer:{name:'Redeemer Walker',tag:'Heavy walker',desc:'A newer, bigger walker that purges entire corridors with fire.',perks:'HP 520 · damage reduction 52% · flamer / heavy bolter only · Z: Firestorm'}});
+CLS_INFO.tide.tag='Psyker';CLS_INFO.ward.tag='Power-armoured warrior';CLS_INFO.tide.perks+=' · the only class with psychic powers (V G Q C) · Z: Abyssal Echo';CLS_INFO.ward.perks+=' · Z: Combat Stims';
+for(const k in CLS){const c=CLS[k];CLS_INFO[k].stats=[['HP',c.hp,520],['Gun damage',c.gunMul,1.4],['Melee damage',c.meleeMul,1.6],['Damage reduction',1-c.dmgTaken,.55],['Speed',c.speed,1.1]];}
 // ---------- 开局套用职业
 function applyClassStats(){const c=CLS[cls]||CLS.ward;
   Object.assign(player,{maxHp:c.hp,hp:c.hp,gunMul:c.gunMul,dmgTaken:c.dmgTaken,meleeMul:c.meleeMul,speedMul:c.speed,eye:c.eye||1.6,r:c.r||.45,zcd:0,stimT:0,auraT:0,dash:0});
@@ -2531,7 +2597,7 @@ function applyClassStats(){const c=CLS[cls]||CLS.ward;
 function fixLoadoutForClass(){const c=CLS[cls];if(!c)return;
   if(c.guns&&!c.guns.includes(loadout.primary))loadout.primary=c.guns[0];if(c.melee&&!c.melee.includes(loadout.melee))loadout.melee=c.melee[0];}
 // ---------- Z 技能
-function classAbility(){if(ex.active)return;const c=CLS[cls],Z=ZAB[c.z];if(player.zcd>0){announce(Z.name+' 冷却中 '+Math.ceil(player.zcd)+' 秒',0.8);return;}
+function classAbility(){if(ex.active)return;const c=CLS[cls],Z=ZAB[c.z];if(player.zcd>0){announce(Z.name+' cooling down '+Math.ceil(player.zcd)+' s',0.8);return;}
   player.zcd=Z.cd;const fwd=fwdFlat();if(c.z!=='warp')ultCast(c.z);
   if(c.z==='surge'){player.ovl=0;player.hp=Math.min(player.maxHp,player.hp+15);play('choir');embersBlue(player.pos.clone().setY(1.2),16);}
   else if(c.z==='stim'){player.stimT=6;player.hp=Math.min(player.maxHp,player.hp+20);play('frenzy');}
@@ -2548,7 +2614,7 @@ function classAbility(){if(ex.active)return;const c=CLS[cls],Z=ZAB[c.z];if(playe
 function stunE2(e,d){e.stun=Math.max(e.stun,d);if(isClient()&&e.remote)sendNet({t:'stun',id:e.id,dur:d});}
 function shockwave(P,R,dmg,stun){fxSend('slam',{x:+P.x.toFixed(2),z:+P.z.toFixed(2)});for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.g.position.x-P.x,e.g.position.z-P.z);if(d>R+e.r)continue;
   const dir=e.g.position.clone().sub(P).setY(0).normalize();damageEnemy(e,dmg*(1-d/(R*2)),'body',dir,{knock:2,stagger:.6,point:contactPoint(e)});if(e.alive)stunE2(e,stun);}slamFx(P.x,P.z);}
-function auraAt(x,z,self=false){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;if(!self)announce('圣盾领域：受到伤害减半',1.2);}if(!self)ultFx({k:'aegis',x,z});}
+function auraAt(x,z,self=false){if(Math.hypot(player.pos.x-x,player.pos.z-z)<8){player.auraT=6;if(!self)announce('Aegis Field: damage taken halved',1.2);}if(!self)ultFx({k:'aegis',x,z});}
 let grenades=[];
 function updateClassExtras(dt){updateAuspex(dt);updateAbyss(dt);updatePyreBeam(dt);player.slowT=Math.max(0,(player.slowT||0)-dt);canvas.style.filter=player.slowT>0?'saturate(.6) hue-rotate(-20deg) brightness(1.1)':(canvas.style.filter.includes('hue-rotate(-20')?'':canvas.style.filter);updateCockpit(dt);player.zcd=Math.max(0,(player.zcd||0)-dt);player.stimT=Math.max(0,(player.stimT||0)-dt);player.auraT=Math.max(0,(player.auraT||0)-dt);
   for(const g of grenades){g.t-=dt;g.v.y-=18*dt;g.p.addScaledVector(g.v,dt);if(g.p.y<.1){g.p.y=.1;g.v.y*=-.3;g.v.x*=.6;g.v.z*=.6;}g.m.position.copy(g.p);g.m.rotation.x+=dt*12;if(g.m.userData.led)g.m.userData.led.visible=Math.sin(gameTime*30)>0;if(Math.random()<.5)puff(g.p.clone(),1,0x707070,.4);
@@ -2662,12 +2728,12 @@ function updateCockpit(dt){if(!CK||!isMech())return;CK.barrels.spin.rotation.z+=
 buildCockpit();
 // ============================================================ 成长：职业解锁、武器熟练度、涂装
 function isUnlocked(c){if(CFG.unlockAll)return true;const v=loadVault();return !CFG.unlock[c]||(v.unlocked||[]).includes(c);}
-function classOk(){if(isUnlocked(cls))return true;announce('先在职业面板里解锁「'+CLS_INFO[cls].name+'」',1.5);play('dry');return false;}
+function classOk(){if(isUnlocked(cls))return true;announce('Unlock “'+CLS_INFO[cls].name+'”',1.5);play('dry');return false;}
 function unlockClass(c){const v=loadVault(),u=CFG.unlock[c];if(!u||isUnlocked(c))return;if(v.loot<(u.loot||0)||v.rare<(u.rare||0)){play('dry');return;}
   v.loot-=u.loot||0;v.rare-=u.rare||0;v.unlocked=(v.unlocked||[]).concat(c);saveVault(v);play('beacon');showVault();renderShop();selectClass(c);refreshCards();}
 function refreshCards(){document.querySelectorAll('#clsCards .card').forEach(el=>{const c=el.dataset.cls;el.classList.toggle('locked',!isUnlocked(c));});}
 function unlockPanel(c){if(isUnlocked(c))return'';const u=CFG.unlock[c],v=loadVault();const can=v.loot>=(u.loot||0)&&v.rare>=(u.rare||0);
-  return `<div class="unl">🔒 未解锁 · 需要 ${[u.loot?u.loot+' 物资':'',u.rare?u.rare+' 圣物':''].filter(Boolean).join(' + ')} <button id="unlockBtn" ${can?'':'disabled'}>解锁</button></div>`;}
+  return `<div class="unl">🔒 Locked · requires  ${[u.loot?u.loot+' Loot':'',u.rare?u.rare+' Relics':''].filter(Boolean).join(' + ')} <button id="unlockBtn" ${can?'':'disabled'}>Unlock</button></div>`;}
 // 熟练度：本局记在 match.mastery，结算时存进仓库
 function masteryKill(){if(!match||training.on)return;const w=WEAPONS[cur];if(!w)return;const id=(w.block&&player.ssPistol)?'pistol':w.id;match.mastery=match.mastery||{};match.mastery[id]=(match.mastery[id]||0)+1;}
 function saveMastery(v){v.mastery=v.mastery||{};const before={};for(const k in (match.mastery||{})){before[k]=masteryLvFrom(v.mastery[k]||0);v.mastery[k]=(v.mastery[k]||0)+match.mastery[k];
@@ -2675,10 +2741,10 @@ function saveMastery(v){v.mastery=v.mastery||{};const before={};for(const k in (
 function masteryLvFrom(n){return CFG.mastery.filter(t=>n>=t).length;}
 function masteryLv(id){return masteryLvFrom(((loadVault().mastery)||{})[id]||0);}
 function masteryText(id){const n=((loadVault().mastery)||{})[id]||0,lv=masteryLvFrom(n),next=CFG.mastery[lv];const nm=(RANGED[id]||MELEE[id]||{}).name||id;
-  return `${nm} 熟练 Lv${lv}${next?`（${n}/${next} 击杀）`:'（满级）'}${lv?` 伤害 +${lv*5}%`:''}`;}
+  return `${nm} Mastery Lv${lv}${next?`(${n}/${next} kills)`:'(maxed)'}${lv?` damage +${lv*5}%`:''}`;}
 // 涂装：替换带金属贴图的装甲材质颜色
 const PAINTS=[null,0x8a1a14,0x2a2a2e,0xd0c8b0,0x2e5a3a,0x5a3a7a];
-const PAINT_NAMES=['原色','血红','漆黑','骨白','军绿','暗紫'];
+const PAINT_NAMES=['Original','Blood Red','Pitch Black','Bone White','Field Green','Dusk Violet'];
 function paintModel(g,idx){if(!idx||!PAINTS[idx])return;g.traverse(o=>{if(o.isMesh&&o.material&&o.material.map===texMetal){o.material=o.material.clone();o.material.color.setHex(PAINTS[idx]);}});}
 function paintRow(c){const cur=(loadout.paint||{})[c]||0;return `<div class="paints">${PAINTS.map((p,i)=>`<span class="sw ${i===cur?'sel':''}" data-paint="${i}" title="${PAINT_NAMES[i]}" style="background:${p?'#'+p.toString(16).padStart(6,'0'):'linear-gradient(135deg,#41557e,#b8952e)'}"></span>`).join('')}</div>`;}
 function bindClassPanel(c){const b=$('unlockBtn');if(b)b.onclick=()=>unlockClass(c);
@@ -2715,8 +2781,8 @@ const mKick=t=>mOsc('sine',120,40,t,.35,.55),mSnare=t=>{mNoise(t,.18,.25,1800,'b
 const mBass=(t,f,d)=>mOsc('sawtooth',f,f,t,d*.9,.09),mChoir=(t,f)=>{for(const m of [1,1.26,1.5])mOsc('triangle',f*m,f*m,t,1.6,.03);};
 // ============================================================ 按键自定义 + 手柄
 // 改键：把玩家按的键翻译成默认键再交给原来的处理函数（捕获阶段拦截，重新派发）
-const ACTIONS=[['KeyW','前进'],['KeyS','后退'],['KeyA','左移'],['KeyD','右移'],['Space','跳跃'],['ShiftLeft','冲刺'],['KeyR','换弹'],['KeyF','互动'],['KeyX','处决'],['KeyZ','职业技能'],['KeyT','侦测仪'],
-  ['KeyE','格挡'],['KeyB','回收装置'],['KeyM','地图'],['KeyV','锁喉'],['KeyG','黑洞'],['KeyQ','子弹时间'],['KeyC','符文技能'],['KeyH','按键说明']];
+const ACTIONS=[['KeyW','Forward'],['KeyS','Back'],['KeyA','Left'],['KeyD','Right'],['Space','Jump'],['ShiftLeft','Sprint'],['KeyR','Reload'],['KeyF','Interact'],['KeyX','Execute'],['KeyZ','Class ability'],['KeyT','Auspex'],
+  ['KeyE','Block'],['KeyB','Beacon'],['KeyM','Map'],['KeyV','Choke'],['KeyG','Void Rift'],['KeyQ','Slow Time'],['KeyC','Rune skill'],['KeyH','Help']];
 let REMAP={},BLOCK=new Set();
 function rebuildRemap(){REMAP={};BLOCK=new Set();const b=SET.keys||{};const used=new Set(Object.values(b));
   for(const [def] of ACTIONS){const k=b[def];if(k&&k!==def){REMAP[k]=def;if(!used.has(def)||Object.keys(b).every(d=>b[d]!==def))BLOCK.add(def);}}
@@ -2728,9 +2794,9 @@ for(const type of ['keydown','keyup'])addEventListener(type,e=>{
   if(e.isTrusted===false&&e._re)return;const d=REMAP[e.code];
   if(d){e.stopImmediatePropagation();e.preventDefault?.();const n=new KeyboardEvent(type,{code:d,repeat:e.repeat});n._re=true;dispatchEvent(n);return;}
   if(BLOCK.has(e.code)&&e.isTrusted!==false)e.stopImmediatePropagation();},true);
-const keyName=c=>c.replace(/^Key/,'').replace(/^Digit/,'').replace('ShiftLeft','左 Shift').replace('Space','空格');
+const keyName=c=>c.replace(/^Key/,'').replace(/^Digit/,'').replace('ShiftLeft','Left Shift').replace('Space','Space');
 function renderKeys(){const el=$('keyRows');if(!el)return;const b=SET.keys||{};
-  el.innerHTML=ACTIONS.map(([d,n])=>`<label class="setrow"><span>${n}</span><button class="kb" data-act="${d}">${rebinding===d?'按任意键…':keyName(b[d]||d)}</button><b></b></label>`).join('')+'<button id="keyReset">恢复默认按键</button>';
+  el.innerHTML=ACTIONS.map(([d,n])=>`<label class="setrow"><span>${n}</span><button class="kb" data-act="${d}">${rebinding===d?'Press any key...':keyName(b[d]||d)}</button><b></b></label>`).join('')+'<button id="keyReset">Reset to defaults</button>';
   el.querySelectorAll('[data-act]').forEach(x=>x.onclick=()=>{rebinding=x.dataset.act;renderKeys();});$('keyReset').onclick=()=>{SET.keys={};saveSet();rebuildRemap();renderKeys();};}
 // ---------- 手柄（标准布局）：左摇杆移动、右摇杆视角、RT 开火、LT 右键功能、A 跳、X 换弹、B 处决、Y 切武器、LB 职业技能、RB 近战、十字键 互动/回收/锁喉/黑洞、Start 暂停
 const pad={active:false,prev:[],keysSet:{}};
@@ -2738,7 +2804,7 @@ const PAD_KEYS={0:'Space',2:'KeyR',1:'KeyX',4:'KeyZ',8:'KeyM',10:'ShiftLeft',12:
 function padKey(code,down){const ev=new KeyboardEvent(down?'keydown':'keyup',{code});ev._re=true;dispatchEvent(ev);}
 function updatePad(dt){const gp=navigator.getGamepads?navigator.getGamepads()[0]:null;if(!gp)return;
   const b=i=>gp.buttons[i]&&gp.buttons[i].pressed,dz=v=>Math.abs(v)<.22?0:v;
-  if(!pad.active&&gp.buttons.some(x=>x.pressed)){pad.active=true;announce('已连接手柄',1.2);}if(!pad.active)return;
+  if(!pad.active&&gp.buttons.some(x=>x.pressed)){pad.active=true;announce('Gamepad connected',1.2);}if(!pad.active)return;
   const lx=dz(gp.axes[0]),ly=dz(gp.axes[1]),rx=dz(gp.axes[2]),ry=dz(gp.axes[3]);
   for(const [k,on] of [['KeyW',ly<-.3],['KeyS',ly>.3],['KeyA',lx<-.3],['KeyD',lx>.3]]){if(on!==!!pad.keysSet[k]){pad.keysSet[k]=on;keys[k]=on;}}
   if(state==='playing'){player.yaw-=rx*2.6*dt*SET.sens;player.pitch=clamp(player.pitch-ry*1.9*dt*SET.sens,-1.5,1.5);}
@@ -2751,13 +2817,13 @@ function updatePad(dt){const gp=navigator.getGamepads?navigator.getGamepads()[0]
     else if(i===9&&now){if(state==='playing'){state='paused';$('pause').classList.add('show');}else if(state==='paused')resumeGame();}}}
 // ============================================================ 职业大招表现：横幅 + 屏幕闪光 + 专属特效（队友也能看到）+ HUD 冷却环 + 详细说明
 const ULT_INFO={
-  surge:{color:'#b060ff',hex:0xb060ff,sub:'深渊之力从体内炸开',long:'清空全部过载、回复 15 生命，并以自己为中心炸开紫色冲击波：推开 7 米内的敌人，造成 40 伤害并震晕 1 秒。过载快爆的时候用它保命。'},
-  stim:{color:'#ff3030',hex:0xff3030,sub:'心跳加速，痛觉消失',long:'注射战斗兴奋剂：6 秒内移速 +30%、伤害 +25%，立即回复 20 生命。适合冲进敌群或者追杀逃跑的术士。'},
-  grenade:{color:'#ffa040',hex:0xffa040,sub:'投掷震爆手雷',long:'投出一枚震爆手雷，碰到敌人或 1.1 秒后爆炸：3.5 米内造成 120 伤害并震晕 1.2 秒。用来打断骨盾恶魔和成群的小恶魔。'},
-  warp:{color:'#80c8ff',hex:0x80c8ff,sub:'撕开现实，跃入敌阵',long:'瞬移到准星方向最远 10 米处（会被墙挡住），落地释放冲击波：4 米内造成 90 伤害并震晕 1.5 秒。原地会留下残影。'},
-  aegis:{color:'#ffd060',hex:0xffd060,sub:'圣光笼罩全队',long:'展开金色圣盾护罩 6 秒：站在 8 米内的你和队友受到的伤害减半。坚守信标、守仪式法阵时最有用。'},
-  stomp:{color:'#ffb050',hex:0xffb050,sub:'钢铁巨人冲锋',long:'机甲全速向前冲锋 0.6 秒，撞飞路上所有敌人（140 伤害，震晕 1 秒），冲锋结束时重重砸地，再震晕周围敌人。'},
-  pyre:{color:'#ff6020',hex:0xff6020,sub:'以火净化一切',long:'向四周喷出火焰风暴：6 米内所有敌人受到 80 伤害并被点燃，地上留下一圈燃烧的火海，持续烧伤走进来的敌人。'}};
+  surge:{color:'#b060ff',hex:0xb060ff,sub:'Abyssal power erupts from within',long:'Clears all overload and heals 15, then unleashes a purple shockwave: pushes back enemies within 7m, deals 40 damage and stuns for 1s. Use it when you’re about to overload.'},
+  stim:{color:'#ff3030',hex:0xff3030,sub:'Heart racing, pain gone',long:'Inject combat stims: +30% move speed and +25% damage for 6s, heal 20 instantly. Great for diving into a crowd or chasing a fleeing caster.'},
+  grenade:{color:'#ffa040',hex:0xffa040,sub:'Throw a shock grenade',long:'Throws a shock grenade that explodes on contact or after 1.1s: 120 damage and a 1.2s stun within 3.5m. Breaks up bone shields and imp swarms.'},
+  warp:{color:'#80c8ff',hex:0x80c8ff,sub:'Tear reality, strike the line',long:'Teleport up to 10m along your aim (blocked by walls); the landing shockwave deals 90 damage and stuns for 1.5s within 4m. Leaves an afterimage behind.'},
+  aegis:{color:'#ffd060',hex:0xffd060,sub:'Holy light shields the squad',long:'Raises a golden aegis dome for 6s: you and allies within 8m take half damage. Best when holding beacons or ritual circles.'},
+  stomp:{color:'#ffb050',hex:0xffb050,sub:'The iron giant charges',long:'The walker charges at full speed for 0.6s, smashing everything in its path (140 damage, 1s stun), then slams the ground to stun everything nearby.'},
+  pyre:{color:'#ff6020',hex:0xff6020,sub:'Purge everything with fire',long:'Unleashes a firestorm: everything within 6m takes 80 damage and catches fire, leaving a ring of burning ground that scorches anything that walks in.'}};
 for(const k in ULT_INFO)ZAB[k].long=ULT_INFO[k].long;
 let ufx=[];
 function ufxAdd(m,life,o={}){scene.add(m);ufx.push({m,t:0,life,...o});return m;}
@@ -2800,13 +2866,13 @@ function updateUltOverlays(dt){const t=$('ultTint');if(player.stimT>0){const p=(
   else t.style.opacity=0;
   updateUfx(dt);
   const c=CLS[cls];if(!c)return;const Z=ZAB[c.z],I=ULT_INFO[c.z],r=player.zcd>0?player.zcd/Z.cd:0;
-  $('zab').innerHTML=`<div class="zi" style="--c:${I.color};--p:${(1-r)*360}deg"><b>Z</b></div><div><div class="zn" style="color:${I.color}">${Z.name}${player.zcd>0?` <span>${Math.ceil(player.zcd)}s</span>`:' <span class="rd">就绪</span>'}</div><div class="zd">${Z.desc}</div></div>`;}
+  $('zab').innerHTML=`<div class="zi" style="--c:${I.color};--p:${(1-r)*360}deg"><b>Z</b></div><div><div class="zn" style="color:${I.color}">${Z.name}${player.zcd>0?` <span>${Math.ceil(player.zcd)}s</span>`:' <span class="rd">Ready</span>'}</div><div class="zd">${Z.desc}</div></div>`;}
 function ultPanel(c){const z=CLS[c]&&CLS[c].z;if(!z)return'';const Z=ZAB[z],I=ULT_INFO[z];
-  return `<div class="ultbox" style="border-color:${I.color}"><b style="color:${I.color}">职业大招 · ${Z.name}</b> <span class="dim">Z · 冷却 ${Z.cd} 秒</span><br>${I.long}</div>`;}
+  return `<div class="ultbox" style="border-color:${I.color}"><b style="color:${I.color}">Class Ultimate ·  ${Z.name}</b> <span class="dim">Z · cooldown ${Z.cd} s</span><br>${I.long}</div>`;}
 // ============================================================ 侦测仪（非灵能职业都有）：按 T 开关；画面左侧弹出倾斜的全息屏，隔墙用模糊移动的小红点显示附近恶魔
 const AUS={on:false,sweep:0,lit:new Map(),range:32};
 function hasAuspex(){return CLS[cls]&&!CLS[cls].psy;}
-function toggleAuspex(){if(!hasAuspex()){announce('唤潮者没有侦测仪——用灵能感知吧',1.2);return;}AUS.on=!AUS.on;$('auspex').classList.toggle('show',AUS.on);play(AUS.on?'beacon':'equip');}
+function toggleAuspex(){if(!hasAuspex()){announce('Tidecallers have no auspex — use your psychic senses',1.2);return;}AUS.on=!AUS.on;$('auspex').classList.toggle('show',AUS.on);play(AUS.on?'beacon':'equip');}
 function updateAuspex(dt){if(!AUS.on)return;if(state!=='playing'&&state!=='spectate'){return;}const cv=$('ausCv');if(!cv||!cv.getContext)return;const g=cv.getContext('2d');if(!g)return;
   const W=cv.width,H=cv.height,cx=W/2,cy=H*.6,R=Math.min(W*.48,H*.58),sc=R/AUS.range;
   g.fillStyle='rgba(18,6,4,.55)';g.fillRect(0,0,W,H);
@@ -2831,7 +2897,7 @@ function updateAuspex(dt){if(!AUS.on)return;if(state!=='playing'&&state!=='spect
   g.restore();g.fillStyle='#ffe0b0';g.beginPath();g.moveTo(cx,cy-5);g.lineTo(cx-4,cy+4);g.lineTo(cx+4,cy+4);g.fill();
   // 噪点与扫描线
   for(let i=0;i<40;i++){g.fillStyle=`rgba(255,160,90,${Math.random()*.15})`;g.fillRect(Math.random()*W,Math.random()*H,1,1);}
-  const n=enemies.filter(e=>e.alive&&e.g.position.distanceTo(player.pos)<AUS.range).length;$('ausN').textContent=n?`${n} 个生命信号`:'未发现信号';}
+  const n=enemies.filter(e=>e.alive&&e.g.position.distanceTo(player.pos)<AUS.range).length;$('ausN').textContent=n?`${n} life signs`:'No signals';}
 // 模型：头戴侦测仪（人形在头侧，机甲在顶部天线）
 function addAuspexGear(model,c){if(!CLS[c]||CLS[c].psy)return;const dark=new THREE.MeshLambertMaterial({color:0x26262c}),lens=new THREE.MeshBasicMaterial({color:0xff4020});
   if(CLS[c].eye){const g=new THREE.Group();g.position.set(-.45,3.25,.1);const p=new THREE.Mesh(new THREE.BoxGeometry(.06,.5,.06),dark);p.position.y=.25;g.add(p);
@@ -2877,7 +2943,7 @@ function updateCutscene(dt){
     for(let i=0;i<14;i++){const s=.4+Math.random()*.8;const m=new THREE.Mesh(scaleBoxUV(new THREE.BoxGeometry(s,s*.5,s),s,s*.5,s),matBrick);const a=Math.random()*6.28,r=2+Math.random()*4;m.position.set(Math.cos(a)*r,H+Math.random()*3,Math.sin(a)*r);m.rotation.set(Math.random(),Math.random(),Math.random());scene.add(m);levelGroup.add(m);
       gibs.push({m,v:new THREE.Vector3(0,-2,0),spin:new THREE.Vector3(Math.random()*3,0,Math.random()*3),rest:false});}
     colliders.push({minX:-1.4,maxX:1.4,minZ:-1.4,maxZ:1.4});
-    setTimeout(()=>{if(state==='cutscene')$('cutCap').textContent='巢都第七区 · 空降坐标确认';},400);
+    setTimeout(()=>{if(state==='cutscene')$('cutCap').textContent='Hive Sector 7 · drop coordinates confirmed';},400);
   }
   // 舱门炸开，角色走出来
   if(t>3.6&&!cut.opened){cut.opened=true;play('saw');noiseHit&&actx&&noiseHit(1500,0.4,0.4);
@@ -2980,26 +3046,26 @@ class RelayPeer{
 const useP2P=()=>location.hash==='#p2p';   // 网址末尾加 #p2p 改用旧的 PeerJS 直连
 function loadPeerJS(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';s.onload=()=>res();s.onerror=()=>rej(new Error('load'));document.head.appendChild(s);});}
 const PEER_PREFIX='abysscov-';
-function netErrText(err){const t=err&&err.type;if(t==='peer-unavailable')return'找不到这个房间，请检查房间码。';
-  if(t==='unavailable-id')return'房间码冲突，请再试一次。';
-  if(t==='relay-unreachable')return'连不上中继服务器（broker.emqx.io）。请检查网络；Claude 页面里不能联机，请用 GitHub Pages 版或离线版。';
-  return'无法连接联机服务器。注意：Claude 页面里不能联机，请在 GitHub Pages 版本中打开游戏。'+(t?'（'+t+'）':'');}
+function netErrText(err){const t=err&&err.type;if(t==='peer-unavailable')return'Room not found — check the room code.';
+  if(t==='unavailable-id')return'Room code conflict, try again.';
+  if(t==='relay-unreachable')return'Can’t reach the relay server (broker.emqx.io). Check your network; multiplayer doesn’t work inside the Claude page — use the GitHub Pages or offline version.';
+  return'Can’t connect to the multiplayer server. Note: multiplayer doesn’t work inside the Claude page — open the game on GitHub Pages.'+(t?'('+t+')':'');}
 function myName(){return CLS_INFO[cls].name;}
 async function hostRoom(){
-  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
+  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('Couldn’t load the multiplayer module. Open the game on GitHub Pages.');}
   netReset();net.code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
   if(!useP2P())net.code=withRelay(net.code,0);   // 先按主服务器定好房间码，免得连上后变
   let peer;try{peer=useP2P()?new Peer(PEER_PREFIX+net.code):new RelayPeer(PEER_PREFIX+net.code);}catch(e){return netFail(netErrText(e));}
-  net.peer=peer;net.mode='host';showLobby('正在创建房间…');
-  peer.on('open',id=>{net.myId=id;if(peer.relay)net.code=peer.code;net.lobby=[{id,name:myName()+'（房主）',cls}];renderLobby();});
+  net.peer=peer;net.mode='host';showLobby('Creating room...');
+  peer.on('open',id=>{net.myId=id;if(peer.relay)net.code=peer.code;net.lobby=[{id,name:myName()+'(host)',cls}];renderLobby();});
   peer.on('connection',c=>{c.on('open',()=>{net.conns.set(c.peer,c);});c.on('data',d=>{try{hostRecv(c.peer,deser(d));}catch(err){console.error('net',err);}});c.on('close',()=>hostDrop(c.peer));});
   peer.on('error',err=>netFail(netErrText(err)));
 }
 async function joinRoom(code){
-  code=(code||'').trim().toUpperCase();if(code.length<4){$('netMsg').textContent='请输入房间码';return;}
-  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
+  code=(code||'').trim().toUpperCase();if(code.length<4){$('netMsg').textContent='Enter a room code';return;}
+  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('Couldn’t load the multiplayer module. Open the game on GitHub Pages.');}
   netReset();let peer;try{peer=useP2P()?new Peer():new RelayPeer(null,relayOf(code));}catch(e){return netFail(netErrText(e));}
-  net.peer=peer;showLobby('正在连接房间 '+code+' …');
+  net.peer=peer;showLobby('Connecting to room '+code+' ...');
   peer.on('open',id=>{net.myId=id;const c=peer.connect(PEER_PREFIX+code,{reliable:true});net.conn=c;
     c.on('open',()=>{net.mode='client';net.code=code;sendNet({t:'hello',cls,name:myName(),paint:(loadout.paint||{})[cls]||0});});
     c.on('data',d=>{try{clientRecv(deser(d));}catch(err){console.error('net',err);}});
@@ -3010,15 +3076,15 @@ function netReset(){try{for(const c of net.conns.values())c.close();if(net.conn)
   for(const r of net.remotes.values())if(r.model)scene.remove(r.model);
   Object.assign(net,{mode:'solo',peer:null,conn:null,myId:'me',code:'',lobby:[],inMatch:false});net.conns=new Map();net.remotes=new Map();}
 function netFail(msg){netReset();showLobby(msg,true);}
-function hostLost(){const inGame=net.inMatch;netReset();if(inGame&&state!=='hub'){enterHub();}showLobby('房主已断开连接。',true);}
+function hostLost(){const inGame=net.inMatch;netReset();if(inGame&&state!=='hub'){enterHub();}showLobby('The host disconnected.',true);}
 function leaveRoom(){netReset();$('lobby').classList.remove('show');}
 // ---------- 大厅界面
 function showLobby(msg,isErr){$('lobby').classList.add('show');$('netMsg').textContent=msg||'';$('netMsg').style.color=isErr?'#e05a4a':'#a8977c';renderLobby();}
 function renderLobby(){
   $('lobbyCode').textContent=net.code?net.code:'—';
-  $('lobbyList').innerHTML=net.lobby.map(p=>`<div class="slot ${p.id===net.myId?'me':''}">${p.name}</div>`).join('')+Array.from({length:Math.max(0,3-net.lobby.length)},()=>'<div class="slot wait">空位</div>').join('');
+  $('lobbyList').innerHTML=net.lobby.map(p=>`<div class="slot ${p.id===net.myId?'me':''}">${p.name}</div>`).join('')+Array.from({length:Math.max(0,3-net.lobby.length)},()=>'<div class="slot wait">Empty slot</div>').join('');
   $('lobbyStart').style.display=isHost()&&net.lobby.length>0?'':'none';
-  if(isClient())$('netMsg').textContent='已加入，等待房主开始行动…';else if(isHost()&&net.myId!=='me')$('netMsg').textContent='把房间码发给朋友，他们在「加入房间」里输入即可。最多 3 人。';
+  if(isClient())$('netMsg').textContent='Joined — waiting for the host to start...';else if(isHost()&&net.myId!=='me')$('netMsg').textContent='Send the room code to your friends; they enter it under "Join". Up to 3 players.';
 }
 // ---------- 房主收到消息
 function hostRecv(id,m){
@@ -3028,7 +3094,7 @@ function hostRecv(id,m){
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,paint:m.paint||0,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
-    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat,bi:curBiome});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
+    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat,bi:curBiome});annTeam('Orbital drop signal confirmed — '+m.name+'  makes planetfall.',3);}
     return;}
   if(!r)return;
   if(m.t==='state'){r.tp.set(m.x,m.y,m.z);r.yaw=m.yaw;r.pitch=m.pitch;r.hp=m.hp;r.maxHp=m.maxHp;r.dead=m.dead;r.inMatch=true;if(!r.pos.lengthSq())r.pos.copy(r.tp);}
@@ -3038,10 +3104,10 @@ function hostRecv(id,m){
   else if(m.t==='interact'){const it=interactables[m.idx];if(it&&!it.used)interact(it,r);}
   else if(m.t==='cast'){asRemote(r,()=>{if(m.k==='lift')castLift(true);else if(m.k==='hole')castHole(true,id);});}
   else if(m.t==='beacon'){callBeacon(r.pos.clone());}
-  else if(m.t==='dead'){r.dead=true;annTeam(r.name+' 阵亡了！',2);checkWipe();}
+  else if(m.t==='dead'){r.dead=true;annTeam(r.name+' is down!',2);checkWipe();}
 }
 function hostDrop(id){const r=net.remotes.get(id);if(r&&r.model)scene.remove(r.model);net.remotes.delete(id);net.conns.delete(id);
-  net.lobby=net.lobby.filter(p=>p.id!==id);bcast({t:'lobby',list:net.lobby});renderLobby();if(r&&net.inMatch){annTeam(r.name+' 离开了队伍',2);checkWipe();}}
+  net.lobby=net.lobby.filter(p=>p.id!==id);bcast({t:'lobby',list:net.lobby});renderLobby();if(r&&net.inMatch){annTeam(r.name+' left the squad',2);checkWipe();}}
 function asRemote(r,fn){const sp=player.pos.clone(),sy=player.yaw,spi=player.pitch,cp=camera.position.clone(),cq=camera.quaternion.clone();
   player.pos.copy(r.pos);player.yaw=r.yaw;player.pitch=r.pitch;camera.position.set(r.pos.x,r.pos.y+1.6,r.pos.z);camera.rotation.set(r.pitch,r.yaw,0,'YXZ');
   try{fn();}finally{player.pos.copy(sp);player.yaw=sy;player.pitch=spi;camera.position.copy(cp);camera.quaternion.copy(cq);}}
@@ -3174,13 +3240,13 @@ function prepareMatch(seedArg){
 }
 $('readyBtn').onclick=()=>{
   $('ready').classList.remove('show');document.body.classList.remove('inhub');
-  announce('空降完成。撤离方式未知——寻找线索。',3.5);
+  announce('Drop complete. Extraction method unknown — find clues.',3.5);
   state='playing';canvas.requestPointerLock?.();
 };
 let deathT=0;
 function beginDeath(){
   if(state!=='playing')return;state='dying';deathT=2.2;mouseDown=false;swordOut=0;swing=0;MS.phase='none';ex.active=false;player.blocking=false;sawEngine(false,'idle');humEngine(false,false);
-  play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('你倒下了……',2);
+  play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('You have fallen...',2);
 }
 function updateDeath(dt){
   deathT-=dt;const k=1-clamp(deathT/2.2,0,1);
@@ -3188,7 +3254,7 @@ function updateDeath(dt){
   camera.rotation.set(lerp(player.pitch,-0.2,k),player.yaw,lerp(0,1.25,Math.min(1,k*1.4)),'YXZ');
   view.visible=false;canvas.style.filter=`grayscale(${k}) brightness(${1-k*0.5})`;
   if(deathT<=0){if(isClient())sendNet({t:'dead'});
-    if(isNet()&&[...net.remotes.values()].some(r=>r.inMatch&&!r.dead)){state='spectate';$('hurt').style.opacity=0;canvas.style.filter='';announce('你已阵亡，正在观战。队伍撤离或全灭时一起结算。',5);checkWipe();}
+    if(isNet()&&[...net.remotes.values()].some(r=>r.inMatch&&!r.dead)){state='spectate';$('hurt').style.opacity=0;canvas.style.filter='';announce('You’re down and spectating. Results come when the squad extracts or wipes.',5);checkWipe();}
     else endMatch(false);}
 }
 function endMatch(win){
@@ -3201,17 +3267,17 @@ function endMatch(win){
   const t=Math.floor(gameTime),mm=String(Math.floor(t/60)).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
   const done=match.conds.filter(c=>c.prog>=c.target).length,found=match.conds.filter(c=>c.revealed).length;
   const parts=Object.keys(PART_NEED).reduce((a,k)=>a+match.parts[k],0),need=Object.values(PART_NEED).reduce((a,b)=>a+b,0);
-  $('resTitle').textContent=win?'撤离成功':'阵亡';
+  $('resTitle').textContent=win?'Extracted':'Down';
   $('resTitle').style.color=win?'#8fd08f':'#e05a4a';
-  $('resText').textContent=diedButWon?'你在行动中阵亡，但队伍成功撤离，带回了全队的物资。':win?'逃生舱冲出大气层，「永夜誓约号」接住了你。':'全队倒在了巢都深处。身上的一切都留给了深渊。';
+  $('resText').textContent=diedButWon?'You fell in action, but the squad extracted with everyone’s loot.':win?'The escape pod breaks atmosphere — the "Eternal Night Oath" catches you.':'The squad fell deep in the hive. Everything you carried is left to the Abyss.';
   const row=(a,b,c='')=>`<tr><td>${a}</td><td class="${c}">${b}</td></tr>`;
   $('resTable').innerHTML=
-    row('存活时间',mm+':'+ss)+row('击杀恶魔',match.kills+(match.elites?`（精英 ${match.elites}）`:''))+
-    row('撤离条件',`完成 ${done} / ${match.conds.length}　发现 ${found} / ${match.conds.length}`)+row('逃生舱零件',`${parts} / ${need}`)+
-    row(win?'带回物资':'回收装置保住',kept+' 件','gain')+(win?'':row('丢失物资',lost+' 件','lost'))+
-    row('灵能圣物',match.rare?(win?'带回':'丢失'):'未找到',match.rare?(win?'gain':'lost'):'')+
-    row('威胁等级',CFG.threat[match.threat||1].name+`（物资 ×${TM}）`)+(player.amulet?row('圣物护符',amLost?'失去':'带回',amLost?'lost':'gain'):'')+
-    row('战舰仓库总计',`${v.loot} 件物资 · ${v.rare} 件圣物`);
+    row('Time survived',mm+':'+ss)+row('Slay demons',match.kills+(match.elites?`(elite ${match.elites})`:''))+
+    row('Extraction',`done ${done} / ${match.conds.length} found ${found} / ${match.conds.length}`)+row('Pod parts',`${parts} / ${need}`)+
+    row(win?'Loot brought back':'Saved by beacon',kept+'  ','gain')+(win?'':row('Loot lost',lost+'  ','lost'))+
+    row('psy-relic',match.rare?(win?'Returned':'Lost'):'Not found',match.rare?(win?'gain':'lost'):'')+
+    row('Threat level',CFG.threat[match.threat||1].name+`(Loot ×${TM})`)+(player.amulet?row('Relic amulet',amLost?'Lost':'Returned',amLost?'lost':'gain'):'')+
+    row('Ship vault total',`${v.loot} loot ·  ${v.rare} relics`);
   $('result').classList.add('show');
 }
 function resumeGame(){state='playing';$('pause').classList.remove('show');canvas.requestPointerLock?.();}
@@ -3226,7 +3292,7 @@ $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene()
 let mouseDown=false;
 addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;const k=0.0022*SET.sens*(camera.fov<40?0.35:1);player.yaw-=e.movementX*k;player.pitch=clamp(player.pitch-e.movementY*k,-1.5,1.5);});
 addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&(document.pointerLockElement||pad.active))tryFire(true);}
-  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'右手：爆弹手枪':'右手：剑',0.7);}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'Right hand: bolt pistol':'Right hand: sword',0.7);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='saw'&&cur===2&&!ex.active&&MS.phase==='none'){player.revving=true;player.revCharge=0;}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='power'&&cur===2&&!ex.active)activateField();
   if(e.button===2&&state==='playing'&&WEAPONS[cur].scope&&cur===0)player.aiming=true;
@@ -3234,7 +3300,7 @@ addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='pla
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state!=='playing')return;let n=(cur+(e.deltaY>0?1:2))%3;if(n===1&&CLS[cls].noPistol)n=(n+(e.deltaY>0?1:2))%3;switchWeapon(n);});
 addEventListener('mouseup',e=>{if(e.button===0){mouseDown=false;if(state==='playing')meleeRelease();}if(e.button===2){player.charging=false;player.aiming=false;
-  if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
+  if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('Chainsword frenzy! Move & attack speed up '+player.frenzy.toFixed(1)+' s',1.5);}player.revCharge=0;}}});
 addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET.fps;saveSet();applySet();return;}
   if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}
   if(e.code==='Tab'){e.preventDefault();if(state==='playing'&&CLS[cls].psy)openRunes();else if(state==='runes')$('runeDone').onclick();return;}
@@ -3243,7 +3309,7 @@ addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET
   if(e.code==='Space'&&player.onGround&&!CLS[cls].noJump){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
   if(e.code==='KeyZ')classAbility();if(e.code==='KeyT'){toggleAuspex();return;}
-  if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('只有唤潮者能使用灵能 · 按 Z 使用职业技能',1.2);return;}
+  if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('Only Tidecallers can use psychic powers · press Z for your class ability',1.2);return;}
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
   if(e.code==='KeyE'&&!e.repeat&&WEAPONS[cur].block&&!ex.active){player.blocking=true;player.blockStart=gameTime;play('equip');}

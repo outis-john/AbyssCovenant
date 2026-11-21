@@ -5,7 +5,7 @@ function hurtPlayer(n,self=false,att=null){
   if(!self&&player.blocking){
     if(att&&gameTime-player.blockStart<0.3){   // 完美格挡 -> 防反横斩
       play('clang');play('parry');hitstop=0.12;player.shake=.3;att.stun=1.4;att.lean=1.2;if(isClient()&&att.remote)sendNet({t:'stun',id:att.id,dur:1.4});att.kv.addScaledVector(att.g.position.clone().sub(player.pos).setY(0).normalize(),6);
-      $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);announce('防反！',0.8);
+      $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);announce('Parry!',0.8);
       player.blocking=false;MS.step={p:'h',dm:2.4,cleave:true,fin:true};MS.dir=stepDir();MS.counter=true;MS.phase='windup';MS.t=0.06;MS.s=0;MS.hitDone=false;swordOut=1.4;player.meleeCd=0.5;return;}
     n*=0.2;play('clang');player.shake=Math.max(player.shake,.15);}n*=player.dmgTaken;
   player.hp-=n;play('hurt');player.shake=Math.max(player.shake,0.2);$('hurt').style.opacity=0.9;setTimeout(()=>$('hurt').style.opacity=0,120);

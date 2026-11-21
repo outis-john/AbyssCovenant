@@ -4,7 +4,7 @@ const bt={t:0};let lifts=[],holes=[];
 function payPsy(cost,ovlMul=1){const paid=Math.min(player.mana,cost),miss=cost-paid;player.mana-=paid;player.ovl+=(paid*0.6+miss*2)*ovlMul;}
 function fwdFlat(){return new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));}
 function castLift(free=false){
-  if(!free&&PSY.lift.cd>0){announce('锁喉冷却中',0.8);return;}
+  if(!free&&PSY.lift.cd>0){announce('Choke cooling down',0.8);return;}
   if(isClient()){payPsy(30);PSY.lift.cd=PSY.lift.max;player.channelT=1.7;play('lift');sendNet({t:'cast',k:'lift'});if(player.ovl>=player.maxOvl)backlash();return;}
   const f=fwdFlat(),list=[];
   for(const e of enemies){if(!e.alive||e.lifted||e.boss||e.static)continue;const to=e.g.position.clone().sub(player.pos).setY(0);const d=to.length();if(d<16&&to.normalize().dot(f)>Math.cos(0.66))list.push([d,e]);}
@@ -12,7 +12,7 @@ function castLift(free=false){
   // 扇形范围提示
   const fan=new THREE.Mesh(new THREE.CircleGeometry(16,20,Math.PI/2-0.66,1.32),new THREE.MeshBasicMaterial({color:0xa040ff,transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));
   const fg=new THREE.Group();fg.position.set(player.pos.x,.05,player.pos.z);fg.rotation.y=player.yaw;fan.rotation.x=-Math.PI/2;fg.add(fan);scene.add(fg);beams.push({m:fg,life:.45,fadeChild:fan});
-  if(!targets.length){if(!free)announce('扇形范围内没有目标',1);return;}
+  if(!targets.length){if(!free)announce('No target in range',1);return;}
   if(!free){payPsy(30);PSY.lift.cd=PSY.lift.max;player.channelT=1.7;}play('lift');
   targets.forEach((e,i)=>{e.lifted=true;e.kv.set(0,0,0);lifts.push({e,t:-i*0.05,vy:0,phase:'rise',tend:0});});
   if(player.ovl>=player.maxOvl)backlash();
@@ -37,7 +37,7 @@ function updateLifts(dt){
 }
 function dust(p,n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0x6a6058}));m.position.set(p.x,.2,p.z);m.scale.setScalar(2);scene.add(m);const a=Math.random()*6.28,s=3+Math.random()*4;sparks.push({m,v:new THREE.Vector3(Math.cos(a)*s,1+Math.random()*2,Math.sin(a)*s),life:.5+Math.random()*.4});}}
 function castHole(free=false,origin=null){
-  if(!free&&PSY.hole.cd>0){announce('黑洞冷却中',0.8);return;}
+  if(!free&&PSY.hole.cd>0){announce('Void Rift cooling down',0.8);return;}
   const {o,d}=aimRay(0);const h=castRay(o,d,30);const P=(h?h.point:o.clone().addScaledVector(d,18)).addScaledVector(d,-0.8);P.y=1.3;
   if(isClient()){payPsy(40);PSY.hole.cd=PSY.hole.max;spawnHoleVisual(P);sendNet({t:'cast',k:'hole'});if(player.ovl>=player.maxOvl)backlash();return;}
   if(!free){payPsy(40);PSY.hole.cd=PSY.hole.max;}play('hole');
@@ -66,19 +66,19 @@ function updateHoles(dt){
   holes=holes.filter(H=>!H.done);
 }
 function castBT(){
-  if(PSY.bt.cd>0){announce('子弹时间冷却中',0.8);return;}
-  payPsy(60,0.8);PSY.bt.cd=PSY.bt.max;bt.t=cls==='tide'?8:6;play('bt');announce('子弹时间 · 攻击吸血',1.6);
+  if(PSY.bt.cd>0){announce('Slow Time cooling down',0.8);return;}
+  payPsy(60,0.8);PSY.bt.cd=PSY.bt.max;bt.t=cls==='tide'?8:6;play('bt');announce('Slow Time · Lifesteal',1.6);
   if(player.ovl>=player.maxOvl)backlash();
 }
 // ============================================================ 灵能
-const FORMS={bolt:'射线',blast:'爆炸',shield:'护盾',summon:'召唤'};
-const ELEMS={fire:'火',lightning:'雷',void:'虚空',mind:'心灵'};
-const MODS={homing:'追踪',split:'分裂',delayed:'延时'};
+const FORMS={bolt:'Bolt',blast:'Blast',shield:'Shield',summon:'Summon'};
+const ELEMS={fire:'Fire',lightning:'Lightning',void:'Void',mind:'Mind'};
+const MODS={homing:'Homing',split:'Split',delayed:'Delayed'};
 const ELEM_COLOR={fire:0xff6a20,lightning:0x8fd0ff,void:0xa040ff,mind:0x60ffb0};
 const ELEM_MUL={fire:1,lightning:.9,void:1.3,mind:.6};
 const spellCost=s=>({bolt:15,blast:30,shield:20,summon:40}[s.form])+10*s.mods.length;
 const spellSlots=s=>2+s.mods.length;
-const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'焚灭火柱':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
+const spellName=s=>(s.elem==='fire'&&s.form==='bolt'?'Pyre Beam':ELEMS[s.elem]+FORMS[s.form])+(s.mods.length?'·'+s.mods.map(m=>MODS[m]).join(''):'');
 function castSpell(i){
   const s=spells[i];if(!s||spellSlots(s)>player.slots)return;
   const cost=spellCost(s),paid=Math.min(player.mana,cost),miss=cost-paid;
@@ -86,7 +86,7 @@ function castSpell(i){
   play('spell',s.elem==='lightning'?900:s.elem==='void'?250:500);
   const go=()=>{if(state!=='playing')return;const n=s.mods.includes('split')?3:1;
     for(let k=0;k<n;k++){const {o,d}=aimRay(0);if(n>1)d.applyAxisAngle(new THREE.Vector3(0,1,0),(k-1)*0.14);execSpell(s,o,d,(n>1?0.6:1)*(s.mods.includes('delayed')?1.5:1));}};
-  if(s.mods.includes('delayed')){announce('延时符文：1 秒后释放',1);setTimeout(go,1000);}else go();
+  if(s.mods.includes('delayed')){announce('Delayed rune: releases in 1s',1);setTimeout(go,1000);}else go();
   if(player.ovl>=player.maxOvl)backlash();
 }
 function nearestEnemy(p,maxD,cone){let best=null,bd=maxD;for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().setY(1.2).sub(p);const d=to.length();if(d>bd)continue;if(cone&&to.normalize().dot(cone)<0.85)continue;bd=d;best=e;}return best;}
@@ -108,7 +108,7 @@ function execSpell(s,o,d,scale){
   } else if(s.form==='blast'){
     const m=new THREE.Mesh(new THREE.SphereGeometry(.25,6,4),new THREE.MeshBasicMaterial({color:col}));m.position.copy(o).addScaledVector(d,.8);scene.add(m);
     projectiles.push({m,v:d.clone().multiplyScalar(24),s,mul,life:3,homing:s.mods.includes('homing')});
-  } else if(s.form==='shield'){player.shield=Math.max(player.shield,4*scale);announce('灵能护盾',1);}
+  } else if(s.form==='shield'){player.shield=Math.max(player.shield,4*scale);announce('Psychic Shield',1);}
   else if(s.form==='summon'){
     const m=new THREE.Mesh(new THREE.OctahedronGeometry(.3),new THREE.MeshBasicMaterial({color:col}));scene.add(m);
     wisps.push({m,s,mul,life:8*scale,cd:0,a:Math.random()*6});
@@ -123,14 +123,14 @@ function explode(p,s,mul){
 function beam(a,b,col){const g=new THREE.BufferGeometry().setFromPoints([a,b]);const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:col}));scene.add(l);beams.push({m:l,life:.12});}
 function backlash(){
   const over=player.ovl-player.maxOvl;player.ovl=player.maxOvl*0.5;
-  if(Math.random()<player.ignoreChance){announce('你压制住了深渊的反噬',2);return;}
-  if(player.bless==='change'){hurtPlayer(5,true);announce('万变赐福吞下了反噬',1.2);return;}
+  if(Math.random()<player.ignoreChance){announce('You suppressed the backlash',2);return;}
+  if(player.bless==='change'){hurtPlayer(5,true);announce('The Blessing of Change swallowed the backlash',1.2);return;}
   addTaint(CFG.taint.backlash,'change');play('backlash');player.warp=2.5;player.shake=0.5;
-  if(over>=35){announce('重度反噬——裂隙撕开了！',3);hurtPlayer(20,true);
+  if(over>=35){announce('Severe backlash — the rift tears open!',3);hurtPlayer(20,true);
     for(let k=0;k<3;k++){const a=Math.random()*6.28;spawnEnemy('imp',player.pos.x+Math.cos(a)*4,player.pos.z+Math.sin(a)*4);}}
-  else if(over>=15){announce('中度反噬——灵能爆发！',2);hurtPlayer(30,true);
+  else if(over>=15){announce('Moderate backlash — psychic eruption!',2);hurtPlayer(30,true);
     for(const e of enemies)if(e.alive&&e.g.position.distanceTo(player.pos)<5)damageEnemy(e,30,'body',e.g.position.clone().sub(player.pos).normalize(),{knock:1.5});}
-  else{announce('轻度反噬',1.5);hurtPlayer(10,true);}
+  else{announce('Minor backlash',1.5);hurtPlayer(10,true);}
 }
 function updateSpells(dt){
   for(const p of projectiles){p.life-=dt;

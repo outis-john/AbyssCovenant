@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>深渊圣约 Abyss Covenant</title>
+<title>Abyss Covenant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:#e8d9c0;user-select:none}
   #game{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated;display:block}
@@ -63,13 +64,29 @@
   #exBars{position:fixed;inset:0;pointer-events:none;z-index:6;background:linear-gradient(#000 0 9%,transparent 9% 91%,#000 91%);opacity:0;transition:opacity .15s}#exBars.show{opacity:1}
   #hellTint{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity 1s;mix-blend-mode:screen}
   #blessTag{margin-top:4px;font-size:12px;font-weight:bold;text-shadow:0 0 6px currentColor}
-  #auspex{position:fixed;left:9%;top:24%;width:300px;z-index:15;pointer-events:none;opacity:0;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(.3);transform-origin:left center;transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1)}
-  #auspex.show{opacity:.92;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(1);animation:ausFlick 3s infinite}
-  #auspex canvas{display:block;width:300px;height:220px;border:2px solid rgba(255,140,60,.7);box-shadow:0 0 18px rgba(255,90,30,.45),inset 0 0 30px rgba(0,0,0,.6);background:rgba(10,4,2,.6);filter:blur(.4px)}
-  #auspex .ah{font-size:11px;color:#ffb070;letter-spacing:2px;background:rgba(40,12,4,.8);border:1px solid rgba(255,140,60,.6);border-bottom:0;padding:3px 8px}#auspex .ah span{float:right;color:#ff6040}
-  #auspex .st{position:absolute;right:100%;height:3px;background:linear-gradient(90deg,rgba(60,50,40,.9),rgba(160,120,80,.9));transform-origin:right center}
-  #auspex .s1{top:24%;width:150px;transform:rotate(-28deg)}#auspex .s2{top:62%;width:160px;transform:rotate(-34deg)}#auspex .s3{top:96%;width:120px;transform:rotate(-30deg)}
-  @keyframes ausFlick{0%,96%,100%{filter:none}97%{filter:brightness(1.6) hue-rotate(-10deg)}98%{filter:brightness(.7)}}
+  #auspex{position:fixed;left:11%;top:23%;width:330px;z-index:15;pointer-events:none;opacity:0;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(.25) translateX(-200px);transform-origin:left center;transition:opacity .2s,transform .45s cubic-bezier(.25,1.25,.4,1)}
+  #auspex.show{opacity:1;transform:perspective(800px) rotateY(24deg) rotateZ(-2deg) scale(1)}
+  /* 机械支架：分段金属臂 + 铰链 + 液压杆 */
+  #auspex .arm{position:absolute;right:100%;height:16px;transform-origin:right center;background:linear-gradient(#5a564c,#34322c 45%,#1c1b18);border:1px solid #0c0b0a;box-shadow:inset 0 1px 0 rgba(255,240,210,.25),0 3px 6px rgba(0,0,0,.6);
+    background-image:radial-gradient(circle,#8a8270 1.5px,transparent 2px),linear-gradient(#5a564c,#34322c 45%,#1c1b18);background-size:22px 16px,100% 100%;background-position:4px 0,0 0}
+  #auspex .a1{top:18%;width:190px;transform:rotate(-27deg)}#auspex .a2{top:58%;width:205px;transform:rotate(-33deg)}#auspex .a3{top:92%;width:150px;height:12px;transform:rotate(-26deg)}
+  #auspex .pst{position:absolute;left:18%;top:-7px;width:55%;height:5px;background:linear-gradient(#c8c0a8,#6a6458);border:1px solid #1a1814;border-radius:2px}
+  #auspex .hg{position:absolute;right:-12px;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:radial-gradient(circle,#1a1916 3px,#8a8068 4px,#4a463c 7px,#22201c 11px);border:1px solid #0a0908}
+  #auspex .cable{position:absolute;right:100%;top:75%;width:170px;height:24px;border:3px solid #1a1a1a;border-color:transparent transparent #161616 transparent;border-radius:0 0 60% 40%;transform:rotate(-20deg);transform-origin:right top}
+  /* 显示器本体：铆接厚框、铭牌、散热格栅、指示灯 */
+  #auspex .bez{position:relative;padding:12px 14px 10px;background:linear-gradient(160deg,#55514a,#2e2c27 35%,#1d1c19 70%,#2a2824);border:2px solid #0c0b0a;border-radius:6px 6px 4px 4px;
+    box-shadow:inset 0 0 0 2px #3e3b34,inset 0 2px 0 rgba(255,240,200,.25),0 10px 24px rgba(0,0,0,.7)}
+  #auspex .bt{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d8d0b8,#6a6050 55%,#1a1814 75%);box-shadow:0 1px 1px #000}
+  #auspex .b1{left:4px;top:4px}#auspex .b2{right:4px;top:4px}#auspex .b3{left:4px;bottom:4px}#auspex .b4{right:4px;bottom:4px}
+  #auspex .plate{display:flex;gap:8px;align-items:center;margin:0 6px 6px;padding:2px 8px;white-space:nowrap;font-size:9px!important;background:linear-gradient(#a08848,#6a5528);border:1px solid #2a2010;font:600 10px Oswald,sans-serif;letter-spacing:2px;color:#1a1208;text-shadow:0 1px 0 rgba(255,230,160,.4)}
+  #auspex .plate .tag{opacity:.7}#auspex .plate #ausN{margin-left:auto;color:#5a0c06}
+  #auspex .scr{position:relative;border:3px solid #0a0a09;border-radius:10px/14px;overflow:hidden;box-shadow:inset 0 0 22px rgba(0,0,0,.9)}
+  #auspex .scr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.28) 2px 3px),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55));pointer-events:none}
+  #auspex canvas{display:block;width:300px;height:220px;background:#0a0603;filter:blur(.35px) contrast(1.1)}
+  #auspex .foot{display:flex;align-items:center;gap:6px;margin-top:6px;font:600 9px Oswald,sans-serif;letter-spacing:2px;color:#8a8068}
+  #auspex .grl{flex:1;height:8px;background:repeating-linear-gradient(90deg,#0c0b0a 0 3px,#3a372f 3px 5px);border:1px solid #0a0908}
+  #auspex .led{width:7px;height:7px;border-radius:50%;background:#ff3018;box-shadow:0 0 6px #ff3018;animation:ausLed 1s steps(2) infinite}#auspex .led.g{background:#60ff70;box-shadow:0 0 6px #60ff70;animation-delay:.5s}
+  @keyframes ausLed{50%{opacity:.25}}
   body.inhub #auspex{display:none}
   #ultTint,#ultFlash{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0}
   #ultBanner{position:fixed;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:30;opacity:0}#ultBanner.go{animation:ub 1.4s ease-out}
@@ -132,7 +149,7 @@
   .lb{position:absolute;left:0;right:0;height:11vh;background:#000}.lb.top{top:0}.lb.bot{bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0 40px;box-sizing:border-box}
   #cutCap{font-size:20px;letter-spacing:6px;color:#d8a657}.skip{font-size:12px;color:#5a4f42}
   #hub .bottom .nb,#joinCode{pointer-events:auto;font-size:14px;padding:10px 14px}
-  #joinCode{width:92px;background:#1d110d;color:#f0dcb8;border:1px solid #6b4a2a;border-left:0;border-right:0;text-transform:uppercase;letter-spacing:3px;margin:0;font:inherit;font-size:14px}
+  #joinCode{width:118px;letter-spacing:1px!important;background:#1d110d;color:#f0dcb8;border:1px solid #6b4a2a;border-left:0;border-right:0;text-transform:uppercase;letter-spacing:3px;margin:0;font:inherit;font-size:14px}
   #lobby{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);width:560px;padding:16px 20px;background:rgba(10,6,5,.92);border:1px solid #6b4a2a;text-align:center;display:none;pointer-events:auto}
   #lobby.show{display:block}#lobby .lt{color:#d8a657;font-size:18px;letter-spacing:4px;margin-bottom:6px}#lobbyCode{font-size:26px;letter-spacing:6px;color:#f0c674}
   #matching{position:fixed;left:0;right:0;bottom:120px;text-align:center;display:none;pointer-events:auto}
@@ -145,6 +162,42 @@
   #result table{border-collapse:collapse;width:100%;margin:10px 0 6px;font-size:14px}
   #result td{padding:6px 4px;border-bottom:1px solid #2e1f17}#result td:last-child{text-align:right;color:#f0dcb8}
   .lost{color:#e05a4a!important}.gain{color:#8fd08f!important}
+
+  /* ===== HUD：冷峻军用风（参考图风格）===== */
+  body{font-family:"Barlow Condensed","Oswald","Arial Narrow","Microsoft YaHei",sans-serif}
+  #hud-bl{left:22px;bottom:20px;width:300px;font-size:13px;letter-spacing:.5px}
+  .sq{display:flex;gap:8px;align-items:flex-start;margin-top:6px}.sq .pf{width:44px;height:50px;flex:none;border:1px solid rgba(220,230,220,.35);background:linear-gradient(160deg,#2a2e2c,#0d0f0e);display:grid;place-items:center;font:600 15px Oswald,sans-serif;color:#cfd8d0;letter-spacing:1px}
+  .sq.mate .pf{width:30px;height:34px;font-size:11px}.sq .sqi{flex:1;min-width:0}
+  .sq .nm{display:flex;justify-content:space-between;font-weight:600;font-size:14px;color:#e8eee8;text-transform:uppercase;letter-spacing:1px}.sq .nm .hpn{font-weight:500;color:#9aa8a0;font-size:12px}
+  .sq.mate .nm{font-size:12px}.sq.mate .bar{height:4px;margin:3px 0}
+  .bar{height:6px;background:rgba(0,0,0,.55);border:0;margin:4px 0;position:relative;box-shadow:0 0 0 1px rgba(200,210,200,.18)}
+  .bar.seg{height:8px}.bar.seg::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(0,0,0,.85) calc(10% - 2px) 10%)}
+  .bar.thin{height:3px;margin:2px 0 5px}
+  #hp>div{background:linear-gradient(#f2f6f2,#b8c4bc)}#st>div{background:#6fa8c0}#exb>div{background:#d8a040}#exb.full>div{background:#ffcc60;box-shadow:0 0 6px #ffcc60}
+  #mana>div{background:#7aa0ff}#ovl>div{background:#e05a4a}
+  .mini{display:block;margin-top:2px}.mini span,.psyb span{font-size:10px;letter-spacing:2px;color:#8a968e}.mini b,.psyb b{color:#d8e0da;font-weight:600;margin-left:4px}
+  #blessTag{font-size:11px;letter-spacing:2px;text-transform:uppercase}
+  #weapons{left:auto;right:22px;bottom:20px;transform:none;flex-direction:column;align-items:flex-end;gap:4px}
+  .wslot{display:flex;align-items:center;gap:10px;border:0;background:linear-gradient(270deg,rgba(10,12,11,.75),rgba(10,12,11,0));padding:4px 10px 4px 30px;min-width:0;color:#9aa49e;font-size:12px;letter-spacing:1px;text-transform:uppercase;clip-path:polygon(14px 0,100% 0,100% 100%,0 100%)}
+  .wslot .wn{min-width:120px;text-align:right;font-weight:600}.wslot .wk{border:1px solid rgba(200,210,200,.4);padding:0 4px;font-size:11px;color:#c8d0ca}
+  .wslot .am{font:600 15px Oswald,sans-serif;color:#cfd8d0;min-width:60px;text-align:right}.wslot .am small{font-size:11px;color:#7a847e;margin-left:2px}
+  .wslot.on{background:linear-gradient(270deg,rgba(30,36,33,.92),rgba(30,36,33,.15));color:#eef3ee;padding:8px 12px 8px 40px}
+  .wslot.on .am{font-size:40px;line-height:.9;color:#f2f6f2;text-shadow:0 0 8px rgba(255,255,255,.25)}.wslot.on .am small{display:block;font-size:14px;color:#a0aaa4;text-align:right}
+  .wslot .low{color:#ff6a50}
+  #hud-br{left:50%;right:auto;bottom:16px;transform:translateX(-50%);width:auto;text-align:center}
+  .psyb{display:grid;grid-template-columns:auto 160px auto 160px;gap:4px 8px;align-items:center;justify-content:center}
+  .spell{border:0;border-bottom:2px solid;background:rgba(10,12,11,.7);padding:3px 8px;font-size:12px;min-width:76px;letter-spacing:1px;text-transform:uppercase}
+  #obj{left:auto;right:22px;top:216px;max-width:330px;font-size:13px;line-height:1.5;background:linear-gradient(90deg,rgba(24,28,26,.85),rgba(24,28,26,.55));border-left:3px solid #c8d0ca;padding:8px 12px 8px 12px}
+  #obj h3{font:600 12px Oswald,sans-serif;color:#c8d0ca;letter-spacing:3px;text-transform:uppercase}#obj h3::before{content:'◎ ';color:#f0f4f0}
+  #obj .done{color:#8fd08f;text-decoration:line-through}#obj .hidden{color:#8a948e}
+  #mapWrap{right:22px;top:20px}#mapLegend{font-size:11px;letter-spacing:1px}
+  #announce{top:24%;left:50%;width:auto;transform:translateX(-50%);padding:6px 40px;font:600 20px Oswald,sans-serif;text-transform:uppercase;letter-spacing:3px;color:#f2f6f2;
+    background:linear-gradient(90deg,rgba(20,24,22,0),rgba(20,24,22,.85) 20%,rgba(20,24,22,.85) 80%,rgba(20,24,22,0));border-top:1px solid rgba(220,230,220,.5);border-bottom:1px solid rgba(220,230,220,.5);white-space:nowrap}
+  #prompt{top:62%;font-size:15px;letter-spacing:1px;text-transform:uppercase}
+  #bossbar{width:360px!important;top:10px!important;font:600 13px Oswald,sans-serif!important;letter-spacing:2px;color:#e04030!important;text-transform:uppercase}
+  #bossbar>div{height:5px!important;border:0!important;background:rgba(0,0,0,.6)!important;box-shadow:0 -3px 0 rgba(200,180,160,.5)}
+  #zab{bottom:178px;left:22px}#zab .zn{font-family:Oswald,sans-serif;letter-spacing:1px;text-transform:uppercase}
+  #progress{height:4px}
 </style>
 </head>
 <body>
@@ -154,79 +207,86 @@
 <div class="layer" id="hurt"></div>
 <div class="layer" id="shieldfx"></div>
 <div class="layer" id="btfx" style="background:radial-gradient(ellipse at center,transparent 45%,rgba(40,160,255,.35) 100%);opacity:0;transition:opacity .3s"></div>
-<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="auspex"><i class="st s1"></i><i class="st s2"></i><i class="st s3"></i><div class="ah">侦测仪 · 生命信号扫描 <span id="ausN"></span></div><canvas id="ausCv" width="300" height="220"></canvas></div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
+<div id="cross"></div><div id="hit"></div><div id="ckFrame"></div><div id="auspex">
+  <div class="arm a1"><i class="pst"></i><i class="hg"></i></div><div class="arm a2"><i class="pst"></i><i class="hg"></i></div><div class="arm a3"><i class="hg"></i></div><i class="cable"></i>
+  <div class="bez"><b class="bt b1"></b><b class="bt b2"></b><b class="bt b3"></b><b class="bt b4"></b>
+    <div class="plate"><span>AUSPEX MK.IV</span><span class="tag">LIFE-SIGN SCAN</span><span id="ausN"></span></div>
+    <div class="scr"><canvas id="ausCv" width="300" height="220"></canvas></div>
+    <div class="foot"><i class="grl"></i><i class="led"></i><i class="led g"></i><span>RNG 32M</span></div></div>
+</div><div id="ultTint"></div><div id="hellTint"></div><div id="ultFlash"></div><div id="ultBanner"></div><div id="exBars"></div><div id="zab"></div><div id="perf" style="position:fixed;left:8px;bottom:8px;color:#9f9;font:12px monospace;background:#0008;padding:2px 6px;z-index:50;display:none"></div>
 <div id="obj"></div>
-<div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> 逃生舱 <span style="color:#60ffb0">●</span> 线索/终端 <span style="color:#ff9a40">●</span> 零件 · M 放大</div></div>
+<div id="mapWrap"><canvas id="minimap" width="180" height="180"></canvas><div class="small" id="mapLegend"><span style="color:#d8a657">■</span> Pod <span style="color:#60ffb0">●</span> Clue / terminal <span style="color:#ff9a40">●</span> Parts · M to enlarge</div></div>
 <div class="layer" id="splat"></div>
 <div id="announce"></div>
 <div id="prompt"></div>
-<div id="bossbar" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:420px;display:none;text-align:center;color:#e8c0a0;font-size:13px;text-shadow:0 0 4px #000">深渊领主<div style="height:8px;border:1px solid #6b2a1a;background:#1a0806;margin-top:3px"><div id="bossfill" style="height:100%;width:100%;background:#c0302a"></div></div></div>
+<div id="bossbar" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:420px;display:none;text-align:center;color:#e8c0a0;font-size:13px;text-shadow:0 0 4px #000">Abyss Lord<div style="height:8px;border:1px solid #6b2a1a;background:#1a0806;margin-top:3px"><div id="bossfill" style="height:100%;width:100%;background:#c0302a"></div></div></div>
 <div id="trainBox" style="position:fixed;top:60px;left:50%;transform:translateX(-50%);display:none;max-width:640px;padding:10px 18px;background:rgba(10,5,4,.85);border:1px solid #d8a657;color:#ffe0a0;font-size:15px;text-align:center;z-index:40"></div>
 <div id="progress" class="bar"><div style="background:#d8a657"></div></div>
 <div id="litany"></div>
 <div id="weapons"></div>
 <div id="hud-bl">
-  <div>生命 <span id="hpTxt"></span></div><div class="bar" id="hp"><div></div></div>
-  <div>体力</div><div class="bar" id="st"><div></div></div>
-  <div>处决 <span id="exTxt"></span></div><div class="bar" id="exb"><div></div></div>
-  <div>深渊侵蚀 <span id="taintTxt"></span></div><div class="bar" id="taint"><div style="background:#9030c0"></div></div>
-  <div id="blessTag"></div>
+  <div id="squad"></div>
+  <div class="sq me"><div class="pf" id="pf"></div><div class="sqi">
+    <div class="nm"><span id="myName"></span><span class="hpn" id="hpTxt"></span></div>
+    <div class="bar seg" id="hp"><div></div></div><div class="bar thin" id="st"><div></div></div>
+    <div class="mini"><span>EXECUTE <b id="exTxt"></b></span><div class="bar thin" id="exb"><div></div></div></div>
+    <div class="mini"><span>CORRUPTION <b id="taintTxt"></b></span><div class="bar thin" id="taint"><div style="background:#9a40d0"></div></div></div>
+    <div id="blessTag"></div></div></div>
 </div>
 <div id="hud-br">
-  <div>灵能 <span id="manaTxt"></span></div><div class="bar" id="mana"><div></div></div>
-  <div>过载 <span id="ovlTxt"></span></div><div class="bar" id="ovl"><div></div></div>
+  <div class="psyb"><span>PSYKER <b id="manaTxt"></b></span><div class="bar thin" id="mana"><div></div></div><span>OVERLOAD <b id="ovlTxt"></b></span><div class="bar thin" id="ovl"><div></div></div></div>
   <div id="spells"></div>
 </div>
 
-<div id="letterbox"><div class="lb top"></div><div class="lb bot"><span id="cutCap"></span><span class="skip">点击 / 空格 跳过</span></div></div>
+<div id="letterbox"><div class="lb top"></div><div class="lb bot"><span id="cutCap"></span><span class="skip">Click / Space to skip</span></div></div>
 <div class="layer" id="fade" style="background:#000;opacity:0"></div>
 <div id="hub" class="show">
   <header class="hbar">
-    <div><div class="title">深渊圣约</div><div class="sub">战舰「永夜誓约号」· 整备甲板</div></div>
-    <div class="hbar-r"><div id="vaultInfo"></div><button id="trainBtn" class="ghost">训练场</button><button id="setBtn" class="ghost">设置</button></div>
+    <div><div class="title">ABYSS COVENANT</div><div class="sub">Warship "Eternal Night Oath" · Armoury Deck</div></div>
+    <div class="hbar-r"><div id="vaultInfo"></div><button id="trainBtn" class="ghost">Training</button><button id="setBtn" class="ghost">Settings</button></div>
   </header>
   <section class="left pnl">
-    <h4>职业</h4>
+    <h4>Class</h4>
     <div class="clsrow" id="clsCards"></div>
     <div id="clsInfo"></div>
-    <h4>主武器</h4><div class="lo" id="loPrimary"></div>
-    <h4>近战武器</h4><div class="lo" id="loMelee"></div>
+    <h4>Primary</h4><div class="lo" id="loPrimary"></div>
+    <h4>Melee</h4><div class="lo" id="loMelee"></div>
     <div class="small" id="loDesc"></div>
-    <div class="small dim">副武器：爆弹手枪（无限备弹）· 拖动角色旋转查看</div>
+    <div class="small dim">Sidearm: bolt pistol (infinite ammo) · drag the model to rotate</div>
   </section>
   <section class="right pnl"><div id="shop"></div></section>
   <div class="bottom">
     <div class="deploy pnl">
       <div id="deployOpts"></div>
-      <div class="drow"><button id="goBtn">单人行动</button>
-        <div class="mp"><button id="hostBtn" class="nb">创建房间</button><input id="joinCode" maxlength="6" placeholder="房间码"><button id="joinBtn" class="nb">加入</button></div></div>
-      <div class="hint">撤离方式未知 · 阵亡会丢失身上的一切 · 按 H 查看按键</div>
+      <div class="drow"><button id="goBtn">Deploy Solo</button>
+        <div class="mp"><button id="hostBtn" class="nb">Create Room</button><input id="joinCode" maxlength="6" placeholder="Room code"><button id="joinBtn" class="nb">Join</button></div></div>
+      <div class="hint">Extraction unknown · death loses everything you carry · press H for controls</div>
     </div>
   </div>
 </div>
 </div>
-<div id="lobby"><div class="lt">联机房间</div><div>房间码 <b id="lobbyCode">—</b></div><div class="slots" id="lobbyList"></div>
-  <div id="netMsg" class="hint"></div><button id="lobbyStart">开始行动</button><button id="lobbyLeave">离开房间</button></div>
+<div id="lobby"><div class="lt">Squad Room</div><div>Room code <b id="lobbyCode">—</b></div><div class="slots" id="lobbyList"></div>
+  <div id="netMsg" class="hint"></div><button id="lobbyStart">Deploy</button><button id="lobbyLeave">Leave Room</button></div>
 <div id="matching">
-  <div id="mmText">正在寻找队友……</div>
-  <div class="slots"><div class="slot me" id="slot0"></div><div class="slot wait" id="slot1">寻找中…</div><div class="slot wait" id="slot2">寻找中…</div></div>
-  <button id="mmCancel">取消匹配</button>
-  <div class="hint">联机功能开发中，目前会以单人身份空降</div>
+  <div id="mmText">Searching for squadmates...</div>
+  <div class="slots"><div class="slot me" id="slot0"></div><div class="slot wait" id="slot1">Searching...</div><div class="slot wait" id="slot2">Searching...</div></div>
+  <button id="mmCancel">Cancel</button>
+  <div class="hint">Multiplayer in development — deploying solo for now</div>
 </div>
-<div class="panel" id="ready"><div class="box" style="text-align:center"><h2>空降舱已着陆</h2><p>巢都第七区。撤离方式未知——寻找数据板线索。</p><button id="readyBtn">点击开始行动</button></div></div>
+<div class="panel" id="ready"><div class="box" style="text-align:center"><h2>Drop pod has landed</h2><p>Hive Sector 7. Extraction method unknown — find data-slate clues.</p><button id="readyBtn">Click to deploy</button></div></div>
 
-<div class="panel" id="settings"><div class="box" style="width:520px"><h2>设置</h2><div id="setRows"></div><h3 style="margin:16px 0 4px;color:#d8a657;font-size:14px">按键（点击后按新键，Esc 取消）· 也支持手柄</h3><div id="keyRows" style="max-height:220px;overflow:auto"></div><button id="setClose">完成</button></div></div>
-<div id="help"><h3 style="margin:0 0 6px">按键说明 <small>（H 关闭）</small></h3><div id="helpBody"></div></div>
-<div class="panel" id="pause"><div class="box"><h2>暂停</h2><button id="resume">继续</button><button id="pauseSet">设置</button><button id="pauseHelp">按键说明</button><button id="quit">放弃行动</button></div></div>
+<div class="panel" id="settings"><div class="box" style="width:520px"><h2>Settings</h2><div id="setRows"></div><h3 style="margin:16px 0 4px;color:#d8a657;font-size:14px">Controls (click then press a new key, Esc to cancel) · gamepad supported</h3><div id="keyRows" style="max-height:220px;overflow:auto"></div><button id="setClose">done</button></div></div>
+<div id="help"><h3 style="margin:0 0 6px">Help <small>(H close)</small></h3><div id="helpBody"></div></div>
+<div class="panel" id="pause"><div class="box"><h2>Paused</h2><button id="resume">Resume</button><button id="pauseSet">Settings</button><button id="pauseHelp">Help</button><button id="quit">Abandon Mission</button></div></div>
 
 <div class="panel" id="runes"><div class="box" style="width:640px">
-  <h2>符文拼装</h2>
-  <p class="small">每个技能 = 形态 + 元素 + 修饰。形态和元素各占 1 槽，每个修饰占 1 槽。槽位：<b id="slotInfo"></b></p>
+  <h2>Rune Builder</h2>
+  <p class="small">Each skill = form + element + modifiers. Form and element take 1 slot each; each modifier takes 1 slot. Slots: <b id="slotInfo"></b></p>
   <div id="runeList"></div>
-  <button id="runeDone">完成</button>
+  <button id="runeDone">done</button>
 </div></div>
 
-<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="backBtn">返回战舰</button></div></div>
+<div class="panel" id="result"><div class="box" style="width:460px"><h2 id="resTitle"></h2><p id="resText"></p><table id="resTable"></table><button id="backBtn">Return to Ship</button></div></div>
 
 <script type="module">
 /*@GAME@*/

@@ -59,4 +59,4 @@ function capBloods(){while(bloods.length>CFG.perf.bloods){const o=bloods.shift()
 // ---------- F3：帧率和对象数量
 const perfMon={on:false,t:0,n:0,fps:0};
 function updatePerf(dt){if(!perfMon.on)return;perfMon.t+=dt;perfMon.n++;if(perfMon.t<0.5)return;perfMon.fps=Math.round(perfMon.n/perfMon.t);perfMon.t=0;perfMon.n=0;
-  const i=renderer.info.render||{};$('perf').textContent=`FPS ${perfMon.fps} · 敌人 ${enemies.filter(e=>e.alive).length} · 碎块 ${gibs.length} · 血 ${bloods.length} · 粒子 ${sparks.length+puffs.length} · 绘制 ${i.calls??'-'}`;}
+  const i=renderer.info.render||{};$('perf').textContent=`FPS ${perfMon.fps} · Enemies ${enemies.filter(e=>e.alive).length} · Gibs ${gibs.length} · Blood ${bloods.length} · Particles ${sparks.length+puffs.length} · Draws ${i.calls??'-'}`;}

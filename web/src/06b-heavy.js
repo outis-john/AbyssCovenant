@@ -1,12 +1,12 @@
 // ============================================================ 重击（按住左键）+ 新近战武器模型
 // 每把近战武器：轻攻击 = COMBOS 里的连招；重击 = HEAVY 里的独特动作（蓄力时举起武器，松开释放）
 const HEAVY={
-  saw:   {p:'h',dm:2.2,k:'spin',  name:'回旋锯斩'},
-  power: {p:'a',dm:2.6,k:'line',  name:'裂地斩'},
-  ssword:{p:'t',dm:0.8,k:'bash',  thrust:true,name:'盾击'},
-  hammer:{p:'hm3',dm:1.9,k:'quake', name:'雷霆砸地'},
-  fist:  {p:'f4',dm:3.0,k:'crush', thrust:true,name:'捏碎'},
-  axe:   {p:'x3',dm:2.4,k:'behead',name:'斩首'}};
+  saw:   {p:'h',dm:2.2,k:'spin',  name:'Spin Saw'},
+  power: {p:'a',dm:2.6,k:'line',  name:'Earth Splitter'},
+  ssword:{p:'t',dm:0.8,k:'bash',  thrust:true,name:'Shield Bash'},
+  hammer:{p:'hm3',dm:1.9,k:'quake', name:'Thunder Slam'},
+  fist:  {p:'f4',dm:3.0,k:'crush', thrust:true,name:'Crush'},
+  axe:   {p:'x3',dm:2.4,k:'behead',name:'Behead'}};
 // 新武器自己的动作：幅度更大，彼此不同（锤：抡圆横扫 + 过顶砸；拳：直拳 / 勾拳 / 上勾；斧：过顶劈 / 反手上撩 / 整圈横斩）
 Object.assign(POSE,{
   hm1:{start:[0.25,2.5,1.5],end:[0.05,-2.5,-1.3],ps:[.72,-.08,-.35],pe:[-.8,-.5,-.6]},
@@ -20,9 +20,9 @@ Object.assign(POSE,{
   x2:{start:[-1.3,-1.5,-0.9],end:[1.2,1.4,1.1],ps:[-.42,-.65,-.45],pe:[.7,.12,-.6]},
   x3:{start:[0.1,2.7,0.35],end:[0.1,-2.7,-0.35],ps:[.75,-.25,-.35],pe:[-.85,-.3,-.5]}});
 Object.assign(COMBOS,{
-  hammer:[{p:'hm1',dm:1,name:'抡圆横扫'},{p:'hm2',dm:1.1,name:'回身横扫'},{p:'hm3',dm:1.6,fin:true,name:'过顶重砸'}],
-  fist:[{p:'f1',dm:.8,thrust:true,name:'直拳'},{p:'f2',dm:1.1,name:'勾拳'},{p:'f3',dm:1.6,fin:true,name:'上勾拳'}],
-  axe:[{p:'x1',dm:1,name:'过顶劈'},{p:'x2',dm:1.1,name:'反手上撩'},{p:'x3',dm:1.4,bite:true,biteDur:.35,name:'回旋锯斩'}]});
+  hammer:[{p:'hm1',dm:1,name:'Wide sweep'},{p:'hm2',dm:1.1,name:'Back sweep'},{p:'hm3',dm:1.6,fin:true,name:'Overhead smash'}],
+  fist:[{p:'f1',dm:.8,thrust:true,name:'Cross'},{p:'f2',dm:1.1,name:'Hook'},{p:'f3',dm:1.6,fin:true,name:'Uppercut'}],
+  axe:[{p:'x1',dm:1,name:'Overhead chop'},{p:'x2',dm:1.1,name:'Rising backhand'},{p:'x3',dm:1.4,bite:true,biteDur:.35,name:'Spin Saw'}]});
 // ---------- 模型
 const hammerG=new THREE.Group();view.add(hammerG);hammerG.visible=false;
 {const hd=new THREE.Mesh(new THREE.BoxGeometry(.36,.26,.26),new THREE.MeshLambertMaterial({map:texMetal,color:0x8a8a9a}));hd.position.z=-.95;hammerG.add(hd);

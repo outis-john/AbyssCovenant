@@ -16,13 +16,13 @@ function prepareMatch(seedArg){
 }
 $('readyBtn').onclick=()=>{
   $('ready').classList.remove('show');document.body.classList.remove('inhub');
-  announce('空降完成。撤离方式未知——寻找线索。',3.5);
+  announce('Drop complete. Extraction method unknown — find clues.',3.5);
   state='playing';canvas.requestPointerLock?.();
 };
 let deathT=0;
 function beginDeath(){
   if(state!=='playing')return;state='dying';deathT=2.2;mouseDown=false;swordOut=0;swing=0;MS.phase='none';ex.active=false;player.blocking=false;sawEngine(false,'idle');humEngine(false,false);
-  play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('你倒下了……',2);
+  play('kill');play('hurt');$('hurt').style.opacity=1;setProgress(-1);announce('You have fallen...',2);
 }
 function updateDeath(dt){
   deathT-=dt;const k=1-clamp(deathT/2.2,0,1);
@@ -30,7 +30,7 @@ function updateDeath(dt){
   camera.rotation.set(lerp(player.pitch,-0.2,k),player.yaw,lerp(0,1.25,Math.min(1,k*1.4)),'YXZ');
   view.visible=false;canvas.style.filter=`grayscale(${k}) brightness(${1-k*0.5})`;
   if(deathT<=0){if(isClient())sendNet({t:'dead'});
-    if(isNet()&&[...net.remotes.values()].some(r=>r.inMatch&&!r.dead)){state='spectate';$('hurt').style.opacity=0;canvas.style.filter='';announce('你已阵亡，正在观战。队伍撤离或全灭时一起结算。',5);checkWipe();}
+    if(isNet()&&[...net.remotes.values()].some(r=>r.inMatch&&!r.dead)){state='spectate';$('hurt').style.opacity=0;canvas.style.filter='';announce('You’re down and spectating. Results come when the squad extracts or wipes.',5);checkWipe();}
     else endMatch(false);}
 }
 function endMatch(win){
@@ -43,17 +43,17 @@ function endMatch(win){
   const t=Math.floor(gameTime),mm=String(Math.floor(t/60)).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
   const done=match.conds.filter(c=>c.prog>=c.target).length,found=match.conds.filter(c=>c.revealed).length;
   const parts=Object.keys(PART_NEED).reduce((a,k)=>a+match.parts[k],0),need=Object.values(PART_NEED).reduce((a,b)=>a+b,0);
-  $('resTitle').textContent=win?'撤离成功':'阵亡';
+  $('resTitle').textContent=win?'Extracted':'Down';
   $('resTitle').style.color=win?'#8fd08f':'#e05a4a';
-  $('resText').textContent=diedButWon?'你在行动中阵亡，但队伍成功撤离，带回了全队的物资。':win?'逃生舱冲出大气层，「永夜誓约号」接住了你。':'全队倒在了巢都深处。身上的一切都留给了深渊。';
+  $('resText').textContent=diedButWon?'You fell in action, but the squad extracted with everyone’s loot.':win?'The escape pod breaks atmosphere — the "Eternal Night Oath" catches you.':'The squad fell deep in the hive. Everything you carried is left to the Abyss.';
   const row=(a,b,c='')=>`<tr><td>${a}</td><td class="${c}">${b}</td></tr>`;
   $('resTable').innerHTML=
-    row('存活时间',mm+':'+ss)+row('击杀恶魔',match.kills+(match.elites?`（精英 ${match.elites}）`:''))+
-    row('撤离条件',`完成 ${done} / ${match.conds.length}　发现 ${found} / ${match.conds.length}`)+row('逃生舱零件',`${parts} / ${need}`)+
-    row(win?'带回物资':'回收装置保住',kept+' 件','gain')+(win?'':row('丢失物资',lost+' 件','lost'))+
-    row('灵能圣物',match.rare?(win?'带回':'丢失'):'未找到',match.rare?(win?'gain':'lost'):'')+
-    row('威胁等级',CFG.threat[match.threat||1].name+`（物资 ×${TM}）`)+(player.amulet?row('圣物护符',amLost?'失去':'带回',amLost?'lost':'gain'):'')+
-    row('战舰仓库总计',`${v.loot} 件物资 · ${v.rare} 件圣物`);
+    row('Time survived',mm+':'+ss)+row('Slay demons',match.kills+(match.elites?`(elite ${match.elites})`:''))+
+    row('Extraction',`done ${done} / ${match.conds.length} found ${found} / ${match.conds.length}`)+row('Pod parts',`${parts} / ${need}`)+
+    row(win?'Loot brought back':'Saved by beacon',kept+'  ','gain')+(win?'':row('Loot lost',lost+'  ','lost'))+
+    row('psy-relic',match.rare?(win?'Returned':'Lost'):'Not found',match.rare?(win?'gain':'lost'):'')+
+    row('Threat level',CFG.threat[match.threat||1].name+`(Loot ×${TM})`)+(player.amulet?row('Relic amulet',amLost?'Lost':'Returned',amLost?'lost':'gain'):'')+
+    row('Ship vault total',`${v.loot} loot ·  ${v.rare} relics`);
   $('result').classList.add('show');
 }
 function resumeGame(){state='playing';$('pause').classList.remove('show');canvas.requestPointerLock?.();}
@@ -68,7 +68,7 @@ $('letterbox').addEventListener('click',()=>{if(state==='cutscene')endCutscene()
 let mouseDown=false;
 addEventListener('mousemove',e=>{if(state!=='playing'||!document.pointerLockElement)return;const k=0.0022*SET.sens*(camera.fov<40?0.35:1);player.yaw-=e.movementX*k;player.pitch=clamp(player.pitch-e.movementY*k,-1.5,1.5);});
 addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='playing'&&(document.pointerLockElement||pad.active))tryFire(true);}
-  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'右手：爆弹手枪':'右手：剑',0.7);}
+  if(e.button===2&&state==='playing'&&WEAPONS[cur].block&&!ex.active){player.ssPistol=!player.ssPistol;switchT=0.2;reloadT=0;MS.phase='none';play('equip');announce(player.ssPistol?'Right hand: bolt pistol':'Right hand: sword',0.7);}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='saw'&&cur===2&&!ex.active&&MS.phase==='none'){player.revving=true;player.revCharge=0;}
   if(e.button===2&&state==='playing'&&WEAPONS[cur].id==='power'&&cur===2&&!ex.active)activateField();
   if(e.button===2&&state==='playing'&&WEAPONS[cur].scope&&cur===0)player.aiming=true;
@@ -76,7 +76,7 @@ addEventListener('mousedown',e=>{if(e.button===0){mouseDown=true;if(state==='pla
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(state!=='playing')return;let n=(cur+(e.deltaY>0?1:2))%3;if(n===1&&CLS[cls].noPistol)n=(n+(e.deltaY>0?1:2))%3;switchWeapon(n);});
 addEventListener('mouseup',e=>{if(e.button===0){mouseDown=false;if(state==='playing')meleeRelease();}if(e.button===2){player.charging=false;player.aiming=false;
-  if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('链锯狂热！移速、攻速提升 '+player.frenzy.toFixed(1)+' 秒',1.5);}player.revCharge=0;}}});
+  if(player.revving){player.revving=false;if(player.revCharge>0.2){player.frenzy=1.5+player.revCharge*3.5;play('frenzy');announce('Chainsword frenzy! Move & attack speed up '+player.frenzy.toFixed(1)+' s',1.5);}player.revCharge=0;}}});
 addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET.fps;saveSet();applySet();return;}
   if(e.code==='KeyH'&&(state==='playing'||state==='paused')){toggleHelp();return;}
   if(e.code==='Tab'){e.preventDefault();if(state==='playing'&&CLS[cls].psy)openRunes();else if(state==='runes')$('runeDone').onclick();return;}
@@ -85,7 +85,7 @@ addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();SET.fps=!SET
   if(e.code==='Space'&&player.onGround&&!CLS[cls].noJump){player.vy=7.5;player.onGround=false;}
   if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);
   if(e.code==='KeyZ')classAbility();if(e.code==='KeyT'){toggleAuspex();return;}
-  if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('只有唤潮者能使用灵能 · 按 Z 使用职业技能',1.2);return;}
+  if(!CLS[cls].psy&&['KeyV','KeyG','KeyQ','KeyC'].includes(e.code)){announce('Only Tidecallers can use psychic powers · press Z for your class ability',1.2);return;}
   if(e.code==='KeyV')castLift();if(e.code==='KeyG')castHole();if(e.code==='KeyQ')castBT();if(e.code==='KeyC')castSpell(0);
   if(e.code==='KeyM')$('mapWrap').classList.toggle('big');
   if(e.code==='KeyE'&&!e.repeat&&WEAPONS[cur].block&&!ex.active){player.blocking=true;player.blockStart=gameTime;play('equip');}

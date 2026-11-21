@@ -61,7 +61,7 @@ function killEnemy(e,dir,explode,how={}){
   if(e.boss&&!isClient())bossDown(e);
   if(e.type==='bloater')bloaterBurst(e);
   if(e.type==='tanker')tankerBurst(e);if(e.type==='frostling')iceBurst(e);
-  if(e.type==='nest'&&!isClient()){addProgress('nest',1);annTeam('恶魔巢穴被摧毁！',2);}
+  if(e.type==='nest'&&!isClient()){addProgress('nest',1);annTeam('Demon nest destroyed!',2);}
   e.alive=false;play('kill');hitstop=Math.max(hitstop,explode?0.12:0.06);player.shake=Math.max(player.shake,0.25);e.lifted=false;e.inHole=false;
   e.g.updateMatrixWorld(true);
   try{

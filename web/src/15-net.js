@@ -68,26 +68,26 @@ class RelayPeer{
 const useP2P=()=>location.hash==='#p2p';   // 网址末尾加 #p2p 改用旧的 PeerJS 直连
 function loadPeerJS(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';s.onload=()=>res();s.onerror=()=>rej(new Error('load'));document.head.appendChild(s);});}
 const PEER_PREFIX='abysscov-';
-function netErrText(err){const t=err&&err.type;if(t==='peer-unavailable')return'找不到这个房间，请检查房间码。';
-  if(t==='unavailable-id')return'房间码冲突，请再试一次。';
-  if(t==='relay-unreachable')return'连不上中继服务器（broker.emqx.io）。请检查网络；Claude 页面里不能联机，请用 GitHub Pages 版或离线版。';
-  return'无法连接联机服务器。注意：Claude 页面里不能联机，请在 GitHub Pages 版本中打开游戏。'+(t?'（'+t+'）':'');}
+function netErrText(err){const t=err&&err.type;if(t==='peer-unavailable')return'Room not found — check the room code.';
+  if(t==='unavailable-id')return'Room code conflict, try again.';
+  if(t==='relay-unreachable')return'Can’t reach the relay server (broker.emqx.io). Check your network; multiplayer doesn’t work inside the Claude page — use the GitHub Pages or offline version.';
+  return'Can’t connect to the multiplayer server. Note: multiplayer doesn’t work inside the Claude page — open the game on GitHub Pages.'+(t?'('+t+')':'');}
 function myName(){return CLS_INFO[cls].name;}
 async function hostRoom(){
-  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
+  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('Couldn’t load the multiplayer module. Open the game on GitHub Pages.');}
   netReset();net.code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
   if(!useP2P())net.code=withRelay(net.code,0);   // 先按主服务器定好房间码，免得连上后变
   let peer;try{peer=useP2P()?new Peer(PEER_PREFIX+net.code):new RelayPeer(PEER_PREFIX+net.code);}catch(e){return netFail(netErrText(e));}
-  net.peer=peer;net.mode='host';showLobby('正在创建房间…');
-  peer.on('open',id=>{net.myId=id;if(peer.relay)net.code=peer.code;net.lobby=[{id,name:myName()+'（房主）',cls}];renderLobby();});
+  net.peer=peer;net.mode='host';showLobby('Creating room...');
+  peer.on('open',id=>{net.myId=id;if(peer.relay)net.code=peer.code;net.lobby=[{id,name:myName()+'(host)',cls}];renderLobby();});
   peer.on('connection',c=>{c.on('open',()=>{net.conns.set(c.peer,c);});c.on('data',d=>{try{hostRecv(c.peer,deser(d));}catch(err){console.error('net',err);}});c.on('close',()=>hostDrop(c.peer));});
   peer.on('error',err=>netFail(netErrText(err)));
 }
 async function joinRoom(code){
-  code=(code||'').trim().toUpperCase();if(code.length<4){$('netMsg').textContent='请输入房间码';return;}
-  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('无法加载联机组件。请在 GitHub Pages 版本中打开游戏。');}
+  code=(code||'').trim().toUpperCase();if(code.length<4){$('netMsg').textContent='Enter a room code';return;}
+  if(useP2P())try{await loadPeerJS();}catch(e){return netFail('Couldn’t load the multiplayer module. Open the game on GitHub Pages.');}
   netReset();let peer;try{peer=useP2P()?new Peer():new RelayPeer(null,relayOf(code));}catch(e){return netFail(netErrText(e));}
-  net.peer=peer;showLobby('正在连接房间 '+code+' …');
+  net.peer=peer;showLobby('Connecting to room '+code+' ...');
   peer.on('open',id=>{net.myId=id;const c=peer.connect(PEER_PREFIX+code,{reliable:true});net.conn=c;
     c.on('open',()=>{net.mode='client';net.code=code;sendNet({t:'hello',cls,name:myName(),paint:(loadout.paint||{})[cls]||0});});
     c.on('data',d=>{try{clientRecv(deser(d));}catch(err){console.error('net',err);}});
@@ -98,15 +98,15 @@ function netReset(){try{for(const c of net.conns.values())c.close();if(net.conn)
   for(const r of net.remotes.values())if(r.model)scene.remove(r.model);
   Object.assign(net,{mode:'solo',peer:null,conn:null,myId:'me',code:'',lobby:[],inMatch:false});net.conns=new Map();net.remotes=new Map();}
 function netFail(msg){netReset();showLobby(msg,true);}
-function hostLost(){const inGame=net.inMatch;netReset();if(inGame&&state!=='hub'){enterHub();}showLobby('房主已断开连接。',true);}
+function hostLost(){const inGame=net.inMatch;netReset();if(inGame&&state!=='hub'){enterHub();}showLobby('The host disconnected.',true);}
 function leaveRoom(){netReset();$('lobby').classList.remove('show');}
 // ---------- 大厅界面
 function showLobby(msg,isErr){$('lobby').classList.add('show');$('netMsg').textContent=msg||'';$('netMsg').style.color=isErr?'#e05a4a':'#a8977c';renderLobby();}
 function renderLobby(){
   $('lobbyCode').textContent=net.code?net.code:'—';
-  $('lobbyList').innerHTML=net.lobby.map(p=>`<div class="slot ${p.id===net.myId?'me':''}">${p.name}</div>`).join('')+Array.from({length:Math.max(0,3-net.lobby.length)},()=>'<div class="slot wait">空位</div>').join('');
+  $('lobbyList').innerHTML=net.lobby.map(p=>`<div class="slot ${p.id===net.myId?'me':''}">${p.name}</div>`).join('')+Array.from({length:Math.max(0,3-net.lobby.length)},()=>'<div class="slot wait">Empty slot</div>').join('');
   $('lobbyStart').style.display=isHost()&&net.lobby.length>0?'':'none';
-  if(isClient())$('netMsg').textContent='已加入，等待房主开始行动…';else if(isHost()&&net.myId!=='me')$('netMsg').textContent='把房间码发给朋友，他们在「加入房间」里输入即可。最多 3 人。';
+  if(isClient())$('netMsg').textContent='Joined — waiting for the host to start...';else if(isHost()&&net.myId!=='me')$('netMsg').textContent='Send the room code to your friends; they enter it under "Join". Up to 3 players.';
 }
 // ---------- 房主收到消息
 function hostRecv(id,m){
@@ -116,7 +116,7 @@ function hostRecv(id,m){
   if(m.t==='aura'){auraAt(m.x,m.z);bcast({t:'aura',x:m.x,z:m.z},id);return;}
   if(m.t==='hello'){r={id,name:m.name,cls:m.cls,paint:m.paint||0,pos:new THREE.Vector3(),yaw:0,pitch:0,hp:100,maxHp:100,dead:false,model:null,tp:new THREE.Vector3()};net.remotes.set(id,r);
     net.lobby.push({id,name:m.name,cls:m.cls});bcast({t:'lobby',list:net.lobby});renderLobby();
-    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat,bi:curBiome});annTeam('轨道空投信号已确认——'+m.name+' 降临战场。',3);}
+    if(net.inMatch){sendTo(id,{t:'start',seed,mid:true,th:match.threat,bi:curBiome});annTeam('Orbital drop signal confirmed — '+m.name+'  makes planetfall.',3);}
     return;}
   if(!r)return;
   if(m.t==='state'){r.tp.set(m.x,m.y,m.z);r.yaw=m.yaw;r.pitch=m.pitch;r.hp=m.hp;r.maxHp=m.maxHp;r.dead=m.dead;r.inMatch=true;if(!r.pos.lengthSq())r.pos.copy(r.tp);}
@@ -126,10 +126,10 @@ function hostRecv(id,m){
   else if(m.t==='interact'){const it=interactables[m.idx];if(it&&!it.used)interact(it,r);}
   else if(m.t==='cast'){asRemote(r,()=>{if(m.k==='lift')castLift(true);else if(m.k==='hole')castHole(true,id);});}
   else if(m.t==='beacon'){callBeacon(r.pos.clone());}
-  else if(m.t==='dead'){r.dead=true;annTeam(r.name+' 阵亡了！',2);checkWipe();}
+  else if(m.t==='dead'){r.dead=true;annTeam(r.name+' is down!',2);checkWipe();}
 }
 function hostDrop(id){const r=net.remotes.get(id);if(r&&r.model)scene.remove(r.model);net.remotes.delete(id);net.conns.delete(id);
-  net.lobby=net.lobby.filter(p=>p.id!==id);bcast({t:'lobby',list:net.lobby});renderLobby();if(r&&net.inMatch){annTeam(r.name+' 离开了队伍',2);checkWipe();}}
+  net.lobby=net.lobby.filter(p=>p.id!==id);bcast({t:'lobby',list:net.lobby});renderLobby();if(r&&net.inMatch){annTeam(r.name+' left the squad',2);checkWipe();}}
 function asRemote(r,fn){const sp=player.pos.clone(),sy=player.yaw,spi=player.pitch,cp=camera.position.clone(),cq=camera.quaternion.clone();
   player.pos.copy(r.pos);player.yaw=r.yaw;player.pitch=r.pitch;camera.position.set(r.pos.x,r.pos.y+1.6,r.pos.z);camera.rotation.set(r.pitch,r.yaw,0,'YXZ');
   try{fn();}finally{player.pos.copy(sp);player.yaw=sy;player.pitch=spi;camera.position.copy(cp);camera.quaternion.copy(cq);}}

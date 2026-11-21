@@ -4,12 +4,12 @@ function upLv(id){return (loadVault().up||{})[id]||0;}
 function curThreat(){return CFG.threat[(match&&match.threat)||pendingThreat];}
 function renderShop(){const v=loadVault();v.up=v.up||{};
   const rows=CFG.upgrades.map(u=>{const lv=v.up[u.id]||0,max=lv>=u.max,c=max?0:u.cost[lv],r=max?0:(u.rare?u.rare[lv]:0);
-    const can=!max&&v.loot>=c&&v.rare>=r;const price=max?'已满级':[c?c+' 物资':'',r?r+' 圣物':''].filter(Boolean).join(' + ');
+    const can=!max&&v.loot>=c&&v.rare>=r;const price=max?'Maxed':[c?c+' Loot':'',r?r+' Relics':''].filter(Boolean).join(' + ');
     return `<div class="up"><div><b>${u.name}</b> <span class="lv">${'■'.repeat(lv)}${'□'.repeat(u.max-lv)}</span><div class="small">${u.desc}</div></div><button data-up="${u.id}" ${can?'':'disabled'}>${price}</button></div>`;}).join('');
-  const th=CFG.threat.slice(1).map((t,i)=>`<button class="th ${loadout.threat===i+1?'sel':''}" data-th="${i+1}">${t.name}<small>物资 ×${t.loot}</small></button>`).join('');
-  const am=v.rare>0?`<label class="am"><input type="checkbox" id="amulet" ${loadout.amulet?'checked':''}> 佩戴圣物护符出击（生命 +${CFG.amulet.hp}，伤害 +${Math.round((CFG.amulet.dmg-1)*100)}%；<b style="color:#e05a4a">阵亡会失去 1 件圣物</b>）</label>`:'<div class="small">拥有灵能圣物后可以佩戴圣物护符出击。</div>';
-  $('shop').innerHTML=`<h3>战舰工坊</h3>${rows}`;const bi=[['random','随机区域']].concat(Object.entries(CFG.biomes).map(([k,b])=>[k,b.name])).map(([k,n])=>`<button class="th ${(loadout.biome||'random')===k?'sel':''}" data-bi="${k}">${n}</button>`).join('');
-  $('deployOpts').innerHTML=`<div class="ths" style="margin-bottom:6px">${bi}</div><div class="lbl">威胁等级</div><div class="ths">${th}</div>${am}`;
+  const th=CFG.threat.slice(1).map((t,i)=>`<button class="th ${loadout.threat===i+1?'sel':''}" data-th="${i+1}">${t.name}<small>Loot ×${t.loot}</small></button>`).join('');
+  const am=v.rare>0?`<label class="am"><input type="checkbox" id="amulet" ${loadout.amulet?'checked':''}> Deploy wearing a relic amulet (HP +${CFG.amulet.hp}, damage +${Math.round((CFG.amulet.dmg-1)*100)}%; <b style="color:#e05a4a">lose 1 relic if you die</b>)</label>`:'<div class="small">Own a psy-relic to deploy with a relic amulet.</div>';
+  $('shop').innerHTML=`<h3>Ship Forge</h3>${rows}`;const bi=[['random','Random zone']].concat(Object.entries(CFG.biomes).map(([k,b])=>[k,b.name])).map(([k,n])=>`<button class="th ${(loadout.biome||'random')===k?'sel':''}" data-bi="${k}">${n}</button>`).join('');
+  $('deployOpts').innerHTML=`<div class="ths" style="margin-bottom:6px">${bi}</div><div class="lbl">Threat level</div><div class="ths">${th}</div>${am}`;
   $('deployOpts').querySelectorAll('[data-bi]').forEach(b=>b.onclick=()=>{loadout.biome=b.dataset.bi;saveLoadout();renderShop();play('equip');});
   $('shop').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>buyUpgrade(b.dataset.up));
   $('deployOpts').querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{loadout.threat=+b.dataset.th;saveLoadout();renderShop();play('equip');});

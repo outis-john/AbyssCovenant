@@ -58,7 +58,7 @@ function mergeProps(){try{
     return out;};
   wallMeshes=mergeSet(levelGroup.children.filter(m=>walls.has(m)));   // 墙合并后仍然用来做射线检测
   mergeSet(levelGroup.children.filter(m=>!walls.has(m)&&!wallMeshes.includes(m)));
-}catch(e){/* 测试替身里没有真实几何体，跳过 */}}
+}catch(e){/* real geometry missing in the test stub, skip */}}
 // ---------- 炼油厂：储油罐、管道、阀门、检修走道、钠灯、蒸汽、警示条纹
 function refinery(i,j,cx,cz,sides){
   for(const w of sides){const r=wallRot(w);const nx=w.n[0],nz=w.n[1];

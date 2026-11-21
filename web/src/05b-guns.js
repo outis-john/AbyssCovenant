@@ -40,14 +40,14 @@ const [snM,snF]=gunModel([[.12,.14,.55,0,0,.15,gunMat],[.1,.2,.12,0,-.14,.25,new
 // 视角模型整体缩小并往前挪，免得离镜头太近
 for(const G of [plasmaM,hbM,flM,snM]){const inner=new THREE.Group();while(G.children.length)inner.add(G.children[0]);inner.scale.setScalar(.68);inner.position.set(0,-.03,-.26);G.add(inner);}
 Object.assign(RANGED,{
-  plasma:{id:'plasma',name:'等离子枪',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:3,dmg:46,pellets:1,spread:.006,auto:false,climb:.04,kick:1.8,reload:0,splash:2.2,snd:'none',
-    desc:'发射飞行的等离子弹，命中后范围爆炸。右键蓄力过充：伤害 ×3、爆炸更大，但过热时会烫伤自己。',model:plasmaM,flash:plasmaF},
-  hbolter:{id:'hbolter',name:'重型爆弹机枪',spin:true,magSize:120,reserveMax:480,res0:240,rate:13,dmg:20,pellets:1,spread:.03,auto:true,climb:.008,kick:1.1,reload:2.6,knock:.25,snd:'hbolter',
-    desc:'按住开火，枪管越转越快，射速从 3 发 / 秒升到 13 发 / 秒。开火时移动变慢。',model:hbM,flash:hbF},
-  flamer:{id:'flamer',name:'火焰喷射器',flame:true,magSize:100,reserveMax:300,res0:200,rate:12,dmg:9,pellets:1,spread:0,auto:true,climb:0,kick:.2,reload:2,range:7,snd:'flame',
-    desc:'近距离锥形喷火，同时烧到一片敌人，被点燃的敌人会持续掉血。射程只有 7 米。',model:flM,flash:flF},
-  needle:{id:'needle',name:'穿甲狙击枪',scope:true,magSize:5,reserveMax:30,res0:20,rate:1.1,dmg:150,pellets:1,spread:0,auto:false,climb:.12,kick:3.4,reload:1.8,knock:.9,pierce3:true,snd:'needle',
-    desc:'右键开镜。一枪穿透最多 3 个敌人，爆头直接打爆头颅。',model:snM,flash:snF}});
+  plasma:{id:'plasma',name:'Plasma Gun',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:3,dmg:46,pellets:1,spread:.006,auto:false,climb:.04,kick:1.8,reload:0,splash:2.2,snd:'none',
+    desc:'Fires plasma bolts that explode on impact. Hold RMB to overcharge: ×3 damage and a bigger blast, but overheating burns you.',model:plasmaM,flash:plasmaF},
+  hbolter:{id:'hbolter',name:'Heavy Bolter',spin:true,magSize:120,reserveMax:480,res0:240,rate:13,dmg:20,pellets:1,spread:.03,auto:true,climb:.008,kick:1.1,reload:2.6,knock:.25,snd:'hbolter',
+    desc:'Hold to fire — the barrels spin up from 3 to 13 rounds per second. You move slower while firing.',model:hbM,flash:hbF},
+  flamer:{id:'flamer',name:'Flamer',flame:true,magSize:100,reserveMax:300,res0:200,rate:12,dmg:9,pellets:1,spread:0,auto:true,climb:0,kick:.2,reload:2,range:7,snd:'flame',
+    desc:'Short-range cone of fire that burns a whole crowd and sets them alight. Range only 7m.',model:flM,flash:flF},
+  needle:{id:'needle',name:'Needle Rifle',scope:true,magSize:5,reserveMax:30,res0:20,rate:1.1,dmg:150,pellets:1,spread:0,auto:false,climb:.12,kick:3.4,reload:1.8,knock:.9,pierce3:true,snd:'needle',
+    desc:'RMB to aim. Each shot pierces up to 3 enemies; headshots burst skulls.',model:snM,flash:snF}});
 for(const k of ['plasma','hbolter','flamer','needle'])if(CFG.guns[k])Object.assign(RANGED[k],CFG.guns[k]);
 Object.assign(sfx,{
   plasma(){tone('sine',90,28,0.7,0.35);tone('sawtooth',1400,120,0.22,0.3);noiseHit(2500,0.45,0.35,'bandpass');tone('square',3200,600,0.08,0.12);},
@@ -73,7 +73,7 @@ let plasmaBalls=[];
 function fireSpecial(w,mScale){
   if(w.id==='plasma'){const {o,d,muzzle}=fromMuzzle(w,w.spread);const big=mScale>0.9;const m=new THREE.Mesh(new THREE.BoxGeometry(big?.3:.18,big?.3:.18,big?.3:.18),new THREE.MeshBasicMaterial({color:big?0xe0f4ff:0x60c0ff}));
     if(muzzle)m.position.copy(o);else m.position.copy(o).add(new THREE.Vector3(0,-.12,0)).addScaledVector(d,.6);scene.add(m);plasmaBalls.push({m,d:d.clone(),life:2,dmg:w.dmg*(big?3:1)*player.gunMul,r:w.splash*(big?1.6:1)});
-    play(big?'plasmaBig':'plasma');heat.v+=big?55:16;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');if(big){hurtPlayer(12,true);announce('等离子过热！你被烫伤了',1.5);}else announce('等离子枪过热！',1.2);}return true;}
+    play(big?'plasmaBig':'plasma');heat.v+=big?55:16;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');if(big){hurtPlayer(12,true);announce('Plasma overheated! You got burned',1.5);}else announce('Plasma gun overheated!',1.2);}return true;}
   if(w.flame){const R=fromMuzzle(w,0);const fwd=R.d,o=R.o;let any=false,kill=false;
     const oc=o.clone().addScaledVector(fwd,-1);   // 判定从枪口后 1 米算，锥形更宽一点
     for(const e of enemies){if(!e.alive)continue;const to=e.g.position.clone().setY(Math.max(.6,o.y-.4)).sub(oc);const L=to.length();if(L>w.range+1+e.r)continue;if(to.normalize().dot(fwd)<Math.cos(0.5))continue;

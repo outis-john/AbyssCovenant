@@ -15,18 +15,18 @@ Object.assign(POSE,{
   t:{start:[0.08,0.25,0.0],end:[-0.04,0.02,0.0],ps:[.32,-.38,-.12],pe:[.06,-.26,-.82]},     // 突刺
   u:{start:[-0.85,0.35,0.25],end:[1.05,-0.25,-0.2],ps:[.2,-.7,-.32],pe:[.22,.02,-.46]}});   // 上挑
 const COMBOS={
-  power:[{p:'a',dm:1,name:'左劈'},{p:'r',dm:1,name:'右劈'},{p:'t',dm:1.3,thrust:true,name:'突刺'},{p:'u',dm:1.7,fin:true,name:'上挑'}],
-  saw:[{p:'a',dm:1,name:'斜劈'},{p:'h',dm:1,name:'横斩'},{p:'t',dm:1,thrust:true,bite:true,biteDur:.62,name:'突刺锯入'},{p:'u',dm:2.2,fin:true,name:'切开'}],
+  power:[{p:'a',dm:1,name:'Left cut'},{p:'r',dm:1,name:'Right cut'},{p:'t',dm:1.3,thrust:true,name:'Thrust'},{p:'u',dm:1.7,fin:true,name:'Rising cut'}],
+  saw:[{p:'a',dm:1,name:'Slash'},{p:'h',dm:1,name:'Sweep'},{p:'t',dm:1,thrust:true,bite:true,biteDur:.62,name:'Thrust & grind'},{p:'u',dm:2.2,fin:true,name:'Rip'}],
   ssword:[{p:'a',dm:1},{p:'b',dm:1}]};
 const frenzyMul=()=>player.frenzy>0?0.62:1;
-const LITANIES=['以圣约之名，斩断深渊的低语。','斥退深渊彼岸的地狱，此身即是壁垒。','我的剑即是誓言，誓言永不熄灭。','血肉终将腐朽，信仰不会。',
-  '不洁之物，回到你们来的黑暗里去。','退去吧，地狱的造物——此地仍有人守望。','每一次挥剑，都是一次祷告。','沉睡者在注视着我，我不会令祂失望。',
-  '恐惧是叛徒，怜悯是破绽。','以钢铁与圣火，净化此地。','我不求胜利，只求无愧。','黑暗终有尽头，而我便是那尽头。'];
+const LITANIES=['In the Covenant’s name, I sever the Abyss’s whispers.','Hell beyond the Abyss, be repelled — I am the bulwark.','My blade is my oath, and the oath never dies.','Flesh will rot. Faith will not.',
+  'Unclean things, return to the darkness you crawled from.','Begone, spawn of hell — this place is still watched.','Every swing is a prayer.','The Sleeper watches me. I will not fail Him.',
+  'Fear is a traitor. Mercy is a weakness.','With steel and holy fire, this place is cleansed.','I do not ask for victory, only to be without shame.','The dark has an end — and I am that end.'];
 let litIdx=0,litT=0;
 const fieldMul=()=>(WEAPONS[2].id==='power'&&player.field>0)?CFG.field.mul:1;
-function activateField(){if(player.fieldCd>0){announce('分解力场冷却中 '+Math.ceil(player.fieldCd)+' 秒',0.8);return;}
-  player.field=CFG.field.dur;player.fieldCd=CFG.field.cd;play('fieldOn');play('choir');announce('分解力场 · 激活',1.2);showLitany();}
-function showLitany(){const el=$('litany');el.textContent='「'+LITANIES[litIdx++%LITANIES.length]+'」';el.style.transition='none';el.style.opacity=1;litT=1.8;}
+function activateField(){if(player.fieldCd>0){announce('Disruption field cooling down '+Math.ceil(player.fieldCd)+' s',0.8);return;}
+  player.field=CFG.field.dur;player.fieldCd=CFG.field.cd;play('fieldOn');play('choir');announce('Disruption Field · Active',1.2);showLitany();}
+function showLitany(){const el=$('litany');el.textContent='“'+LITANIES[litIdx++%LITANIES.length]+'”';el.style.transition='none';el.style.opacity=1;litT=1.8;}
 function melee(){
   if(ex.active||player.revving)return;if(player.meleeCd>0||MS.phase==='bite'){MS.queued=true;return;}MS.queued=false;const M=WEAPONS[2],list=COMBOS[M.id];
   if(MS.phase==='none'&&gameTime-(MS.lastEnd??-9)>1.0)MS.combo=0;

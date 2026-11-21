@@ -94,7 +94,7 @@ function updateSpits(dt){
     for(const t of tl){const dx=P.x-t.pos.x,dz=P.z-t.pos.z,dy=P.y-((t.pos.y||0)+1);if(dx*dx+dz*dz<0.5&&Math.abs(dy)<1.1){
       if(!s.visual&&t.local&&player.blocking&&gameTime-player.blockStart<0.3){   // 完美格挡：把瘟火球弹回去
         const back=s.att&&s.att.alive?s.att.g.position.clone().setY(1.3*s.att.s0).sub(P).normalize():s.v.clone().negate().normalize();
-        s.v.copy(back.multiplyScalar(20));s.reflected=true;s.life=2;s.m.material.color.setHex(0xfff080);play('clang');play('parry');hitstop=0.08;announce('弹反！',0.8);
+        s.v.copy(back.multiplyScalar(20));s.reflected=true;s.life=2;s.m.material.color.setHex(0xfff080);play('clang');play('parry');hitstop=0.08;announce('Reflect!',0.8);
         $('shieldfx').style.opacity=1;setTimeout(()=>$('shieldfx').style.opacity=0,150);break;}
       if(!s.visual){if(t.remote)sendTo(t.remote.id,{t:'hurt',n:s.dmg,att:s.att&&s.att.id,psy:1});else{hurtPlayer(s.dmg,false,s.att&&s.att.alive?s.att:null);addTaint(CFG.taint.psyHit,'change');}}
       spitPop(s);break;}}}
@@ -104,7 +104,7 @@ function updateSpits(dt){
 
 // ---------- Boss：深渊领主（房主判定；砸地特效用 fx 事件同步给队友）
 function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>e.maxHp*0.33?2:3;
-  if(ph>e.phase){e.phase=ph;annTeam(ph===2?'深渊领主怒吼——瘟火从它掌中涌出！':'深渊领主陷入狂暴！裂隙在它身边撕开……',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
+  if(ph>e.phase){e.phase=ph;annTeam(ph===2?'The Abyss Lord roars — plague-fire pours from its hands!':'The Abyss Lord goes berserk! Rifts tear open around it...',2.5);play('backlash');e.speed=CFG.enemies.lord.speed*(ph===3?1.4:1);e.summonT=2;}
   const aL=e.parts.armL,aR=e.parts.armR;
   if(bossVariantTick(e,T,ph,dt))return true;
   if(ph===3){e.summonT-=dt;if(e.summonT<=0){e.summonT=B.summonEvery;for(let k=0;k<B.summonN;k++){const a=Math.random()*6.28;spawnEnemy(e.variant==='sanctum'?'caster':'imp',e.g.position.x+Math.cos(a)*3,e.g.position.z+Math.sin(a)*3);}play('growl');}}
@@ -126,7 +126,7 @@ function bossAI(e,T,pp,to,dist,dt){const B=CFG.boss,ph=e.hp>e.maxHp*0.66?1:e.hp>
 }
 function slamFx(x,z){const P=new THREE.Vector3(x,0.3,z);play('boom');for(let i=0;i<18;i++){const a=i/18*6.28;puff(new THREE.Vector3(x+Math.cos(a)*CFG.boss.slamR*.8,.3,z+Math.sin(a)*CFG.boss.slamR*.8),1,0x4a3a2a,1.2);}
   embers(P,10);if(player.pos.distanceTo(P)<14)player.shake=Math.max(player.shake,0.5);}
-function bossDown(e){const p=e.g.position;annTeam('深渊领主倒下了！它的心脏化作一件灵能圣物。',3);
+function bossDown(e){const p=e.g.position;annTeam('The Abyss Lord falls! Its heart becomes a psy-relic.',3);
   netDrop('rare',p.x,p.z);for(let k=0;k<4;k++)netDrop('relic',p.x+(Math.random()-.5)*4,p.z+(Math.random()-.5)*4);}
 
 // ---------- 绕障碍：前方有碰撞体就左右试探转向；原地卡住就侧移一会儿

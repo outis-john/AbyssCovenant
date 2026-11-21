@@ -66,17 +66,17 @@ function showHit(kill){const h=$('hit');h.className=kill?'kill':'';h.style.opaci
 function spawnSpark(p){const m=new THREE.Mesh(bloodGeo,new THREE.MeshBasicMaterial({color:0xffc060}));m.position.copy(p);scene.add(m);setTimeout(()=>scene.remove(m),80);}
 // ============================================================ 武器与配装
 const RANGED={
-  bolter:{id:'bolter',name:'爆弹枪',magSize:24,reserveMax:192,res0:120,rate:7,dmg:24,pellets:1,spread:.012,auto:true,climb:.016,kick:1.2,reload:1.1,knock:.35,snd:'bolter',desc:'全自动火箭推进爆弹：钉进目标后小范围爆炸，能炸碎命中的部位。',model:gun,flash:flash},
-  shotgun:{id:'shotgun',name:'霰弹枪',magSize:6,reserveMax:48,res0:30,rate:1.3,dmg:16,pellets:10,spread:.1,auto:false,climb:.06,kick:2.2,reload:1.3,knock:.5,snd:'shotgun',desc:'大口径，10 颗弹丸。近距离能把敌人胸口轰出大洞，或把半边身体轰飞。',model:shotgun,flash:sgFlash},
-  melta:{id:'melta',name:'热熔枪',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:1.6,dmg:170,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:0,range:16,pierce:true,snd:'melta',desc:'无需弹药，会过热。右键蓄力、左键发射，直接烧穿一条线上所有敌人的身体。',model:melta,flash:meltaFlash}};
-const PISTOL={id:'pistol',name:'爆弹手枪',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:.8,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
+  bolter:{id:'bolter',name:'Bolter',magSize:24,reserveMax:192,res0:120,rate:7,dmg:24,pellets:1,spread:.012,auto:true,climb:.016,kick:1.2,reload:1.1,knock:.35,snd:'bolter',desc:'Fully automatic rocket-propelled bolts: they bury into the target and detonate, shattering whatever they hit.',model:gun,flash:flash},
+  shotgun:{id:'shotgun',name:'Shotgun',magSize:6,reserveMax:48,res0:30,rate:1.3,dmg:16,pellets:10,spread:.1,auto:false,climb:.06,kick:2.2,reload:1.3,knock:.5,snd:'shotgun',desc:'Heavy gauge, 10 pellets. Up close it blasts a hole through the chest or tears half the body away.',model:shotgun,flash:sgFlash},
+  melta:{id:'melta',name:'Meltagun',heat:true,magSize:Infinity,reserveMax:Infinity,res0:Infinity,rate:1.6,dmg:170,pellets:1,spread:0,auto:false,climb:.05,kick:2.4,reload:0,range:16,pierce:true,snd:'melta',desc:'No ammo, but it overheats. Hold RMB to charge, LMB to fire — burns straight through every enemy in a line.',model:melta,flash:meltaFlash}};
+const PISTOL={id:'pistol',name:'Bolt Pistol',magSize:10,reserveMax:Infinity,res0:Infinity,rate:4,dmg:20,pellets:1,spread:.008,auto:false,climb:.02,kick:1,reload:.8,knock:.25,snd:'pistol',model:pistol,flash:pFlash};
 const MELEE={
-  saw:{id:'saw',name:'链锯剑',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'四段连招：斜劈、横斩、突刺锯入、切开。右键按住蓄力，松开进入狂热（移速和攻速提升）。重击（按住左键）：回旋锯斩，拦腰锯断周围一圈敌人。'},
-  power:{id:'power',name:'力场分解剑',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'四段连招：左劈、右劈、突刺、上挑，每刀都能劈开前方所有敌人。右键：分解力场（8 秒，伤害 ×1.6，挥砍时吟诵祷言）。重击（按住左键）：裂地斩，劈开前方一条直线上的所有敌人。'},
-  hammer:{id:'hammer',name:'雷殛锤',melee:true,cleave:true,dmg:72,windup:.24,slash:.2,desc:'三段大范围横扫，打退一片。重击：雷霆砸地，震晕周围所有敌人。'},
-  fist:{id:'fist',name:'破甲巨拳',melee:true,dmg:50,windup:.1,slash:.11,desc:'刺拳、直拳、上勾拳，拳拳打碎血肉。重击：抓住面前的敌人当场捏碎（精英要先打残）。'},
-  axe:{id:'axe',name:'链锯战斧',melee:true,bite:true,dmg:54,windup:.16,slash:.16,desc:'沉重的劈砍会咬进敌人身体。重击：横斩斩首。'},
-  ssword:{id:'ssword',name:'剑盾',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'按住 E 举盾格挡（时机准可防反）；右键切换剑 / 爆弹手枪。重击（按住左键）：盾击，撞飞并震晕前方敌人。'}};
+  saw:{id:'saw',name:'Chainsword',melee:true,bite:true,dmg:35,windup:.13,slash:.17,desc:'4-hit combo: slash, sweep, thrust-and-grind, rip. Hold RMB to rev, release for Frenzy (move and attack speed up). Heavy (hold LMB): Spin Saw, cuts everything around you in half.'},
+  power:{id:'power',name:'Power Sword',melee:true,cleave:true,dmg:48,windup:.09,slash:.12,desc:'4-hit combo: left, right, thrust, rising cut — every swing cleaves all enemies in front. RMB: Disruption Field (8s, damage ×1.6, chant litanies). Heavy (hold LMB): Earth Splitter, cleaves every enemy in a straight line.'},
+  hammer:{id:'hammer',name:'Thunder Hammer',melee:true,cleave:true,dmg:72,windup:.24,slash:.2,desc:'3 wide sweeping blows that knock back crowds. Heavy: Thunder Slam, stuns everything around you.'},
+  fist:{id:'fist',name:'Power Fist',melee:true,dmg:50,windup:.1,slash:.11,desc:'Jab, cross, uppercut — every punch pulps flesh. Heavy: grab the enemy in front and crush it (elites must be weakened first).'},
+  axe:{id:'axe',name:'Chain Axe',melee:true,bite:true,dmg:54,windup:.16,slash:.16,desc:'Heavy chops that bite into flesh. Heavy: decapitating sweep.'},
+  ssword:{id:'ssword',name:'Sword & Shield',melee:true,block:true,dmg:42,windup:.14,slash:.17,desc:'Hold E to block (perfect timing parries); RMB toggles sword / bolt pistol. Heavy (hold LMB): Shield Bash, knocks back and stuns enemies in front.'}};
 for(const k in CFG.guns)if(RANGED[k])Object.assign(RANGED[k],CFG.guns[k]);for(const k in CFG.melee)Object.assign(MELEE[k],CFG.melee[k]);
 const MELEE_GROUP={saw:sawG,power:powG,ssword:ssG};
 function loadLoadout(){try{return JSON.parse(localStorage.getItem('abyss_loadout'))||{primary:'bolter',melee:'saw'};}catch(e){return{primary:'bolter',melee:'saw'};}}
@@ -88,16 +88,16 @@ function applyLoadout(){const P={...RANGED[loadout.primary]},M={...MELEE[loadout
   ammo=[{mag:WEAPONS[0].magSize,res:WEAPONS[0].res0},{mag:PISTOL.magSize,res:Infinity},{}];cur=0;reloadT=0;switchT=0;reloadFor=-1;}
 applyLoadout();
 function activeGun(){const w=WEAPONS[cur];if(w.melee)return (w.block&&player.ssPistol)?{w:PISTOL,slot:1}:null;return {w,slot:cur};}
-function switchWeapon(i){if(i===0&&match&&match.carrier&&match.carrier===net.myId){announce('扛着圣物棺，不能用主武器',0.8);return;}if(i===1&&CLS[cls]&&CLS[cls].noPistol){if(cur===1)return;announce('机甲没有副武器',0.8);return;}if(i===cur||i<0||i>2||MS.phase==='bite'||ex.active)return;cur=i;switchT=0.3;reloadT=0;reloadFor=-1;player.blocking=false;player.revving=false;
+function switchWeapon(i){if(i===0&&match&&match.carrier&&match.carrier===net.myId){announce('Carrying the reliquary — primary weapon unavailable',0.8);return;}if(i===1&&CLS[cls]&&CLS[cls].noPistol){if(cur===1)return;announce('Walkers have no sidearm',0.8);return;}if(i===cur||i<0||i>2||MS.phase==='bite'||ex.active)return;cur=i;switchT=0.3;reloadT=0;reloadFor=-1;player.blocking=false;player.revving=false;
   if(i!==2){swordOut=0;sword.visible=false;ghost.visible=false;shieldG.visible=false;}MS.phase='none';swing=0;MS.queued=false;play('equip');if(cur!==2&&MS.phase!=='none'){MS.phase='none';swing=0;}}
-function startReload(){const G=activeGun();if(!G)return;const w=G.w;if(player.channelT>0){announce('施法中无法换弹',0.8);return;}if(w.heat)return;if(reloadT>0||switchT>0||ex.active)return;const a=ammo[G.slot];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('没有备弹了',1);return;}
+function startReload(){const G=activeGun();if(!G)return;const w=G.w;if(player.channelT>0){announce('Can’t reload while casting',0.8);return;}if(w.heat)return;if(reloadT>0||switchT>0||ex.active)return;const a=ammo[G.slot];if(a.mag>=w.magSize||a.res<=0){if(a.res<=0&&a.mag<=0)announce('Out of reserve ammo',1);return;}
   reloadT=w.reload;reloadFor=G.slot;play('magOut');setTimeout(()=>{if(reloadT>0)play('magIn');},w.reload*550);}
 function finishReload(){const w=reloadFor===1?PISTOL:WEAPONS[reloadFor],a=ammo[reloadFor];const n=Math.min(w.magSize-a.mag,a.res);a.mag+=n;if(a.res!==Infinity)a.res-=n;play('chamber');reloadFor=-1;}
 function tryFire(pressed){if(ex.active)return;const G=activeGun();
   if(!G){if(pressed&&!player.blocking)meleePress();return;}const w=G.w,slot=G.slot;
   if(!w.auto&&!pressed)return;
   if(reloadT>0||switchT>0||player.fireCd>0)return;
-  if(w.heat){if(!pressed)return;if(heat.over>0){play('dry');announce('热熔枪过热！',0.8);return;}fire(w);return;}
+  if(w.heat){if(!pressed)return;if(heat.over>0){play('dry');announce('Melta overheated!',0.8);return;}fire(w);return;}
   if(ammo[slot].mag<=0){if(pressed)play('dry');startReload();return;}
   fire(w,slot);
 }
@@ -116,7 +116,7 @@ function fire(w,slot=cur){
       if(!k&&(part==='armL'||part==='armR'))vaporizeLimb(e,part);
       e.burn=2;embers(h.point,6);puff(h.point,2,0x333333,.8);anyHit=true;anyKill=anyKill||k;}
     heatBeam(o.clone().add(new THREE.Vector3(0,-.18,0)),end,0.5+mScale);
-    heat.v+=20+heat.charge*45;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');announce('热熔枪过热！散热中…',1.5);}
+    heat.v+=20+heat.charge*45;heat.charge=0;if(heat.v>=100){heat.v=100;heat.over=2.5;play('vent');announce('Melta overheated! Venting...',1.5);}
   } else if(w.id==='bolter'||w.spin){const r=fromMuzzle(w,w.spread*(w.spin?1.6-player.spin:1));spawnBolt(r.o,r.d,w,r.muzzle);}
   else if(w.id==='shotgun'){const r=shotgunBlast(w);anyHit=r.anyHit;anyKill=r.anyKill;head=r.head;}
   else for(let k=0;k<w.pellets;k++){const {o,d}=aimRay(w.spread);const h=castRay(o,d);if(!h)continue;const e=h.object.userData.enemy;

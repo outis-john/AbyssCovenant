@@ -86,10 +86,10 @@ function buildCharacter(c){
   g.position.y=0.42;return g;
 }
 const CLS_INFO={
-  tide:{name:'唤潮者',desc:'帝国认可的灵能者。深渊在他耳边低语，他用符文把这股力量拧成武器。灵能用得越狠越强，也越危险。',stats:[['生命',100,150],['灵能槽',4,5],['过载上限',130,130],['枪械伤害',1,1.3],['减伤',0,.2]],
-    perks:'灵能核心 4 槽 · 过载上限 +30% · 25% 概率免疫反噬'},
-  ward:{name:'铸甲卫士',desc:'被基因改造的帝国精英，身披动力甲。枪械伤害更高、更耐打，但灵能天赋有限。',stats:[['生命',150,150],['灵能槽',3,5],['过载上限',100,130],['枪械伤害',1.3,1.3],['减伤',.2,.2]],
-    perks:'灵能核心 3 槽 · 枪械伤害 +30% · 受到伤害 -20%'}};
+  tide:{name:'Tidecaller',desc:'A sanctioned psyker. The Abyss whispers in his ear, and he twists its power into weapons with runes. The harder he pushes, the stronger — and more dangerous — it gets.',stats:[['HP',100,150],['Psy slots',4,5],['Overload cap',130,130],['Gun damage',1,1.3],['Damage reduction',0,.2]],
+    perks:'4 psy core slots · overload cap +30% · 25% chance to ignore backlash'},
+  ward:{name:'Forged Warden',desc:'A gene-forged elite in power armour. Hits harder with guns and takes more punishment, but has little psychic gift.',stats:[['HP',150,150],['Psy slots',3,5],['Overload cap',100,130],['Gun damage',1.3,1.3],['Damage reduction',.2,.2]],
+    perks:'3 psy core slots · gun damage +30% · damage taken -20%'}};
 function selectClass(c){
   cls=c;document.querySelectorAll('.card').forEach(el=>el.classList.toggle('sel',el.dataset.cls===c));
   if(hub.char)hubScene.remove(hub.char);hub.char=buildCharacter(c);paintModel(hub.char,(loadout.paint||{})[c]||0);if(typeof addAuspexGear==='function')addAuspexGear(hub.char,c);if(typeof CLS!=='undefined'&&CLS[c]&&CLS[c].eye)hub.char.scale.multiplyScalar(.55);hubScene.add(hub.char);
@@ -115,11 +115,11 @@ document.querySelectorAll('.card').forEach(el=>el.onclick=()=>{initAudio();selec
 // 战舰仓库（保存在这个浏览器里）
 function loadVault(){try{return JSON.parse(localStorage.getItem('abyss_vault'))||{loot:0,rare:0,runs:0,extracted:0};}catch(e){return{loot:0,rare:0,runs:0,extracted:0};}}
 function saveVault(v){try{localStorage.setItem('abyss_vault',JSON.stringify(v));}catch(e){}}
-function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>物资<b>${v.loot}</b></span><span>圣物<b style="color:#d070ff">${v.rare}</b></span><span title="出击 / 成功撤离">战绩<b>${v.extracted}/${v.runs}</b></span>`;}
+function showVault(){const v=loadVault();$('vaultInfo').innerHTML=`<span>Loot<b>${v.loot}</b></span><span>Relics<b style="color:#d070ff">${v.rare}</b></span><span title="Deployments / extractions">Record<b>${v.extracted}/${v.runs}</b></span>`;}
 function renderLoadout(){
   const mk=(el,list,key)=>{$(el).innerHTML=Object.values(list).filter(w=>{const a=typeof CLS!=='undefined'&&CLS[cls]&&CLS[cls][key==='primary'?'guns':'melee'];return !a||a.includes(w.id);}).map(w=>`<div class="opt ${loadout[key]===w.id?'sel':''}" data-k="${key}" data-id="${w.id}">${w.name}</div>`).join('');};
   mk('loPrimary',RANGED,'primary');mk('loMelee',MELEE,'melee');
-  $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>：${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>：${MELEE[loadout.melee].desc}<div class="dim">${masteryText(loadout.primary)} · ${masteryText(loadout.melee)}</div>`;
+  $('loDesc').innerHTML=`<b>${RANGED[loadout.primary].name}</b>: ${RANGED[loadout.primary].desc}<br><b>${MELEE[loadout.melee].name}</b>: ${MELEE[loadout.melee].desc}<div class="dim">${masteryText(loadout.primary)} · ${masteryText(loadout.melee)}</div>`;
   document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{initAudio();loadout[o.dataset.k]=o.dataset.id;try{localStorage.setItem('abyss_loadout',JSON.stringify(loadout));}catch(e){}play('equip');renderLoadout();});
 }
 function enterHub(){
@@ -135,12 +135,12 @@ let mmTimers=[];
 function startMatchmaking(){
   initAudio();actx.resume?.();
   state='matching';$('hub').classList.remove('show');$('matching').classList.add('show');
-  $('slot0').textContent='你 · '+CLS_INFO[cls].name;
-  for(const i of [1,2]){$('slot'+i).textContent='寻找中…';$('slot'+i).className='slot wait';}
-  $('mmText').textContent='正在寻找队友……';$('mmCancel').style.display='';
+  $('slot0').textContent='You ·  '+CLS_INFO[cls].name;
+  for(const i of [1,2]){$('slot'+i).textContent='Searching...';$('slot'+i).className='slot wait';}
+  $('mmText').textContent='Searching for squadmates...';$('mmCancel').style.display='';
   mmTimers=[
-    setTimeout(()=>{for(const i of [1,2]){$('slot'+i).textContent='无人响应';$('slot'+i).className='slot';}$('mmText').textContent='未找到可用队友——以单人身份空降';},3200),
-    setTimeout(()=>{$('mmCancel').style.display='none';$('mmText').textContent='空降舱发射中……';play('beacon');},5000),
+    setTimeout(()=>{for(const i of [1,2]){$('slot'+i).textContent='No response';$('slot'+i).className='slot';}$('mmText').textContent='No squadmates found — deploying solo';},3200),
+    setTimeout(()=>{$('mmCancel').style.display='none';$('mmText').textContent='Drop pod launching...';play('beacon');},5000),
     setTimeout(()=>{prepareMatch();$('matching').classList.remove('show');$('hub').classList.remove('show');startCutscene();},6600),
   ];
 }
